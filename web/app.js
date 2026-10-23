@@ -1,3 +1,4 @@
+import {localDrafts,chooseDraft,putDraft,draftHref,completeLocalRegistration,registrationProgressHTML,demoPerimeterHTML,demoSupportsHTML,localRegistrationsHTML,localConfirmationHTML} from './registration-journey.js';
 import {EmailEntry} from './email-entry.js';
 import {captureSearchContext,readSearchContext,normalizeSearchContext,isCatalogHash,restoreSearchScroll} from './search-journey.js';
 import {accessGateHTML} from './access-gate.js';
@@ -188,6 +189,7 @@ function readStore() {
       submissions: Array.isArray(raw.submissions) ? raw.submissions : [],
       interests: Array.isArray(raw.interests) ? raw.interests : [],
       draft: raw.draft && typeof raw.draft === "object" ? raw.draft : null,
+      drafts:localDrafts(raw),
     };
   } catch {
     return {
@@ -196,6 +198,7 @@ function readStore() {
       submissions: [],
       interests: [],
       draft: null,
+      drafts:[],
     };
   }
 }
@@ -709,7 +712,7 @@ function contributionFields() {
   }${["units", "mixed"].includes(choice) ? `<div class="form-section-label">Para los inmuebles a entregar</div><div class="form-grid">${inputField("Tipo de inmueble preferido", "unit_type", { options: ["Apartamentos", "Casas", "Locales", "Oficinas", "Abierto a alternativas"] })}${inputField("Cantidad deseada", "unit_count", { type: "number", min: 1, placeholder: "Por definir" })}${inputField("Área privada aproximada por unidad (m²)", "unit_area", { type: "number", min: 1, placeholder: "Por definir" })}${inputField("Plazo deseado de entrega (meses)", "unit_months", { type: "number", min: 1, placeholder: "Por definir", hint: "El hito desde el que se cuenta se pactará con el proyecto." })}</div>` : ""}${choice === "mixed" ? `<div class="form-grid" style="margin-top:20px">${inputField("Porcentaje del valor en dinero", "cash_percent", { type: "number", min: 0, placeholder: "Por acordar", hint: "El restante se recibiría en inmuebles. Se refiere al valor, no a las utilidades." })}</div>` : ""}`;
 }
 function formPage(kind) {
-  if(!emailEntry.allows(state.session))return emailEntry.html(kind,saved.draft?.kind===kind?saved.draft:null);
+  if(!emailEntry.allows(state.session))return emailEntry.html(kind,new URLSearchParams(location.hash.split('?')[1]||'').get('nuevo')==='1'?null:chooseDraft(saved,kind,new URLSearchParams(location.hash.split('?')[1]||'').get('borrador')));
   const project = kind === "proyecto",
     f = state.form, totalSteps = project ? 3 : 4;
   let body = "";
@@ -735,7 +738,7 @@ function formPage(kind) {
   }
   if (!project && state.formStep === 3) body = landSituationFields(f.land_situation);
   if (state.formStep === totalSteps) {
-    body = `${project?'':'<section class="du-perimeter-final"><h2>Ubicación y perímetro</h2><p>Confirma el límite del terreno antes de enviar el expediente. El mapa y sus archivos permanecen privados.</p><div data-parcel-host></div></section>'}<h2>Soportes y revisión final</h2><p class="form-intro">Los archivos seleccionados se guardan privados por 60 días. Los archivos geográficos se interpretan; PDF, imágenes y CAD quedan disponibles para revisión del equipo.</p><div class="view-toggle" style="width:max-content;margin-bottom:17px"><button type="button" data-action="file-mode" data-mode="upload" class="${state.fileMode === "upload" ? "active" : ""}">${icon("upload")}Archivo</button><button type="button" data-action="file-mode" data-mode="link" class="${state.fileMode === "link" ? "active" : ""}">${icon("link")}Enlace de descarga</button></div>${state.fileMode === "upload" ? `<div class="upload-zone">${icon("upload")}<h3>Selecciona los soportes del expediente</h3><p>Hasta 10 MB por archivo · Temporales por 60 días.<br>Para archivos mayores, utiliza un enlace de descarga.</p><label><span class="sr-only">Seleccionar documentos del expediente</span><input type="file" id="file-input" multiple accept=".pdf,.kml,.kmz,.geojson,.zip,.jpg,.jpeg,.png,.dwg,.dxf"></label></div>` : `<div class="form-grid">${inputField("Nombre del documento", "file_link_name", { placeholder: "Ej. Levantamiento topográfico", full: true })}${inputField("Enlace HTTPS de acceso o descarga", "file_link_url", { type: "url", placeholder: "https://…", full: true, hint: "No se descarga automáticamente ni se modifican los permisos del proveedor." })}<button type="button" class="button outline" data-action="add-file-link">Agregar referencia ${icon("plus")}</button></div>`}<p class="file-message" id="file-message" role="status"></p><div id="file-list">${fileList()}</div><div class="privacy-note">${icon("info")}Los originales se guardan privados, con acceso para ti y el equipo autorizado. El envío no los publica.</div>${project?'':obligationSupports(f.land_situation,state.files)}<hr class="form-divider"><h3 style="font-size:17px;margin-bottom:15px">Resumen de tu ${project ? "proyecto" : "terreno"}</h3><div class="ux-summary-edit-links">${formSteps(state.formKind).slice(0,-1).map((name,i)=>`<button class="ux-edit-summary" type="button" data-action="form-step" data-step="${i+1}">Editar ${name.toLowerCase()}</button>`).join('')}</div><div data-submission-summary>${formSummary()}</div><hr class="form-divider"><label class="check-row"><input type="checkbox" name="demo_consent" required ${f.demo_consent ? "checked" : ""}>Autorizo guardar este expediente privado para revisión. Enviarlo no publica el terreno ni transfiere el activo.</label><label class="check-row" style="margin-top:12px"><input type="checkbox" name="alerts" ${f.alerts ? "checked" : ""}>Me interesa recibir avisos relacionados con este registro cuando se habiliten. Este envío no activa correos.</label>`;
+    body = `${project?'':emailEntry.isPreview()?demoPerimeterHTML(f.parcel_geometry,f.parcel_confirmed):'<section class="du-perimeter-final"><h2>Ubicación y perímetro</h2><p>Confirma el límite del terreno antes de enviar el expediente. El mapa y sus archivos permanecen privados.</p><div data-parcel-host></div></section>'}<h2>Soportes y revisión final</h2><p class="form-intro">${emailEntry.isPreview()?'Recorre los soportes con un documento ficticio y revisa el resumen antes de finalizar la demostración.':'Los archivos seleccionados se guardan privados por 60 días. Los archivos geográficos se interpretan; PDF, imágenes y CAD quedan disponibles para revisión del equipo.'}</p>${emailEntry.isPreview()?demoSupportsHTML():`<div class="view-toggle" style="width:max-content;margin-bottom:17px"><button type="button" data-action="file-mode" data-mode="upload" class="${state.fileMode === "upload" ? "active" : ""}">${icon("upload")}Archivo</button><button type="button" data-action="file-mode" data-mode="link" class="${state.fileMode === "link" ? "active" : ""}">${icon("link")}Enlace de descarga</button></div>${state.fileMode === "upload" ? `<div class="upload-zone">${icon("upload")}<h3>Selecciona los soportes del expediente</h3><p>Hasta 10 MB por archivo · Temporales por 60 días.<br>Para archivos mayores, utiliza un enlace de descarga.</p><label><span class="sr-only">Seleccionar documentos del expediente</span><input type="file" id="file-input" multiple accept=".pdf,.kml,.kmz,.geojson,.zip,.jpg,.jpeg,.png,.dwg,.dxf"></label></div>` : `<div class="form-grid">${inputField("Nombre del documento", "file_link_name", { placeholder: "Ej. Levantamiento topográfico", full: true })}${inputField("Enlace HTTPS de acceso o descarga", "file_link_url", { type: "url", placeholder: "https://…", full: true, hint: "No se descarga automáticamente ni se modifican los permisos del proveedor." })}<button type="button" class="button outline" data-action="add-file-link">Agregar referencia ${icon("plus")}</button></div>`}<p class="file-message" id="file-message" role="status"></p><div id="file-list">${fileList()}</div><div class="privacy-note">${icon("info")}Los originales se guardan privados, con acceso para ti y el equipo autorizado. El envío no los publica.</div>`}${project?'':obligationSupports(f.land_situation,state.files,{preview:emailEntry.isPreview()})}<hr class="form-divider"><h3 style="font-size:17px;margin-bottom:15px">Resumen de tu ${project ? "proyecto" : "terreno"}</h3><div class="ux-summary-edit-links">${formSteps(state.formKind).slice(0,-1).map((name,i)=>`<button class="ux-edit-summary" type="button" data-action="form-step" data-step="${i+1}">Editar ${name.toLowerCase()}</button>`).join('')}</div><div data-submission-summary>${formSummary()}</div><hr class="form-divider"><label class="check-row"><input type="checkbox" name="demo_consent" required ${f.demo_consent ? "checked" : ""}>${emailEntry.isPreview()?'Entiendo que este registro de demostración se guarda solo en este navegador y no se envía al equipo.':'Autorizo guardar este expediente privado para revisión. Enviarlo no publica el terreno ni transfiere el activo.'}</label><label class="check-row" style="margin-top:12px"><input type="checkbox" name="alerts" ${f.alerts ? "checked" : ""}>Me interesa recibir avisos relacionados con este registro cuando se habiliten. Este envío no activa correos.</label>`;
   }
   return (
     (emailEntry.isPreview()?emailEntry.banner():'') + compactHeading(
@@ -751,7 +754,7 @@ function formPage(kind) {
           : "Cuéntanos qué tienes y qué estás dispuesto a evaluar.",
       project ? "Con o sin terreno" : "Terrenos para desarrollo inmobiliario",
     ) +
-    `<section class="page-content du-publication"><div class="container"><div class="form-layout"><aside class="form-sidebar">${stepperHTML(state.formKind,state.formStep)}<div class="sidebar-note">${icon("lock")}Tu expediente queda privado y pendiente de revisión. No se difunde ningún resumen automáticamente.<br><br>¿No tienes todo a mano?<br>Puedes guardar un borrador local.</div></aside><form class="form-main" data-form="submission"><div class="ux-form-tools"><p data-draft-status role="status">${saved.draft?.kind===state.formKind?'Borrador recuperado de este navegador.':'El borrador se guarda en este navegador al completar los campos.'}</p><button class="text-button" type="button" data-action="save-draft">Guardar borrador</button></div><div data-form-errors class="ux-form-errors" role="alert" tabindex="-1" hidden></div><div class="jr-form-progress" role="progressbar" aria-label="Progreso del registro" aria-valuemin="0" aria-valuemax="${totalSteps}" aria-valuenow="${state.formStep}"><span style="width:${state.formStep/totalSteps*100}%"></span></div><div class="jr-form-orientation"><span>${state.formStep===1?'Primero, los datos esenciales':state.formStep===totalSteps?'Revisa antes de enviar':'Completa lo que conoces'}</span><span>Documentos al final · Borrador local disponible</span></div>${body}<div class="form-navigation">${state.formStep > 1 ? `<button class="button" type="button" data-action="form-back">Atrás</button>` : `<a class="text-button" href="#/mi-espacio">Salir a Mi espacio</a>`}<span>Paso ${state.formStep} de ${totalSteps}</span><button class="button primary" type="submit">${state.formStep === totalSteps ? (emailEntry.isPreview()?"Guardar borrador de demostración":"Enviar a revisión privada") : "Continuar"} ${icon("arrow-right")}</button></div></form></div></div></section>`
+    `<section class="page-content du-publication"><div class="container"><div class="form-layout"><aside class="form-sidebar">${emailEntry.isPreview()?registrationProgressHTML():''}${stepperHTML(state.formKind,state.formStep)}<div class="sidebar-note">${icon("lock")}${emailEntry.isPreview()?'Estás recorriendo la maqueta. El avance queda en este navegador; no se envía al equipo ni se publica.':'Tu expediente queda privado y pendiente de revisión. No se difunde ningún resumen automáticamente.'}<br><br>¿No tienes todo a mano?<br>Puedes guardar un borrador local.</div></aside><form class="form-main" data-form="submission"><div class="ux-form-tools"><p data-draft-status role="status">${chooseDraft(saved,state.formKind,state.form.client_id)?'Borrador recuperado de este navegador.':'El borrador se guarda en este navegador al completar los campos.'}</p><button class="text-button" type="button" data-action="save-draft">Guardar borrador</button><button class="text-button" type="button" data-action="save-and-exit">Guardar y salir</button></div><div data-form-errors class="ux-form-errors" role="alert" tabindex="-1" hidden></div><div class="jr-form-progress" role="progressbar" aria-label="Progreso del registro" aria-valuemin="0" aria-valuemax="${totalSteps}" aria-valuenow="${state.formStep}"><span style="width:${state.formStep/totalSteps*100}%"></span></div><div class="jr-form-orientation"><span>${state.formStep===1?'Primero, los datos esenciales':state.formStep===totalSteps?'Revisa antes de enviar':'Completa lo que conoces'}</span><span>Documentos al final · Borrador local disponible</span></div>${body}<div class="form-navigation">${state.formStep > 1 ? `<button class="button" type="button" data-action="form-back">Atrás</button>` : `<a class="text-button" href="#/mi-espacio">Salir a Mi espacio</a>`}<span>Paso ${state.formStep} de ${totalSteps}</span><button class="button primary" type="submit">${state.formStep === totalSteps ? (emailEntry.isPreview()?"Finalizar demostración":"Enviar a revisión privada") : "Continuar"} ${icon("arrow-right")}</button></div></form></div></div></section>`
   );
 }
 const compensationNames = {
@@ -856,7 +859,7 @@ function formSummary() {
   return `<dl class="summary-list">${rows.map(([label, value]) => `<div><dt>${label}</dt><dd>${escape(value || "Por definir")}</dd></div>`).join("")}</dl>${state.formKind==='terreno'?landSituationSummary(f.land_situation,state.files):''}`;
 }
 function fileList() {
-  return state.files.map((f,i)=>`<div class="uploaded-file">${icon(f.origin==='link'?'link':'file')}<div><strong>${escape(f.name)}</strong><small>${f.size?new Intl.NumberFormat('es-CO',{maximumFractionDigits:2}).format(f.size<1000000?f.size/1000:f.size/1000000)+(f.size<1000000?' KB · ':' MB · '):''}${f.id?'Guardado privado':'Referencia local anterior: vuelve a seleccionar el archivo'} · ${Date.parse(f.expiresAt)<=Date.now()?'Vencido':'Vence '+new Date(f.expiresAt).toLocaleDateString('es-CO')}<br>${escape(f.analysis?.message||'Sin interpretación')}</small>${f.analysis?.candidates?.length?`<button type="button" class="text-button" data-action="file-perimeter" data-index="${i}">Revisar los perímetros del archivo</button>`:''}</div>${f.id?`<button type="button" class="text-button" data-action="download-document" data-id="${f.id}">${f.origin==='link'?'Ver enlace':'Descargar'}</button>`:''}<button type="button" class="icon-button" data-action="remove-file" data-index="${i}" aria-label="Quitar ${escape(f.name)}">${icon('x')}</button></div>`).join('');
+  return state.files.map((f,i)=>`<div class="uploaded-file">${icon(f.origin==='link'?'link':'file')}<div><strong>${escape(f.name)}</strong><small>${f.size?new Intl.NumberFormat('es-CO',{maximumFractionDigits:2}).format(f.size<1000000?f.size/1000:f.size/1000000)+(f.size<1000000?' KB · ':' MB · '):''}${f.origin==='demo'?'Referencia ficticia · Solo en este navegador':(f.id?'Guardado privado':'Referencia local anterior: vuelve a seleccionar el archivo')+' · '+(Date.parse(f.expiresAt)<=Date.now()?'Vencido':'Vence '+new Date(f.expiresAt).toLocaleDateString('es-CO'))}<br>${escape(f.analysis?.message||'Sin interpretación')}</small>${f.analysis?.candidates?.length?`<button type="button" class="text-button" data-action="file-perimeter" data-index="${i}">Revisar los perímetros del archivo</button>`:''}</div>${f.id&&f.origin!=='demo'?`<button type="button" class="text-button" data-action="download-document" data-id="${f.id}">${f.origin==='link'?'Ver enlace':'Descargar'}</button>`:''}<button type="button" class="icon-button" data-action="remove-file" data-index="${i}" aria-label="Quitar ${escape(f.name)}">${icon('x')}</button></div>`).join('');
 }
 function captureForm() {
   const form = $('[data-form="submission"]');
@@ -897,13 +900,17 @@ function saveDraft(silent = false) {
     files: state.files,
     updatedAt: new Date().toISOString(),
   };
+  putDraft(saved,saved.draft);
   const ok = persist();
+  if(ok&&location.hash.startsWith('#/publicar/')){const params=new URLSearchParams(location.hash.split('?')[1]||'');params.delete('nuevo');params.set('borrador',state.form.client_id);history.replaceState(null,'','#/publicar/'+state.formKind+'?'+params.toString());}
   draftStatus($('[data-form="submission"]'),ok,saved.draft.updatedAt);
   if (ok && !silent) toast("Borrador guardado únicamente en este navegador.");
   return ok;
 }
 function successPage(id) {
   const submission = saved.submissions.find((s) => s.id === id);
+  if(!submission)return notFound();
+  if(submission.localRegistration)return localConfirmationHTML(submission);
   return `<section class="page-content"><div class="container"><div class="success-card"><div class="success-icon">${icon("check")}</div><div class="eyebrow" style="justify-content:center">Recorrido completado</div><h1>Tu demostración quedó guardada</h1><p>Recorriste el registro de ${submission?.kind === "proyecto" ? "un proyecto" : "un terreno"}. Puedes consultar el resumen en Mi espacio y seguir explorando la maqueta.</p><div class="reference">${escape(id)} · Registro local de ejemplo</div><div class="info-box" style="text-align:left">${icon("info")}No se publicó una oportunidad, no se subieron archivos ni se enviaron correos. La conexión con los servicios reales está pendiente.</div>${btn("Ir a Mi espacio", "#/mi-espacio")}${btn("Volver al inicio", "#/", "outline")}</div></div></section>`;
 }
 function allyPage() {
@@ -970,7 +977,7 @@ function spacePage() {
       "Tu actividad",
       btn("Vender mi terreno", "#/publicar/terreno", "outline"),
     ) +
-    `<section class="page-content"><div class="container"><div class="info-box">${icon("lock")}<span><strong>Tu actividad, en su lugar.</strong> Los expedientes enviados y el seguimiento se guardan en tu cuenta. Los favoritos, búsquedas y borradores se conservan en este navegador.</span></div>${spaceActionsHTML({draft:saved.draft,team:!!state.session?.teamRole,objective:saved.objective})}${state.session?.authenticated?privateRecordsHTML()+'<div data-activity-center></div>':state.session?accessGateHTML({hash:'#/mi-espacio',title:'Tu seguimiento, desde tu cuenta',description:'Inicia sesión para consultar expedientes, intereses y solicitudes. Tus favoritos y búsquedas locales siguen disponibles más abajo.'}):'<p role="status">Consultando tu cuenta…</p>'}<section class="ux-local-section"><h2>Guardado en este navegador</h2><p>Favoritos, búsquedas y borradores para retomar después. Los expedientes enviados y el seguimiento se consultan arriba.</p><div class="space-stats"><div class="space-stat"><strong>${saved.favorites.length}</strong><span>Favoritos</span></div><div class="space-stat"><strong>${saved.searches.length}</strong><span>Búsquedas guardadas</span></div><div class="space-stat"><strong>${saved.submissions.length}</strong><span>Registros de ejemplo</span></div></div><div class="space-tabs" role="tablist" aria-label="Actividad">${[
+    `<section class="page-content"><div class="container"><div class="info-box">${icon("lock")}<span><strong>Tu actividad, en su lugar.</strong> Los expedientes enviados y el seguimiento se guardan en tu cuenta. Los favoritos, búsquedas y borradores se conservan en este navegador.</span></div>${localRegistrationsHTML(saved)}${spaceActionsHTML({draft:null,team:!!state.session?.teamRole,objective:saved.objective})}${state.session?.authenticated?privateRecordsHTML()+'<div data-activity-center></div>':emailEntry.preview?'<div class="rj-demo-account"><strong>Recorrido por correo · Demostración</strong><p>Retoma tus registros locales desde Mis terrenos y proyectos. No necesitas iniciar una sesión real para continuar la maqueta.</p></div>':state.session?accessGateHTML({hash:'#/mi-espacio',title:'Tu seguimiento, desde tu cuenta',description:'Inicia sesión para consultar expedientes, intereses y solicitudes. Tus favoritos y búsquedas locales siguen disponibles más abajo.'}):'<p role="status">Consultando tu cuenta…</p>'}<section class="ux-local-section"><h2>Guardado en este navegador</h2><p>Favoritos, búsquedas y borradores para retomar después. Los expedientes enviados y el seguimiento se consultan arriba.</p><div class="space-stats"><div class="space-stat"><strong>${saved.favorites.length}</strong><span>Favoritos</span></div><div class="space-stat"><strong>${saved.searches.length}</strong><span>Búsquedas guardadas</span></div><div class="space-stat"><strong>${saved.submissions.length}</strong><span>Registros de ejemplo</span></div></div><div class="space-tabs" role="tablist" aria-label="Actividad">${[
       ["favorites", "Favoritos"],
       ["searches", "Búsquedas"],
       ["submissions", "Borrador e historial local"],
@@ -1051,6 +1058,7 @@ function render() {
   syncParcel();
   needsBoard.mount($('[data-project-needs-host]'),{id:path.split("/")[2]||"",query:location.hash.split("?")[1]||""});
   mountRescueGalleries($('#contenido'),[...properties,...needProjects],item=>modal(rescueGalleryZoomHTML(item)));
+  const demoFileList=$('.rj-demo-supports #file-list');if(demoFileList)demoFileList.innerHTML=fileList();
   const landSituationForm=$('[data-form="submission"]');if(landSituationForm){syncLandSituation(landSituationForm);syncBrokerExclusivity(landSituationForm);mountSubmissionUX(landSituationForm);}
   reviewDesk.mount($('[data-review-desk]'));
   if(path.startsWith('/equipo/')&&reviewDesk.record)$('[data-review-desk]').insertAdjacentHTML('beforeend',teamExperienceHTML(reviewDesk.record));
@@ -1091,7 +1099,9 @@ function enterRoute() {
   if(restoring){Object.assign(state,restore.filters,{placeResults:[],mapPlace:null,drawPoints:[],drawing:false,mapFitRevision:state.mapFitRevision+1});state.searchCamera=restore.camera;state.searchCameraRevision=state.mapFitRevision;pendingResultsContext=restore;}
   if (path.startsWith("/publicar/")) {
     const kind = path.endsWith("proyecto") ? "proyecto" : "terreno";
-    const draft = saved.draft?.kind === kind ? saved.draft : null;
+    const params=new URLSearchParams(location.hash.split('?')[1]||''),requestedId=params.get('borrador');
+    const draft=params.get('nuevo')==='1'?null:chooseDraft(saved,kind,requestedId);
+    if(requestedId&&!draft){const completed=saved.submissions.find(s=>s.localRegistration&&s.clientId===requestedId&&s.kind===kind);if(completed){location.replace('#/confirmacion/'+completed.id);return;}state.formKind=kind;$('#contenido').innerHTML=notFound();return;}
     state.formKind = kind;
     state.formStep = draft?.step || 1;
     state.form = {
@@ -1106,6 +1116,7 @@ function enterRoute() {
     state.form = normalizeLocationDraft(state.form);
     if (!resolveLocation(state.form)) state.formStep = 1;
     if (!state.form.client_id) state.form.client_id = crypto.randomUUID();
+
     if(kind==='terreno'&&isBrokerRelationship(state.form.relationship)&&!['yes','no'].includes(state.form.broker_exclusivity))state.formStep=1;
     if (kind === "terreno" && state.form.project_land_confirmed!==true) state.formStep = 1;
     state.files = draft?.files || [];
@@ -1430,6 +1441,10 @@ async function action(actionName, el, event) {
     render();
     focusFormStep();
   }
+  if(actionName==='save-and-exit'){if(saveDraft(true)){state.spaceTab='submissions';location.hash='#/mi-espacio';toast('Avance guardado en este navegador. Puedes retomarlo desde Mis terrenos y proyectos.');}return;}
+  if(actionName==='edit-local-registration'){const record=saved.submissions.find(s=>s.localRegistration&&s.id===el.dataset.id);if(!record)return;const previous=structuredClone(saved);const draft={kind:record.kind,form:structuredClone(record.form),step:1,files:structuredClone(record.files||[]),updatedAt:new Date().toISOString()};putDraft(saved,draft);if(!persist()){saved=previous;return;}location.hash=draftHref(draft);return;}
+  if(actionName==='demo-document'&&emailEntry.isPreview()){if(!state.files.some(f=>f.origin==='demo'))state.files.push({id:crypto.randomUUID(),name:'Ficha técnica de ejemplo.pdf',origin:'demo',analysis:{status:'demo',message:'Referencia ficticia. No se cargó ningún archivo.'}});saveDraft(true);render();return;}
+  if(actionName==='demo-perimeter'&&emailEntry.isPreview()){captureForm();Object.assign(state.form,{parcel_geometry:demoTerrainGeometry('TER-DEMO-001'),parcel_source:'Perímetro ficticio de demostración · no predial',parcel_confirmed:false,demo_parcel_confirmed:false});saveDraft(true);render();return;}
   if (actionName === "save-draft") saveDraft();
   if (actionName === "file-mode") {
     captureForm();
@@ -1661,6 +1676,7 @@ document.addEventListener("change", async (event) => {
     if(["relationship","broker_exclusivity"].includes(el.name))syncBrokerExclusivity(el.form);
     if(el.name.startsWith("ls_"))syncLandSituation(el.form);
     captureForm();
+    if(el.name==='demo_parcel_confirmed'&&emailEntry.isPreview())state.form.parcel_confirmed=el.checked;
     if(el.name.startsWith("ls_")&&$('[data-submission-summary]'))$('[data-submission-summary]').innerHTML=formSummary();
     if (
       [
@@ -1913,12 +1929,12 @@ document.addEventListener("submit", async (event) => {
       render();
       focusFormStep();
     } else {
-      if(emailEntry.isPreview()){saveDraft(true);modal('<h2 id="dialog-title">Borrador de demostración guardado</h2><p>Puedes retomarlo desde Mi espacio en este navegador. No se envió un expediente ni se publicó la propiedad.</p><a class="button primary" href="#/mi-espacio">Ir a Mi espacio →</a>');return;}
+      if(emailEntry.isPreview()){if(!saveDraft(true))return;const previous=structuredClone(saved);try{const record=completeLocalRegistration(saved,saved.draft);if(!persist()){saved=previous;return;}state.spaceTab='submissions';location.hash='#/confirmacion/'+record.id;}catch(error){saved=previous;showFormIssue(error.message);}return;}
       if(state.files.some(f=>!f.id)){showFormIssue("Vuelve a seleccionar los archivos anteriores para subirlos, o retira sus referencias locales.");return;}
       state.submitting=true;const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent='Guardando expediente privado…';
       try {
         const record=await saveRecord({id:state.form.client_id,kind:state.formKind,form:state.form,parcel:{geometry:state.form.parcel_geometry,source:state.form.parcel_source,confirmed:!!state.form.parcel_confirmed},documentIds:state.files.map(f=>f.id)});
-        state.remoteRecord=record;saved.draft=null;persist();state.remoteLoaded=false;
+        state.remoteRecord=record;saved.drafts=localDrafts(saved).filter(d=>d.form.client_id!==record.id);saved.draft=saved.drafts.at(-1)||null;persist();state.remoteLoaded=false;
         location.hash='#/mi-expediente/'+record.id;toast('Expediente guardado privado y pendiente de revisión.');
       }catch(e){showFormIssue(e.message);saveDraft(true);submit.disabled=false;submit.textContent='Enviar a revisión privada';}
       finally{state.submitting=false;}
