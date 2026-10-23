@@ -1,3 +1,4 @@
+import {catalogRouteState,savedSearchHash,searchLocationLabel} from './catalog-navigation.js';
 import {terrainSearchLabel,terrainSearchQuery,terrainSearchFromQuery} from './terrain-search.js';
 import {landSearchHTML,mountLandSearch,matchesLandSearch} from './land-search.js';
 import {landUses,sectorForSlug} from './development-sectors.js';
@@ -41,7 +42,7 @@ import {featuredOpportunities} from './featured-opportunities.js';
 import {areaBands,priceLimits,matchesOpportunityFilters} from './opportunity-filters.js';
 import {refreshedHomeSections} from './home-sections.js';
 import {referenceHomeHero} from './home-hero.js';
-import {footerDirectoryHTML,readDirectoryScope,directoryTitle,matchesDirectory} from './footer-directory.js';
+import {footerDirectoryHTML,directoryTitle,matchesDirectory} from './footer-directory.js';
 import {mountHeaderNavigation} from './header-nav.js';
 import {homeOptionsIndex,homeAlternative,heroAlternative} from './home-options.js';
 import {ReviewDesk, ownerWorkflowHTML, statusBadge, summaryHTML} from './review-ui.js';
@@ -303,7 +304,13 @@ async function loadSession(){
   document.querySelectorAll('[data-team-link]').forEach(a=>a.hidden=!state.session.teamRole);
   if(location.hash==='#/mi-espacio'||location.hash.startsWith('#/publicar/'))render();
 }
-let catalogGeneration=0,pendingResultsContext=null,pendingExplicitReturn=null,initialNavigation=true;
+let catalogGeneration=0,pendingResultsContext=null,pendingExplicitReturn=null,pendingCatalogNavigation=null,initialNavigation=true;
+function navigateCatalog(hash){
+  const params=new URLSearchParams(hash.split('?')[1]||'');
+  if(hash.startsWith('#/buscar')&&!params.has('tipo'))Object.assign(state,{type:'terreno',landContent:params.has('contenido')?terrainSearchFromQuery(params.get('contenido')):state.landContent||'land-only',reactivationFilter:''});
+  pendingCatalogNavigation={hash,drawing:state.drawing};
+  if(location.hash===hash)enterRoute();else location.hash=hash;
+}
 async function refreshPublished(append=false){
   const generation=++catalogGeneration,restore=pendingResultsContext;
   try{
@@ -791,7 +798,7 @@ function formSummary() {
   else {
     if(isBrokerRelationship(f.relationship))rows.push(['Exclusividad del intermediario / broker',brokerExclusivityLabel(f.broker_exclusivity)]);
     rows.push(["Destino declarado", "Terreno para evaluar el desarrollo de un proyecto"]);
-    rows.push(["Qué incluye la oferta", terrainSearchLabel(f.land_content)]);
+    rows.push(["Qué incluye la oferta", f.land_content?terrainSearchLabel(f.land_content):"Por definir"]);
     rows.push([
       "Modalidad",
       {
@@ -948,7 +955,7 @@ function spacePage() {
       ? saved.searches
           .map(
             (s, i) =>
-              `<div class="saved-row">${icon("map")}<div><h3>${escape(s.name)}</h3><p>${escape(s.query || directoryTitle(s.directoryScope) || "Sin municipio específico")} · ${escape(s.type==='terreno'?terrainSearchLabel(s.landContent):s.type || "Terrenos y proyectos")} · ${s.zone?.length ? "Con zona dibujada" : s.sectors?.length ? "Con sectores" : "Sin zona"} · Guardado en este navegador</p></div><button class="text-button" data-action="open-search" data-index="${i}">Abrir ${icon("arrow-right")}</button></div>`,
+              `<div class="saved-row">${icon("map")}<div><h3>${escape(s.name)}</h3><p>${escape(searchLocationLabel(s))} · ${escape(s.type==='terreno'?terrainSearchLabel(s.landContent):s.type || "Terrenos y proyectos")} · ${s.zone?.length ? "Con zona dibujada" : s.sectors?.length ? "Con sectores" : "Sin zona"} · Guardado en este navegador</p></div><button class="text-button" data-action="open-search" data-index="${i}">Abrir ${icon("arrow-right")}</button></div>`,
           )
           .join("")
       : `<div class="empty-state">${icon("map")}<h3>Tus criterios, a mano</h3><p>Guarda una búsqueda desde el mapa para retomarla aquí.</p>${btn("Buscar tierra", "#/buscar")}</div>`;
@@ -1053,7 +1060,7 @@ function render() {
   $("#contenido").innerHTML = html;
   hydrateIcons();
   emailEntry.mount($('#contenido'),render);
-  mountLandSearch($('#contenido'),({searchDepartment,searchMunicipality,intendedUse,landContent,draw})=>{Object.assign(state,{searchDepartment,searchMunicipality,intendedUse,landContent,type:'terreno',reactivationFilter:'',query:'',directoryScope:null,zone:[],sectors:[],drawPoints:[],placeBounds:null,mapPlace:null,view:draw?'both':'list',drawing:draw,mapFitRevision:state.mapFitRevision+1});const params=new URLSearchParams();params.set('contenido',terrainSearchQuery(landContent)||'todos');if(searchMunicipality)params.set('municipio',searchMunicipality);if(intendedUse)params.set('uso',intendedUse);if(draw)params.set('zona','1');const hash='#/buscar'+(params.size?'?'+params:'');if(location.pathname!=='/'){location.href='/'+hash;return;}if(location.hash===hash)render();else location.hash=hash;});
+  mountLandSearch($('#contenido'),({searchDepartment,searchMunicipality,intendedUse,landContent,draw})=>{Object.assign(state,{searchDepartment,searchMunicipality,intendedUse,landContent,type:'terreno',reactivationFilter:'',query:'',directoryScope:null,zone:[],sectors:[],drawPoints:[],placeBounds:null,mapPlace:null,view:draw?'both':'list',drawing:draw,mapFitRevision:state.mapFitRevision+1});const params=new URLSearchParams();params.set('contenido',terrainSearchQuery(landContent)||'todos');if(searchMunicipality)params.set('municipio',searchMunicipality);if(intendedUse)params.set('uso',intendedUse);if(draw)params.set('zona','1');const hash='#/buscar'+(params.size?'?'+params:'');if(location.pathname!=='/'){location.href='/'+hash;return;}navigateCatalog(hash);});
   mountPortalPage($('#contenido'));mountLegalAccess($('#contenido'));
   for(const form of $$('#contenido form'))if(!form.closest('.portal-page')&&form.matches('[data-form="submission"],[data-sales-request],[data-service-request],[data-profile-form]'))form.insertAdjacentHTML('beforeend',legalButtons());
   mountTerrainDetail($('[data-terrain-detail]'));
@@ -1093,17 +1100,12 @@ function enterRoute() {
   const path = currentRouteHash().slice(1).split("?")[0];
   if(path==='/alternativas-home/terrenos'){location.replace('#/');return;}
   if(path.startsWith('/oportunidad/'))state.detailMapStyle=terrainDefaultMapStyle(properties.find(p=>p.id===path.split('/')[2]));
-  const restore=isCatalogHash(location.hash)?(pendingExplicitReturn||normalizeSearchContext(history.state?.iiCatalogSearch)||(initialNavigation?readSearchContext(location.hash):null)):null;
+  const navigation=pendingCatalogNavigation?.hash===location.hash?pendingCatalogNavigation:null;
+  pendingCatalogNavigation=null;
+  const restore=isCatalogHash(location.hash)&&!navigation?(pendingExplicitReturn||normalizeSearchContext(history.state?.iiCatalogSearch)||(initialNavigation?readSearchContext(location.hash):null)):null;
   pendingExplicitReturn=null;initialNavigation=false;
   const restoring=restore?.hash===location.hash;
-  if(path==='/buscar'&&!restoring){const params=new URLSearchParams(location.hash.split('?')[1]||'');if(params.get('tipo')==='proyecto')Object.assign(state,{type:'proyecto',landContent:'',reactivationFilter:state.reactivationFilter||'exclude'});else if(params.get('tipo')==='todos')Object.assign(state,{type:'',landContent:'',reactivationFilter:''});else Object.assign(state,{type:'terreno',landContent:params.get('contenido')==='todos'?'':terrainSearchFromQuery(params.get('contenido'))||'land-only',reactivationFilter:''});}
-  if(path==='/proyectos-siniestrados'&&!restoring)Object.assign(state,{type:'proyecto',landContent:'',reactivationFilter:'only'});
-  if(path==='/oportunidades'&&!restoring){
-    state.directoryScope=readDirectoryScope(location.hash);
-    const opportunityType=new URLSearchParams(location.hash.split('?')[1]||'').get('tipo');
-    if(['terreno','proyecto','todos'].includes(opportunityType)&&!state.directoryScope)Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:'',type:opportunityType==='todos'?'':opportunityType,landContent:opportunityType==='terreno'?terrainSearchFromQuery(new URLSearchParams(location.hash.split('?')[1]||'').get('contenido')):'',reactivationFilter:opportunityType==='proyecto'?(new URLSearchParams(location.hash.split('?')[1]||'').get('estado')==='reactivacion'?'only':'exclude'):'',mode:'',maxPrice:'',min:'',max:'',zone:[],sectors:[],drawPoints:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'list',mapFitRevision:state.mapFitRevision+1});
-    if(state.directoryScope)Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:'',type:'terreno',landContent:terrainSearchFromQuery(new URLSearchParams(location.hash.split('?')[1]||'').get('contenido')),reactivationFilter:'',mode:'',maxPrice:'',min:'',max:'',zone:[],sectors:[],drawPoints:[],mapPlace:null,placeBounds:null,mapSearchText:'',pendingLocationQuery:'',view:'list',mapFitRevision:state.mapFitRevision+1});
-  }
+  if(isCatalogHash(location.hash)&&!restoring&&!navigation)Object.assign(state,catalogRouteState(location.hash),{mapFitRevision:state.mapFitRevision+1});
   if(restoring){Object.assign(state,restore.filters,{placeResults:[],mapPlace:null,drawPoints:[],drawing:false,mapFitRevision:state.mapFitRevision+1});state.searchCamera=restore.camera;state.searchCameraRevision=state.mapFitRevision;pendingResultsContext=restore;}
   if (path.startsWith("/publicar/")) {
     const kind = path.endsWith("proyecto") ? "proyecto" : "terreno";
@@ -1126,11 +1128,10 @@ function enterRoute() {
     if (!state.form.client_id) state.form.client_id = crypto.randomUUID();
 
     if(kind==='terreno'&&isBrokerRelationship(state.form.relationship)&&!['yes','no'].includes(state.form.broker_exclusivity))state.formStep=1;
-    if (kind === "terreno" && state.form.project_land_confirmed!==true) state.formStep = 1;
+    if(kind==='terreno'&&(!['land-only','land-project'].includes(state.form.land_content)||state.form.project_land_confirmed!==true))state.formStep=1;
     state.files = draft?.files || [];
   }
-  state.drawing = false;
-  if(path==='/buscar'&&!restoring){const params=new URLSearchParams(location.hash.split('?')[1]||'');if(params.has('municipio')||params.has('uso')||params.has('zona')){const m=getMunicipality(params.get('municipio'));Object.assign(state,{type:'terreno',searchMunicipality:m?.code||'',searchDepartment:m?.departmentCode||'',intendedUse:landUses.some(([v])=>v===params.get('uso'))?params.get('uso'):'',view:params.get('zona')==='1'?'both':state.view,drawing:params.get('zona')==='1'});}}
+  state.drawing=restoring?false:navigation?navigation.drawing:isCatalogHash(location.hash)?state.drawing:false;
   state.layers = false;
   headerNavigation.close();
   render();
@@ -1249,7 +1250,7 @@ function saveSearchDialog() {
   }
   if (!captureSearchFilters()) return;
   modal(
-    `<div class="eyebrow">Retoma tu búsqueda</div><h2 id="dialog-title">Guarda lo que estás buscando.</h2><p>Podrás volver a tus criterios desde Mi espacio. Se guardan solo en este navegador.</p><form class="dialog-form" data-form="save-search"><label class="form-field">Nombre de la búsqueda<input name="name" required maxlength="90" placeholder="Ej. Tierra para vivienda" value="${escape(state.query ? "Búsqueda en " + state.query : "")}" autofocus></label><div class="tutorial-summary">Municipio: ${escape(state.query || directoryTitle(state.directoryScope) || "Sin especificar")}<br>Tipo: ${escape(state.type==='terreno'?terrainSearchLabel(state.landContent):state.type || "Terrenos y proyectos")}<br>Modalidad: ${escape(state.mode || "Abierta a alternativas")}<br>Zona: ${state.zone.length ? "Polígono geográfico" : state.sectors.length ? "Sectores seleccionados" : state.mapPlace ? "Ubicación elegida en Mapbox; al abrir, vuelve a seleccionarla" : "Sin delimitar"}</div><button class="button primary" type="submit">Guardar búsqueda ${icon("bookmark")}</button></form>`,
+    `<div class="eyebrow">Retoma tu búsqueda</div><h2 id="dialog-title">Guarda lo que estás buscando.</h2><p>Podrás volver a tus criterios desde Mi espacio. Se guardan solo en este navegador.</p><form class="dialog-form" data-form="save-search"><label class="form-field">Nombre de la búsqueda<input name="name" required maxlength="90" placeholder="Ej. Tierra para vivienda" value="${escape(state.query ? "Búsqueda en " + state.query : "")}" autofocus></label><div class="tutorial-summary">Municipio: ${escape(searchLocationLabel(state))}<br>Tipo: ${escape(state.type==='terreno'?terrainSearchLabel(state.landContent):state.type || "Terrenos y proyectos")}<br>Modalidad: ${escape(state.mode || "Abierta a alternativas")}<br>Zona: ${state.zone.length ? "Polígono geográfico" : state.sectors.length ? "Sectores seleccionados" : state.mapPlace ? "Ubicación elegida en Mapbox; al abrir, vuelve a seleccionarla" : "Sin delimitar"}</div><button class="button primary" type="submit">Guardar búsqueda ${icon("bookmark")}</button></form>`,
   );
 }
 function redrawMap() {
@@ -1294,7 +1295,7 @@ function resetFilters() {
     mapFitRevision: state.mapFitRevision + 1,
   });
   if (location.hash === "#/" || !location.hash || location.hash.startsWith("#/oportunidades?"))
-    location.hash = "#/oportunidades";
+    navigateCatalog("#/oportunidades");
   else render();
 }
 async function action(actionName, el, event) {
@@ -1309,7 +1310,7 @@ async function action(actionName, el, event) {
   }
 
   if (actionName === "menu") headerNavigation.toggleMobile();
-  if(actionName==='hero-list'||actionName==='hero-map'){state.view=actionName==='hero-list'?'list':'both';location.hash='#/buscar';}
+  if(actionName==='hero-list'||actionName==='hero-map'){state.view=actionName==='hero-list'?'list':'both';navigateCatalog('#/buscar');}
   if(actionName==='hero-filters'){
     modal(`<div class="eyebrow">Define tu búsqueda</div><h2 id="dialog-title">Un terreno para tu proyecto</h2><form data-form="hero-filters" class="dialog-form"><div class="form-grid"><label class="form-field full">Tipo de lote<select name="land_type"><option value="">Todos los lotes</option>${['Urbano','Rural','Expansión urbana'].map(value=>`<option ${state.directoryScope?.landType===value?'selected':''}>${value}</option>`).join('')}</select></label><label class="form-field">Área mínima (m²)<input type="number" min="0" name="minArea" value="${escape(state.min)}" placeholder="Desde"></label><label class="form-field">Área máxima (m²)<input type="number" min="0" name="maxArea" value="${escape(state.max)}" placeholder="Hasta"></label><label class="form-field full">Modalidad<select name="mode"><option value="">Venta o aporte</option>${['Venta','Aporte'].map(value=>`<option ${state.mode===value?'selected':''}>${value}</option>`).join('')}</select></label></div><p class="privacy-note">La clasificación del lote corresponde a información declarada y requiere verificación.</p><button class="button primary" type="submit">Ver resultados ${icon('arrow-right')}</button></form>`);
     if(el.dataset.focus)document.querySelector(`#dialog [name="${el.dataset.focus}"]`)?.focus();
@@ -1377,7 +1378,7 @@ async function action(actionName, el, event) {
     state.placeBounds = locationBounds(feature);
     state.placeResults = [];
     state.mapFitRevision++;
-    if (!location.hash || location.hash === "#/" || location.hash.startsWith("#/alternativas-home/")) location.hash = "#/buscar";
+    if (!location.hash || location.hash === "#/" || location.hash.startsWith("#/alternativas-home/")) navigateCatalog("#/buscar");
     else render();
   }
   if (actionName === "close-places") {
@@ -1426,7 +1427,7 @@ async function action(actionName, el, event) {
     state.mapSearchText = "";
     state.view = "both";
     state.mapFitRevision++;
-    if (!location.hash || location.hash === "#/" || location.hash.startsWith("#/alternativas-home/")) location.hash = "#/buscar";
+    if (!location.hash || location.hash === "#/" || location.hash.startsWith("#/alternativas-home/")) navigateCatalog("#/buscar");
     else redrawResults();
     toast("Zona geográfica delimitada. Puedes guardar la búsqueda.");
   }
@@ -1596,7 +1597,7 @@ async function action(actionName, el, event) {
       toast(
         "Se conservaron tus filtros. Vuelve a dibujar la zona del mapa anterior.",
       );
-    location.hash = "#/buscar?tipo="+(s.type||'todos')+"&contenido="+(terrainSearchQuery(state.landContent)||'todos');
+    navigateCatalog(savedSearchHash(state));
   }
   if (actionName === "view-submission") {
     const s = saved.submissions.find((s) => s.id === el.dataset.id);
@@ -1668,7 +1669,7 @@ document.addEventListener("change", async (event) => {
     state.mapPlace = null;
     state.placeBounds = null;
     state.mapFitRevision++;
-    if (!location.hash || location.hash === "#/" || location.hash.startsWith("#/alternativas-home/")) location.hash = "#/buscar";
+    if (!location.hash || location.hash === "#/" || location.hash.startsWith("#/alternativas-home/")) navigateCatalog("#/buscar");
     else {
       redrawResults();
       state.layers = true;
@@ -1838,7 +1839,7 @@ document.addEventListener("submit", async (event) => {
     if([min,max].some(v=>v&&(!Number.isFinite(Number(v))||Number(v)<0))||(min&&max&&Number(min)>Number(max))){toast('Revisa el rango de áreas. La máxima debe ser mayor o igual a la mínima.');return;}
     const landType=['Urbano','Rural','Expansión urbana'].includes(data.get('land_type'))?data.get('land_type'):'';
     Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:'',type:'terreno',landContent:'land-only',reactivationFilter:'',mode:String(data.get('mode')||''),maxPrice:'',min,max,directoryScope:landType?{city:'',department:'',landType}:null,zone:[],sectors:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'both',mapFitRevision:state.mapFitRevision+1});
-    closeModal();location.hash='#/buscar';return;
+    closeModal();navigateCatalog('#/buscar');return;
   }
   if(type==='featured-filters'){
     const opportunityType=['terreno','proyecto'].includes(data.get('type'))?data.get('type'):'';
@@ -1848,12 +1849,12 @@ document.addEventListener("submit", async (event) => {
     const max=areaBand?areaBand[3]:data.get('areaBand')==='custom'?state.max:'';
     const maxPrice=priceLimits.some(([v])=>v===data.get('maxPrice'))?String(data.get('maxPrice')):'';
     Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:String(data.get('query')||'').trim().slice(0,160),type:opportunityType|| (landType?'terreno':''),landContent:opportunityType==='terreno'&&['land-only','land-project'].includes(data.get('landContent'))?String(data.get('landContent')):'',reactivationFilter:opportunityType==='proyecto'?'exclude':'',mode:'',min,max,maxPrice,directoryScope:landType?{city:'',department:'',landType}:null,zone:[],sectors:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'list',mapFitRevision:state.mapFitRevision+1});
-    location.hash=state.type==='terreno'?'#/buscar?contenido='+(terrainSearchQuery(state.landContent)||'todos'):'#/oportunidades';return;
+    navigateCatalog(state.type==='terreno'?'#/buscar?contenido='+(terrainSearchQuery(state.landContent)||'todos'):'#/oportunidades');return;
   }
   if (type === "filters") {
     if (!captureSearchFilters()) return;
     if (location.hash === "#/" || !location.hash)
-      location.hash = "#/oportunidades";
+      navigateCatalog("#/oportunidades");
     else {render();$('[data-results-heading]')?.focus({preventScroll:true});if(state.view!=='list'&&state.query)searchPlace(state.query);}
   }
   if (type === "map-search")
@@ -1892,6 +1893,7 @@ document.addEventListener("submit", async (event) => {
     const selectedLocation=resolveLocation(state.form);
     if (!selectedLocation) {state.formStep=1;render();showFormIssue("Selecciona un departamento y un municipio válido para continuar.");return;}
     Object.assign(state.form,selectedLocation);
+    if(state.formKind==='terreno'&&!['land-only','land-project'].includes(state.form.land_content)){state.formStep=1;render();showFormIssue('Indica si ofreces solo terreno o terreno con proyecto antes de continuar.');return;}
     if(state.formKind==='terreno'&&state.form.project_land_confirmed!==true){state.formStep=1;render();showFormIssue(landScopeExclusion+' Confirma el destino del terreno antes de continuar.');return;}
     if(state.formKind==='terreno'&&state.formStep===4&&(!state.form.parcel_geometry||!state.form.parcel_confirmed)) {
       showFormIssue("Añade y confirma el perímetro del lote antes de enviar a revisión.");return;
