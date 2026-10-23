@@ -1,3 +1,4 @@
+import {terrainSearchKind} from './terrain-search.js';
 import {terrainContentLabel} from './terrain-project.js';
 export const areaBands=[['small','Hasta 5.000 m²','','5000'],['medium','5.000 – 10.000 m²','5000','10000'],['large','Más de 10.000 m²','10001','']];
 export const priceLimits=[['1000000000','Hasta $1.000 millones'],['2500000000','Hasta $2.500 millones'],['5000000000','Hasta $5.000 millones'],['10000000000','Hasta $10.000 millones']];
@@ -11,6 +12,7 @@ export function declaredCOPPrice(record){
 export function matchesOpportunityFilters(record,filters){
  const type=record.kind||record.type;
  if(filters.type&&type!==filters.type)return false;
+ if(filters.landContent&&terrainSearchKind(record)!==filters.landContent)return false;
  if(filters.reactivationFilter==='only'&&!record.reactivation)return false;
  if(filters.reactivationFilter==='exclude'&&record.reactivation)return false;
  if(filters.query&&!normalize([record.city,record.region,record.title,record.label,terrainContentLabel(record),record.developmentProject?.use].join(' ')).includes(normalize(filters.query)))return false;

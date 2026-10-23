@@ -1,3 +1,4 @@
+import {terrainSearchLabel,terrainSearchQuery,terrainSearchFromQuery} from './terrain-search.js';
 import {landSearchHTML,mountLandSearch,matchesLandSearch} from './land-search.js';
 import {landUses,sectorForSlug} from './development-sectors.js';
 import {localDrafts,chooseDraft,putDraft,draftHref,completeLocalRegistration,registrationProgressHTML,demoPerimeterHTML,demoSupportsHTML,localRegistrationsHTML,localConfirmationHTML} from './registration-journey.js';
@@ -221,6 +222,7 @@ const state = {
   query: "",
   directoryScope: null,
   type: "",
+  landContent: "",
   mode: "",
   maxPrice: "",
   min: "",
@@ -326,7 +328,7 @@ function publicationsHTML(){
   if(state.catalogError)return '<p class="jr-publications-access">No pudimos cargar las publicaciones. Puedes explorar los ejemplos o <button type="button" class="text-button" data-action="retry-publications">volver a intentarlo</button>.</p>';
   if(!state.catalogRecords.length&&!state.catalogCursor)return '<section class="ux-catalog-empty"><h2>Publicaciones revisadas</h2><p>Aún no hay resúmenes publicados disponibles. Más abajo puedes explorar fichas de ejemplo para conocer el recorrido.</p><a class="text-link" href="#/publicar/terreno">Presentar mi terreno →</a></section>';
   const directoryRecords=state.catalogRecords.filter(r=>matchesDirectory(r,state.directoryScope)&&matchesLandSearch(r,state)&&matchesOpportunityFilters(r,state));
-  return `<section class="published-catalog"><div class="section-heading"><div><h2>Resúmenes publicados</h2><p>${directoryRecords.length} ${directoryRecords.length===1?'coincidencia':'coincidencias'} entre ${state.catalogRecords.length} ${state.catalogRecords.length===1?'publicación cargada':'publicaciones cargadas'}${state.catalogCursor?'; hay más por cargar':''}. Información autorizada por su titular.</p></div></div><div class="published-grid">${[...directoryRecords.reduce((groups,r)=>{const key=r.assetReference||r.id;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);return groups;},new Map()).values()].map(group=>{const r=group[0];return `<article>${availabilityHTML(r)}${summaryHTML(r)}<a class="button outline" href="#/publicacion/${r.id}">Ver ficha</a>${comparisonButton(r)}${group.length>1?`<details><summary>${group.length} presentaciones vinculadas al mismo inmueble</summary>${group.slice(1).map(x=>`<p><a href="#/publicacion/${x.id}">${escape(x.reference)} · ${escape(x.title)}</a></p>`).join('')}<p>Revisa representación y exclusividad en cada ficha. Las autorizaciones se gestionan por separado.</p></details>`:''}</article>`;}).join('')}</div>${!directoryRecords.length?'<p>Aún no hay coincidencias entre los resúmenes cargados.</p>':''}${state.catalogCursor?'<button class="button outline" data-action="more-publications">Cargar más publicaciones</button>':''}</section>`;
+  return `<section class="published-catalog"><div class="section-heading"><div><h2>Resúmenes publicados</h2><p>${directoryRecords.length} ${directoryRecords.length===1?'coincidencia':'coincidencias'} entre ${state.catalogRecords.length} ${state.catalogRecords.length===1?'publicación cargada':'publicaciones cargadas'}${state.catalogCursor?'; hay más por cargar':''}. Información autorizada por su titular.</p></div></div><div class="published-grid">${[...directoryRecords.reduce((groups,r)=>{const key=r.assetReference||r.id;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);return groups;},new Map()).values()].map(group=>{const r=group[0];return `<article>${availabilityHTML(r)}${terrainCardTag(r)}${summaryHTML(r)}<a class="button outline" href="#/publicacion/${r.id}">Ver ficha</a>${comparisonButton(r)}${group.length>1?`<details><summary>${group.length} presentaciones vinculadas al mismo inmueble</summary>${group.slice(1).map(x=>`<p><a href="#/publicacion/${x.id}">${escape(x.reference)} · ${escape(x.title)}</a></p>`).join('')}<p>Revisa representación y exclusividad en cada ficha. Las autorizaciones se gestionan por separado.</p></details>`:''}</article>`;}).join('')}</div>${!directoryRecords.length?'<p>Aún no hay coincidencias entre los resúmenes cargados.</p>':''}${state.catalogCursor?'<button class="button outline" data-action="more-publications">Cargar más publicaciones</button>':''}</section>`;
 }
 function publicationPage(){
   const r=state.publicRecord;
@@ -586,8 +588,8 @@ function home(alternativeHero = false) {
 function catalog(isSearch = false, reactivation = false) {
   reactivation=reactivation||state.reactivationFilter==='only';
   const result=filtered();
-  const title=reactivation?'Proyectos para reactivación':state.directoryScope?directoryTitle(state.directoryScope):isSearch?(state.type==='proyecto'?'Proyectos inmobiliarios':!state.type&&state.searchTypeExplicit?'Tierras y proyectos':'Terrenos para tu próximo proyecto'):state.type==='proyecto'?'Proyectos inmobiliarios':state.type==='terreno'?'Terrenos para tu próximo proyecto':'Tierras y proyectos';
-  const description=reactivation?'Explora proyectos en pausa que buscan una nueva ruta de evaluación.':isSearch?'Encuentra, compara y consulta terrenos para desarrollar en Colombia.':'Explora terrenos y proyectos según tu ubicación, área y modalidad.';
+  const title=reactivation?'Proyectos para reactivación':state.type==='terreno'&&state.landContent?terrainSearchLabel(state.landContent):state.directoryScope?directoryTitle(state.directoryScope):state.type==='proyecto'?'Proyectos inmobiliarios':state.type==='terreno'?'Todos los terrenos':'Tierras y proyectos';
+  const description=reactivation?'Explora proyectos en pausa que buscan una nueva ruta de evaluación.':state.type==='terreno'&&state.landContent==='land-only'?'Predios sin proyecto constructivo asociado. Compara su ubicación, perímetro y condiciones de venta o aporte.':state.type==='terreno'&&state.landContent==='land-project'?'Predios que incluyen una propuesta de desarrollo. Revisa el terreno, el programa constructivo y el alcance de la negociación.':state.type==='proyecto'?'Iniciativas que buscan aliados para avanzar, con o sin terreno.':'Compara terrenos y proyectos. Elige una categoría para explorar cada formato por separado.';
   return `<div class="du-catalog ${reactivation?'rf-catalog':''} ${state.view!=='list'?'du-catalog-map':''}">${compactHeading(title,description,isSearch?'Busco tierra':'Oportunidades',!isSearch?btn('Publicar oportunidad','#/publicar/terreno','outline'):'')}<section class="page-content"><div class="container">${catalogGroupsHTML(state)}${state.type!=='proyecto'?landSearchHTML(state):''}${filterBar(true)}<div class="jr-search-summary"><span>Publicaciones y ejemplos se identifican por separado. El mapa muestra ubicaciones ilustrativas.</span><button type="button" data-action="reset-filters">Limpiar filtros</button></div>${publicationsHTML()}<div class="du-results-bar"><p tabindex="-1" data-results-heading role="status"><strong>${result.length}</strong> ${result.length===1?'oportunidad de ejemplo':'oportunidades de ejemplo'}</p><div>${true?`<button class="du-save-search" data-action="save-search">${icon('bookmark')}Guardar búsqueda</button><div class="view-toggle"><button data-action="view" data-view="list" aria-pressed="${state.view==='list'}" class="${state.view==='list'?'active':''}">${icon('list')}Lista</button><button data-action="view" data-view="both" aria-pressed="${state.view!=='list'}" class="${state.view!=='list'?'active':''}">${icon('map')}Mapa</button></div>`:''}</div></div><div class="${state.view!=='list'?'search-layout':'list-only'}"><div class="property-grid">${result.length?result.map(propertyCard).join(''):empty()}</div>${state.view!=='list'?`<div class="search-map">${mapHTML('search')}</div>`:''}</div><p class="du-context-note">${icon('info')}Fichas y ubicaciones ilustrativas. Los terrenos se orientan a desarrollar proyectos; excluyen lotes individuales para una sola vivienda.</p></div></section></div>`;
 }
 
@@ -720,7 +722,7 @@ function formPage(kind) {
     f = state.form, totalSteps = project ? 3 : 4;
   let body = "";
   if (state.formStep === 1) {
-    body = `<h2>${project ? "Cuéntanos sobre tu proyecto" : "Comencemos por tu terreno"}</h2><p class="form-intro">${project ? "Puede tener terreno, estar negociándolo o seguir buscando." : "La información comienza privada. No necesitas tener todos los documentos para empezar."}</p>${project?'':'<p class="du-scope-line">Para desarrollos inmobiliarios. '+landScopeExclusion+'</p>'}<div class="form-grid">${inputField(project ? "Nombre del proyecto" : "Nombre para identificar el terreno", "title", { required: true, full: true, placeholder: project ? "Ej. Proyecto residencial" : "Ej. Terreno en Zona Norte" })}${locationFields()}${inputField(project ? "Tipo de desarrollo" : "Tipo de terreno", "land_type", { options: project ? ["Residencial", "Comercial", "Mixto", "Industrial", "Turístico", "Por definir"] : ["Urbano", "Rural", "Expansión urbana", "Por confirmar"], required: true })}${project ? inputField("Etapa actual", "stage", { options: ["Idea / evaluación", "Planeación", "Preventa", "Construcción", "Proyecto detenido"], required: true }) : inputField("Área declarada (m²)", "area", { type: "number", min: 1, required: true, placeholder: "Ej. 5200" })}${inputField("¿Cuál es tu relación con este registro?", "relationship", { options: ["Propietario", "Representante autorizado", "Promotor / desarrollador", ["Intermediario", "Intermediario / broker"], "Otra relación"], required: true, full: true })}${project?'':inputField('Uso que propones evaluar','intended_use',{options:landUses,full:true,hint:'Indica una intención de desarrollo. No equivale a una certificación de uso permitido o aptitud.'})}${project?'':brokerExclusivityFields(f)}${project?'':inputField('¿Qué quieres hacer con el terreno?', 'negotiation', {options:[['sale','Vender el terreno'],['contribution','Aportarlo a un proyecto'],['open','Evaluar venta o aporte']],required:true,full:true})}${
+    body = `<h2>${project ? "Cuéntanos sobre tu proyecto" : "Comencemos por tu terreno"}</h2><p class="form-intro">${project ? "Puede tener terreno, estar negociándolo o seguir buscando." : "La información comienza privada. No necesitas tener todos los documentos para empezar."}</p>${project?'':'<p class="du-scope-line">Para desarrollos inmobiliarios. '+landScopeExclusion+'</p>'}<div class="form-grid">${inputField(project ? "Nombre del proyecto" : "Nombre para identificar el terreno", "title", { required: true, full: true, placeholder: project ? "Ej. Proyecto residencial" : "Ej. Terreno en Zona Norte" })}${locationFields()}${inputField(project ? "Tipo de desarrollo" : "Tipo de terreno", "land_type", { options: project ? ["Residencial", "Comercial", "Mixto", "Industrial", "Turístico", "Por definir"] : ["Urbano", "Rural", "Expansión urbana", "Por confirmar"], required: true })}${project ? inputField("Etapa actual", "stage", { options: ["Idea / evaluación", "Planeación", "Preventa", "Construcción", "Proyecto detenido"], required: true }) : inputField("Área declarada (m²)", "area", { type: "number", min: 1, required: true, placeholder: "Ej. 5200" })}${inputField("¿Cuál es tu relación con este registro?", "relationship", { options: ["Propietario", "Representante autorizado", "Promotor / desarrollador", ["Intermediario", "Intermediario / broker"], "Otra relación"], required: true, full: true })}${project?'':inputField('¿Qué incluye la oferta?', 'land_content', {options:[['land-only','Solo terreno'],['land-project','Terreno con proyecto']],required:true,full:true,hint:'Elige con proyecto si existe una propuesta de desarrollo asociada. Sus diseños, etapa y condiciones se revisarán con los soportes; no implica licencia ni viabilidad aprobada.'})}${project?'':inputField('Uso que propones evaluar','intended_use',{options:landUses,full:true,hint:'Indica una intención de desarrollo. No equivale a una certificación de uso permitido o aptitud.'})}${project?'':brokerExclusivityFields(f)}${project?'':inputField('¿Qué quieres hacer con el terreno?', 'negotiation', {options:[['sale','Vender el terreno'],['contribution','Aportarlo a un proyecto'],['open','Evaluar venta o aporte']],required:true,full:true})}${
       project
         ? inputField("Situación del terreno", "land_status", {
             options: [
@@ -789,6 +791,7 @@ function formSummary() {
   else {
     if(isBrokerRelationship(f.relationship))rows.push(['Exclusividad del intermediario / broker',brokerExclusivityLabel(f.broker_exclusivity)]);
     rows.push(["Destino declarado", "Terreno para evaluar el desarrollo de un proyecto"]);
+    rows.push(["Qué incluye la oferta", terrainSearchLabel(f.land_content)]);
     rows.push([
       "Modalidad",
       {
@@ -945,7 +948,7 @@ function spacePage() {
       ? saved.searches
           .map(
             (s, i) =>
-              `<div class="saved-row">${icon("map")}<div><h3>${escape(s.name)}</h3><p>${escape(s.query || directoryTitle(s.directoryScope) || "Sin municipio específico")} · ${escape(s.type || "Terrenos y proyectos")} · ${s.zone?.length ? "Con zona dibujada" : s.sectors?.length ? "Con sectores" : "Sin zona"} · Guardado en este navegador</p></div><button class="text-button" data-action="open-search" data-index="${i}">Abrir ${icon("arrow-right")}</button></div>`,
+              `<div class="saved-row">${icon("map")}<div><h3>${escape(s.name)}</h3><p>${escape(s.query || directoryTitle(s.directoryScope) || "Sin municipio específico")} · ${escape(s.type==='terreno'?terrainSearchLabel(s.landContent):s.type || "Terrenos y proyectos")} · ${s.zone?.length ? "Con zona dibujada" : s.sectors?.length ? "Con sectores" : "Sin zona"} · Guardado en este navegador</p></div><button class="text-button" data-action="open-search" data-index="${i}">Abrir ${icon("arrow-right")}</button></div>`,
           )
           .join("")
       : `<div class="empty-state">${icon("map")}<h3>Tus criterios, a mano</h3><p>Guarda una búsqueda desde el mapa para retomarla aquí.</p>${btn("Buscar tierra", "#/buscar")}</div>`;
@@ -1050,7 +1053,7 @@ function render() {
   $("#contenido").innerHTML = html;
   hydrateIcons();
   emailEntry.mount($('#contenido'),render);
-  mountLandSearch($('#contenido'),({searchDepartment,searchMunicipality,intendedUse,draw})=>{Object.assign(state,{searchDepartment,searchMunicipality,intendedUse,type:'terreno',query:'',directoryScope:null,zone:[],sectors:[],drawPoints:[],placeBounds:null,mapPlace:null,view:draw?'both':'list',drawing:draw,mapFitRevision:state.mapFitRevision+1});const params=new URLSearchParams();if(searchMunicipality)params.set('municipio',searchMunicipality);if(intendedUse)params.set('uso',intendedUse);if(draw)params.set('zona','1');const hash='#/buscar'+(params.size?'?'+params:'');if(location.pathname!=='/'){location.href='/'+hash;return;}if(location.hash===hash)render();else location.hash=hash;});
+  mountLandSearch($('#contenido'),({searchDepartment,searchMunicipality,intendedUse,landContent,draw})=>{Object.assign(state,{searchDepartment,searchMunicipality,intendedUse,landContent,type:'terreno',reactivationFilter:'',query:'',directoryScope:null,zone:[],sectors:[],drawPoints:[],placeBounds:null,mapPlace:null,view:draw?'both':'list',drawing:draw,mapFitRevision:state.mapFitRevision+1});const params=new URLSearchParams();params.set('contenido',terrainSearchQuery(landContent)||'todos');if(searchMunicipality)params.set('municipio',searchMunicipality);if(intendedUse)params.set('uso',intendedUse);if(draw)params.set('zona','1');const hash='#/buscar'+(params.size?'?'+params:'');if(location.pathname!=='/'){location.href='/'+hash;return;}if(location.hash===hash)render();else location.hash=hash;});
   mountPortalPage($('#contenido'));mountLegalAccess($('#contenido'));
   for(const form of $$('#contenido form'))if(!form.closest('.portal-page')&&form.matches('[data-form="submission"],[data-sales-request],[data-service-request],[data-profile-form]'))form.insertAdjacentHTML('beforeend',legalButtons());
   mountTerrainDetail($('[data-terrain-detail]'));
@@ -1093,13 +1096,13 @@ function enterRoute() {
   const restore=isCatalogHash(location.hash)?(pendingExplicitReturn||normalizeSearchContext(history.state?.iiCatalogSearch)||(initialNavigation?readSearchContext(location.hash):null)):null;
   pendingExplicitReturn=null;initialNavigation=false;
   const restoring=restore?.hash===location.hash;
-  if(path==='/buscar'&&!restoring&&!state.type&&!state.searchTypeExplicit)state.type='terreno';
-  if(path==='/proyectos-siniestrados'&&!restoring)Object.assign(state,{type:'proyecto',reactivationFilter:'only'});
+  if(path==='/buscar'&&!restoring){const params=new URLSearchParams(location.hash.split('?')[1]||'');if(params.get('tipo')==='proyecto')Object.assign(state,{type:'proyecto',landContent:'',reactivationFilter:state.reactivationFilter||'exclude'});else if(params.get('tipo')==='todos')Object.assign(state,{type:'',landContent:'',reactivationFilter:''});else Object.assign(state,{type:'terreno',landContent:params.get('contenido')==='todos'?'':terrainSearchFromQuery(params.get('contenido'))||'land-only',reactivationFilter:''});}
+  if(path==='/proyectos-siniestrados'&&!restoring)Object.assign(state,{type:'proyecto',landContent:'',reactivationFilter:'only'});
   if(path==='/oportunidades'&&!restoring){
     state.directoryScope=readDirectoryScope(location.hash);
     const opportunityType=new URLSearchParams(location.hash.split('?')[1]||'').get('tipo');
-    if(['terreno','proyecto','todos'].includes(opportunityType)&&!state.directoryScope)Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:'',type:opportunityType==='todos'?'':opportunityType,reactivationFilter:opportunityType==='proyecto'?(new URLSearchParams(location.hash.split('?')[1]||'').get('estado')==='reactivacion'?'only':'exclude'):'',mode:'',maxPrice:'',min:'',max:'',zone:[],sectors:[],drawPoints:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'list',mapFitRevision:state.mapFitRevision+1});
-    if(state.directoryScope)Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:'',type:'terreno',reactivationFilter:'',mode:'',maxPrice:'',min:'',max:'',zone:[],sectors:[],drawPoints:[],mapPlace:null,placeBounds:null,mapSearchText:'',pendingLocationQuery:'',view:'list',mapFitRevision:state.mapFitRevision+1});
+    if(['terreno','proyecto','todos'].includes(opportunityType)&&!state.directoryScope)Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:'',type:opportunityType==='todos'?'':opportunityType,landContent:opportunityType==='terreno'?terrainSearchFromQuery(new URLSearchParams(location.hash.split('?')[1]||'').get('contenido')):'',reactivationFilter:opportunityType==='proyecto'?(new URLSearchParams(location.hash.split('?')[1]||'').get('estado')==='reactivacion'?'only':'exclude'):'',mode:'',maxPrice:'',min:'',max:'',zone:[],sectors:[],drawPoints:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'list',mapFitRevision:state.mapFitRevision+1});
+    if(state.directoryScope)Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:'',type:'terreno',landContent:terrainSearchFromQuery(new URLSearchParams(location.hash.split('?')[1]||'').get('contenido')),reactivationFilter:'',mode:'',maxPrice:'',min:'',max:'',zone:[],sectors:[],drawPoints:[],mapPlace:null,placeBounds:null,mapSearchText:'',pendingLocationQuery:'',view:'list',mapFitRevision:state.mapFitRevision+1});
   }
   if(restoring){Object.assign(state,restore.filters,{placeResults:[],mapPlace:null,drawPoints:[],drawing:false,mapFitRevision:state.mapFitRevision+1});state.searchCamera=restore.camera;state.searchCameraRevision=state.mapFitRevision;pendingResultsContext=restore;}
   if (path.startsWith("/publicar/")) {
@@ -1227,6 +1230,7 @@ function captureSearchFilters() {
     searchTypeExplicit:true,
     reactivationFilter:String(data.get("type")||'')===state.type?state.reactivationFilter:(data.get("type")==="proyecto"?"exclude":""),
     type: String(data.get("type") || ""),
+    landContent: data.get('type')==='terreno'&&['land-only','land-project'].includes(data.get('landContent'))?String(data.get('landContent')):'',
     mode: String(data.get("mode") || ""),
     maxPrice: priceLimits.some(([v])=>v===($('[name="maxPrice"]')?.value||""))?$('[name="maxPrice"]').value:"",
   });
@@ -1245,7 +1249,7 @@ function saveSearchDialog() {
   }
   if (!captureSearchFilters()) return;
   modal(
-    `<div class="eyebrow">Retoma tu búsqueda</div><h2 id="dialog-title">Guarda lo que estás buscando.</h2><p>Podrás volver a tus criterios desde Mi espacio. Se guardan solo en este navegador.</p><form class="dialog-form" data-form="save-search"><label class="form-field">Nombre de la búsqueda<input name="name" required maxlength="90" placeholder="Ej. Tierra para vivienda" value="${escape(state.query ? "Búsqueda en " + state.query : "")}" autofocus></label><div class="tutorial-summary">Municipio: ${escape(state.query || directoryTitle(state.directoryScope) || "Sin especificar")}<br>Tipo: ${escape(state.type || "Terrenos y proyectos")}<br>Modalidad: ${escape(state.mode || "Abierta a alternativas")}<br>Zona: ${state.zone.length ? "Polígono geográfico" : state.sectors.length ? "Sectores seleccionados" : state.mapPlace ? "Ubicación elegida en Mapbox; al abrir, vuelve a seleccionarla" : "Sin delimitar"}</div><button class="button primary" type="submit">Guardar búsqueda ${icon("bookmark")}</button></form>`,
+    `<div class="eyebrow">Retoma tu búsqueda</div><h2 id="dialog-title">Guarda lo que estás buscando.</h2><p>Podrás volver a tus criterios desde Mi espacio. Se guardan solo en este navegador.</p><form class="dialog-form" data-form="save-search"><label class="form-field">Nombre de la búsqueda<input name="name" required maxlength="90" placeholder="Ej. Tierra para vivienda" value="${escape(state.query ? "Búsqueda en " + state.query : "")}" autofocus></label><div class="tutorial-summary">Municipio: ${escape(state.query || directoryTitle(state.directoryScope) || "Sin especificar")}<br>Tipo: ${escape(state.type==='terreno'?terrainSearchLabel(state.landContent):state.type || "Terrenos y proyectos")}<br>Modalidad: ${escape(state.mode || "Abierta a alternativas")}<br>Zona: ${state.zone.length ? "Polígono geográfico" : state.sectors.length ? "Sectores seleccionados" : state.mapPlace ? "Ubicación elegida en Mapbox; al abrir, vuelve a seleccionarla" : "Sin delimitar"}</div><button class="button primary" type="submit">Guardar búsqueda ${icon("bookmark")}</button></form>`,
   );
 }
 function redrawMap() {
@@ -1574,6 +1578,7 @@ async function action(actionName, el, event) {
       pendingLocationQuery: s.locationQuery || "",
       placeResults: [],
       type: s.type || "",
+      landContent:s.type==='terreno'&&['land-only','land-project'].includes(s.landContent)?s.landContent:'',
       reactivationFilter:['only','exclude'].includes(s.reactivationFilter)?s.reactivationFilter:'',
       mode: s.mode || "",
       maxPrice: s.maxPrice || "",
@@ -1591,7 +1596,7 @@ async function action(actionName, el, event) {
       toast(
         "Se conservaron tus filtros. Vuelve a dibujar la zona del mapa anterior.",
       );
-    location.hash = "#/buscar";
+    location.hash = "#/buscar?tipo="+(s.type||'todos')+"&contenido="+(terrainSearchQuery(state.landContent)||'todos');
   }
   if (actionName === "view-submission") {
     const s = saved.submissions.find((s) => s.id === el.dataset.id);
@@ -1832,7 +1837,7 @@ document.addEventListener("submit", async (event) => {
     const min=String(data.get('minArea')||''),max=String(data.get('maxArea')||'');
     if([min,max].some(v=>v&&(!Number.isFinite(Number(v))||Number(v)<0))||(min&&max&&Number(min)>Number(max))){toast('Revisa el rango de áreas. La máxima debe ser mayor o igual a la mínima.');return;}
     const landType=['Urbano','Rural','Expansión urbana'].includes(data.get('land_type'))?data.get('land_type'):'';
-    Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:'',type:'terreno',mode:String(data.get('mode')||''),maxPrice:'',min,max,directoryScope:landType?{city:'',department:'',landType}:null,zone:[],sectors:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'both',mapFitRevision:state.mapFitRevision+1});
+    Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:'',type:'terreno',landContent:'land-only',reactivationFilter:'',mode:String(data.get('mode')||''),maxPrice:'',min,max,directoryScope:landType?{city:'',department:'',landType}:null,zone:[],sectors:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'both',mapFitRevision:state.mapFitRevision+1});
     closeModal();location.hash='#/buscar';return;
   }
   if(type==='featured-filters'){
@@ -1842,8 +1847,8 @@ document.addEventListener("submit", async (event) => {
     const min=areaBand?areaBand[2]:data.get('areaBand')==='custom'?state.min:'';
     const max=areaBand?areaBand[3]:data.get('areaBand')==='custom'?state.max:'';
     const maxPrice=priceLimits.some(([v])=>v===data.get('maxPrice'))?String(data.get('maxPrice')):'';
-    Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:String(data.get('query')||'').trim().slice(0,160),type:opportunityType|| (landType?'terreno':''),mode:'',min,max,maxPrice,directoryScope:landType?{city:'',department:'',landType}:null,zone:[],sectors:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'list',mapFitRevision:state.mapFitRevision+1});
-    location.hash=landType?'#/buscar':'#/oportunidades';return;
+    Object.assign(state,{searchDepartment:'',searchMunicipality:'',intendedUse:'',query:String(data.get('query')||'').trim().slice(0,160),type:opportunityType|| (landType?'terreno':''),landContent:opportunityType==='terreno'&&['land-only','land-project'].includes(data.get('landContent'))?String(data.get('landContent')):'',reactivationFilter:opportunityType==='proyecto'?'exclude':'',mode:'',min,max,maxPrice,directoryScope:landType?{city:'',department:'',landType}:null,zone:[],sectors:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'list',mapFitRevision:state.mapFitRevision+1});
+    location.hash=state.type==='terreno'?'#/buscar?contenido='+(terrainSearchQuery(state.landContent)||'todos'):'#/oportunidades';return;
   }
   if (type === "filters") {
     if (!captureSearchFilters()) return;
@@ -1861,6 +1866,7 @@ document.addEventListener("submit", async (event) => {
       query: state.query,
       locationQuery: state.mapPlace ? state.query : "",
       type: state.type,
+      landContent:state.landContent,
       reactivationFilter: state.reactivationFilter||'',
       mode: state.mode,
       maxPrice: state.maxPrice,

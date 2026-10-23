@@ -54,7 +54,7 @@ export async function purgeExpired(bucket,now=Date.now(),cursor) {
   if(keys.length) await bucket.delete(keys);
   return {deleted:keys.length,cursor:listed.truncated?listed.cursor:null};
 }
-const allowedFields=['intended_use','valuation_assistance','title','city','region','department_code','municipality_code','neighborhood','land_type','project_land_confirmed','area','relationship','description','negotiation','price_method','amount','amount_usd','negotiable','receive_currencies','rate_method','exchange_rate','compensation','payment_schedule','payment_months','unit_type','unit_count','unit_area','unit_months','cash_percent','stage','land_status','need','participation','desired_min','desired_max','desired_zone','need_description','reactivation'];
+const allowedFields=['land_content','intended_use','valuation_assistance','title','city','region','department_code','municipality_code','neighborhood','land_type','project_land_confirmed','area','relationship','description','negotiation','price_method','amount','amount_usd','negotiable','receive_currencies','rate_method','exchange_rate','compensation','payment_schedule','payment_months','unit_type','unit_count','unit_area','unit_months','cash_percent','stage','land_status','need','participation','desired_min','desired_max','desired_zone','need_description','reactivation'];
 export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
   const url=new URL(request.url);if(!url.pathname.startsWith('/api/'))return null;
   try {
@@ -125,6 +125,8 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       const data=JSON.parse(new TextDecoder().decode(await bodyBytes(request,262144)));
       if(!uuid.test(data.id)||!['terreno','proyecto'].includes(data.kind))error(400,'Registro inválido.');
       const form={};for(const field of allowedFields){const v=data.form?.[field];if(typeof v==='string')form[field]=text(v,field.includes('description')?3000:200);else if(typeof v==='boolean')form[field]=v;else if(field==='receive_currencies'&&Array.isArray(v))form[field]=v.filter(x=>['COP','USD'].includes(x));}
+      if(data.form?.land_content!=null&&!['land-only','land-project'].includes(data.form.land_content))error(400,'Selecciona si ofreces solo terreno o terreno con proyecto.');
+      if(data.kind!=='terreno')delete form.land_content;
       if(form.intended_use&&!landUses.some(([key])=>key===form.intended_use))error(400,'Selecciona un uso a evaluar válido.');
       if(data.form?.valuation_assistance!=null&&typeof data.form.valuation_assistance!=='boolean')error(400,'La solicitud de asesoría premium no es válida.');
       if(data.kind==='terreno'){try{const exclusivity=normalizeBrokerExclusivity(form.relationship,data.form?.broker_exclusivity);if(exclusivity)form.broker_exclusivity=exclusivity;}catch(e){error(400,e.message);}}

@@ -1,7 +1,7 @@
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function catalogGroupsHTML(state){
- const active=state.reactivationFilter==='only'?'reactivacion':state.type==='terreno'?'terreno':state.type==='proyecto'?'proyecto':'todos';
- return `<nav class="jr-categories" aria-label="Qué quieres explorar">${[['terreno','Terrenos','terreno'],['proyecto','Proyectos','proyecto'],['reactivacion','Para reactivación','proyecto&estado=reactivacion'],['todos','Todo','todos']].map(([key,label,query])=>`<a href="#/oportunidades?tipo=${query}" ${key===active?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`;
+ const active=state.reactivationFilter==='only'?'reactivacion':state.type==='terreno'?(state.landContent||'terreno'):state.type==='proyecto'?'proyecto':'todos';
+ return `<nav class="jr-categories" aria-label="Qué quieres explorar">${[['land-only','Solo terreno','terreno&contenido=solo-terreno'],['land-project','Terreno con proyecto','terreno&contenido=con-proyecto'],['terreno','Todos los terrenos','terreno'],['proyecto','Proyectos','proyecto'],['reactivacion','Para reactivación','proyecto&estado=reactivacion'],['todos','Todo','todos']].map(([key,label,query])=>`<a href="#/oportunidades?tipo=${query}" ${key===active?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`;
 }
 export function informationLegendHTML(){return `<details class="jr-information-legend"><summary>¿Qué significa el estado de la información?</summary><dl><div><dt>Declarado por el titular</dt><dd>Información suministrada; aún requiere contraste con sus soportes.</dd></div><div><dt>Soporte aportado</dt><dd>Existe documentación vigente asociada. El acceso continúa siendo privado.</dd></div><div><dt>Revisado por el equipo</dt><dd>Se registró una revisión de ese grupo. No certifica titularidad ni viabilidad.</dd></div></dl></details>`;}
 export function detailTabsHTML(id,tabs){

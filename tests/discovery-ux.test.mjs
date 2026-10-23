@@ -14,7 +14,7 @@ test('Directory offers separate service and registration routes without fabricat
  const html=specialistDirectoryHTML({icon:()=>'',specialists});assert.match(html,/Buscador de aliados/);assert.ok(!html.includes('data-du-intent'));assert.ok(!html.includes('data-du-provider-copy'));assert.match(html,/#\/solicitar-servicio\/abogados/);assert.match(html,/#\/perfil-aliado\/suarez-y-gomez-abogados/);assert.ok(!html.includes('verificado'));
 });
 test('Unified search has one query and associates advanced controls with its form',()=>{
- const html=discoveryFiltersHTML({state:{query:'<script>',type:'terreno'},icon:()=>'',priceLimits:[],filterChipsHTML:()=>''});assert.equal((html.match(/name="query"/g)||[]).length,1);assert.match(html,/&lt;script&gt;/);assert.match(html,/name="type" form="opportunity-filters"/);assert.match(html,/value="terreno" selected/);
+ const html=discoveryFiltersHTML({state:{query:'<script>',type:'terreno'},icon:()=>'',priceLimits:[],filterChipsHTML:()=>''});assert.equal((html.match(/name="query"/g)||[]).length,1);assert.match(html,/&lt;script&gt;/);assert.match(html,/name="type" form="opportunity-filters"/);assert.match(html,/name="type" form="opportunity-filters" value="terreno"/);assert.match(html,/name="landContent" form="opportunity-filters"/);
 });
 
 test('La presentación de aliados muestra solo perfiles públicos y lleva a un buscador independiente',()=>{

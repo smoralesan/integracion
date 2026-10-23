@@ -14,7 +14,7 @@ export function readDirectoryScope(hash){
  const city=cities.find(c=>c===params.get('ciudad'))||'';
  const department=departments.find(d=>d===params.get('departamento'))||'';
  const landType=landTypes.find(([key])=>key===params.get('lote'))?.[2]||'';
- return {city,department,landType};
+ return city||department||landType?{city,department,landType}:null;
 }
 export function directoryTitle(scope){
  if(!scope)return '';

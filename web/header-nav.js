@@ -1,8 +1,9 @@
 const groups = [
   {id:'terrenos',label:'Terrenos',eyebrow:'Terrenos para proyectos',title:'Vende o encuentra terrenos para desarrollar.',description:'Conectamos propietarios con compradores y desarrolladores en Colombia.',links:[
     ['Vender mi terreno','Presenta su ubicación, área y condiciones de venta.','#/publicar/terreno'],
-    ['Buscar terreno','Busca por municipio o delimita una zona en el mapa.','#/buscar'],
-    ['Explorar oportunidades','Consulta fichas de terrenos y proyectos.','#/oportunidades'],
+    ['Solo terreno','Busca tierra sin proyecto constructivo asociado.','#/buscar?contenido=solo-terreno'],
+    ['Terreno con proyecto','Explora predios con una propuesta de desarrollo asociada.','#/buscar?contenido=con-proyecto'],
+    ['Todos los terrenos','Compara ambos formatos y los registros aún sin clasificar.','#/oportunidades?tipo=terreno'],
   ],feature:{label:'Venta o aporte',title:'Aportar un terreno a un proyecto',text:'Conoce las opciones de recibir dinero posterior, inmuebles del desarrollo o una combinación.',action:'tutorial',cta:'Cómo funciona el aporte'}},
   {id:'proyectos',label:'Proyectos',eyebrow:'Proyectos inmobiliarios',title:'Presenta tu proyecto y los aliados que buscas.',description:'Conectamos proyectos con profesionales y empresas especializados.',links:[
     ['Tengo un proyecto','Registra su etapa y las capacidades que necesitas sumar.','#/publicar/proyecto'],

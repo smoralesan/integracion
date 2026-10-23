@@ -8,6 +8,7 @@ export function normalizeSearchContext(value,now=Date.now()){
  const f=value.filters||{},filters={};
  for(const key of ['query','min','max','maxPrice','mapSearchText','pendingLocationQuery','searchDepartment','searchMunicipality','intendedUse'])filters[key]=text(f[key]);
  filters.type=['terreno','proyecto'].includes(f.type)?f.type:'';
+ filters.landContent=filters.type==='terreno'&&['land-only','land-project'].includes(f.landContent)?f.landContent:'';
  filters.reactivationFilter=['only','exclude'].includes(f.reactivationFilter)?f.reactivationFilter:'';
  filters.mode=['Venta','Aporte','Alianzas'].includes(f.mode)?f.mode:'';
  filters.view=f.view==='list'?'list':'both';filters.mapStyle=f.mapStyle==='satellite'?'satellite':'map';filters.searchTypeExplicit=true;

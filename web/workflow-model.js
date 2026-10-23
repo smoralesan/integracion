@@ -8,5 +8,6 @@ export function publicSummary(record){
   const f=record.form||{},summary={id:record.publicationId,reference:record.reference,kind:record.kind};
   for(const key of ['title','city','region','land_type','intended_use','department_code','municipality_code','negotiation','price_method'])if(typeof f[key]==='string')summary[key]=f[key].slice(0,160);
   for(const key of ['area','amount','amount_usd'])if(typeof f[key]==='string'&&/^\d{1,15}(?:\.\d{1,2})?$/.test(f[key]))summary[key]=f[key];
+  if(record.kind==='terreno'&&['land-only','land-project'].includes(f.land_content))summary.land_content=f.land_content;
   return {...summary,...publicExperience(record)};
 }
