@@ -1,3 +1,4 @@
+import {PhoneEntry} from './phone-entry.js';
 import {captureSearchContext,readSearchContext,normalizeSearchContext,isCatalogHash,restoreSearchScroll} from './search-journey.js';
 import {accessGateHTML} from './access-gate.js';
 import {normalizeSpaceObjective} from './space-intent.js';
@@ -284,13 +285,15 @@ function propertyCard(p) {
   const favorite = saved.favorites.includes(p.id);
   return `<article class="property-card${p.type==='proyecto'?' property-card--project':''}"><div class="property-image"><a href="#/oportunidad/${p.id}" aria-label="Ver ${escape(p.title)}">${terrainPreviewHTML(p)||`<img src="${escape(p.image)}" alt="Imagen arquitectónica ilustrativa de un edificio individual" loading="lazy">`}</a><span class="pill${p.reactivation ? " warm" : ""}">${p.label}</span><button class="favorite ${favorite ? "saved" : ""}" data-action="favorite" data-id="${p.id}" aria-label="${favorite ? "Quitar de" : "Guardar en"} favoritos: ${escape(p.title)}" aria-pressed="${favorite}">${icon("heart")}</button></div><div class="property-body"><div class="property-reference">${p.id} · Ejemplo</div>${terrainCardTag(p)}<h3><a class="card-detail-link" href="#/oportunidad/${p.id}">${p.title}</a></h3><div class="property-location">${icon("pin")} ${p.city}, ${p.region}</div><div class="property-facts"><span>${p.area ? money(p.area) + " m²" : "Busca " + p.need.toLowerCase()}</span><span>${p.mode}</span></div>${rescueMetricsHTML(p)}<div class="property-bottom"><div class="property-price">${p.price ? "COP $" + money(p.price) : p.type === "terreno" ? "Condiciones por acordar" : "Conecta con el proyecto"}<small>${p.price ? "Precio ilustrativo · Negociable" : p.type === "terreno" ? "Abierto a propuestas" : "Participación por evaluar"}</small></div><a class="icon-button" href="#/oportunidad/${p.id}" aria-label="Ver oportunidad ${p.id}">${icon("arrow-up-right")}</a></div>${comparisonButton(p)}</div></article>`;
 }
+const phoneEntry = new PhoneEntry();
+let draftSaveTimer;
 const landMap = new LandMap();
 const parcelEditor = new ParcelEditor();
 const reviewDesk = new ReviewDesk(()=>{if(location.hash.startsWith('#/equipo'))render();});
 async function loadSession(){
   try{state.session=await api('/api/session');}catch{state.session={authenticated:false,teamRole:null};}
   document.querySelectorAll('[data-team-link]').forEach(a=>a.hidden=!state.session.teamRole);
-  if(location.hash==='#/mi-espacio')render();
+  if(location.hash==='#/mi-espacio'||location.hash.startsWith('#/publicar/'))render();
 }
 let catalogGeneration=0,pendingResultsContext=null,pendingExplicitReturn=null,initialNavigation=true;
 async function refreshPublished(append=false){
@@ -333,7 +336,7 @@ function syncParcel() {
   const f = state.form;
   const key = readOnly ? record?.id : f.client_id;
   parcelEditor.mount(host, {
-    key, readOnly, documentCount:state.files.length,
+    key, readOnly, localPreview:phoneEntry.isPreview(), documentCount:state.files.length,
     geometry: readOnly ? record?.parcel?.geometry : f.parcel_geometry,
     source: readOnly ? record?.parcel?.source : f.parcel_source,
     confirmed: readOnly ? true : f.parcel_confirmed,
@@ -706,6 +709,7 @@ function contributionFields() {
   }${["units", "mixed"].includes(choice) ? `<div class="form-section-label">Para los inmuebles a entregar</div><div class="form-grid">${inputField("Tipo de inmueble preferido", "unit_type", { options: ["Apartamentos", "Casas", "Locales", "Oficinas", "Abierto a alternativas"] })}${inputField("Cantidad deseada", "unit_count", { type: "number", min: 1, placeholder: "Por definir" })}${inputField("Área privada aproximada por unidad (m²)", "unit_area", { type: "number", min: 1, placeholder: "Por definir" })}${inputField("Plazo deseado de entrega (meses)", "unit_months", { type: "number", min: 1, placeholder: "Por definir", hint: "El hito desde el que se cuenta se pactará con el proyecto." })}</div>` : ""}${choice === "mixed" ? `<div class="form-grid" style="margin-top:20px">${inputField("Porcentaje del valor en dinero", "cash_percent", { type: "number", min: 0, placeholder: "Por acordar", hint: "El restante se recibiría en inmuebles. Se refiere al valor, no a las utilidades." })}</div>` : ""}`;
 }
 function formPage(kind) {
+  if(!phoneEntry.allows(state.session))return phoneEntry.html(kind,saved.draft?.kind===kind?saved.draft:null);
   const project = kind === "proyecto",
     f = state.form, totalSteps = project ? 3 : 4;
   let body = "";
@@ -734,7 +738,7 @@ function formPage(kind) {
     body = `${project?'':'<section class="du-perimeter-final"><h2>Ubicación y perímetro</h2><p>Confirma el límite del terreno antes de enviar el expediente. El mapa y sus archivos permanecen privados.</p><div data-parcel-host></div></section>'}<h2>Soportes y revisión final</h2><p class="form-intro">Los archivos seleccionados se guardan privados por 60 días. Los archivos geográficos se interpretan; PDF, imágenes y CAD quedan disponibles para revisión del equipo.</p><div class="view-toggle" style="width:max-content;margin-bottom:17px"><button type="button" data-action="file-mode" data-mode="upload" class="${state.fileMode === "upload" ? "active" : ""}">${icon("upload")}Archivo</button><button type="button" data-action="file-mode" data-mode="link" class="${state.fileMode === "link" ? "active" : ""}">${icon("link")}Enlace de descarga</button></div>${state.fileMode === "upload" ? `<div class="upload-zone">${icon("upload")}<h3>Selecciona los soportes del expediente</h3><p>Hasta 10 MB por archivo · Temporales por 60 días.<br>Para archivos mayores, utiliza un enlace de descarga.</p><label><span class="sr-only">Seleccionar documentos del expediente</span><input type="file" id="file-input" multiple accept=".pdf,.kml,.kmz,.geojson,.zip,.jpg,.jpeg,.png,.dwg,.dxf"></label></div>` : `<div class="form-grid">${inputField("Nombre del documento", "file_link_name", { placeholder: "Ej. Levantamiento topográfico", full: true })}${inputField("Enlace HTTPS de acceso o descarga", "file_link_url", { type: "url", placeholder: "https://…", full: true, hint: "No se descarga automáticamente ni se modifican los permisos del proveedor." })}<button type="button" class="button outline" data-action="add-file-link">Agregar referencia ${icon("plus")}</button></div>`}<p class="file-message" id="file-message" role="status"></p><div id="file-list">${fileList()}</div><div class="privacy-note">${icon("info")}Los originales se guardan privados, con acceso para ti y el equipo autorizado. El envío no los publica.</div>${project?'':obligationSupports(f.land_situation,state.files)}<hr class="form-divider"><h3 style="font-size:17px;margin-bottom:15px">Resumen de tu ${project ? "proyecto" : "terreno"}</h3><div class="ux-summary-edit-links">${formSteps(state.formKind).slice(0,-1).map((name,i)=>`<button class="ux-edit-summary" type="button" data-action="form-step" data-step="${i+1}">Editar ${name.toLowerCase()}</button>`).join('')}</div><div data-submission-summary>${formSummary()}</div><hr class="form-divider"><label class="check-row"><input type="checkbox" name="demo_consent" required ${f.demo_consent ? "checked" : ""}>Autorizo guardar este expediente privado para revisión. Enviarlo no publica el terreno ni transfiere el activo.</label><label class="check-row" style="margin-top:12px"><input type="checkbox" name="alerts" ${f.alerts ? "checked" : ""}>Me interesa recibir avisos relacionados con este registro cuando se habiliten. Este envío no activa correos.</label>`;
   }
   return (
-    compactHeading(
+    (phoneEntry.isPreview()?phoneEntry.banner():'') + compactHeading(
       project
         ? "Tengo un proyecto"
         : f.negotiation === "sale"
@@ -747,7 +751,7 @@ function formPage(kind) {
           : "Cuéntanos qué tienes y qué estás dispuesto a evaluar.",
       project ? "Con o sin terreno" : "Terrenos para desarrollo inmobiliario",
     ) +
-    `<section class="page-content du-publication"><div class="container"><div class="form-layout"><aside class="form-sidebar">${stepperHTML(state.formKind,state.formStep)}<div class="sidebar-note">${icon("lock")}Tu expediente queda privado y pendiente de revisión. No se difunde ningún resumen automáticamente.<br><br>¿No tienes todo a mano?<br>Puedes guardar un borrador local.</div></aside><form class="form-main" data-form="submission"><div class="ux-form-tools"><p data-draft-status role="status">${saved.draft?.kind===state.formKind?'Borrador recuperado de este navegador.':'El borrador se guarda en este navegador al completar los campos.'}</p><button class="text-button" type="button" data-action="save-draft">Guardar borrador</button></div><div data-form-errors class="ux-form-errors" role="alert" tabindex="-1" hidden></div><div class="jr-form-progress" role="progressbar" aria-label="Progreso del registro" aria-valuemin="0" aria-valuemax="${totalSteps}" aria-valuenow="${state.formStep}"><span style="width:${state.formStep/totalSteps*100}%"></span></div><div class="jr-form-orientation"><span>${state.formStep===1?'Primero, los datos esenciales':state.formStep===totalSteps?'Revisa antes de enviar':'Completa lo que conoces'}</span><span>Documentos al final · Borrador local disponible</span></div>${body}<div class="form-navigation">${state.formStep > 1 ? `<button class="button" type="button" data-action="form-back">Atrás</button>` : `<a class="text-button" href="#/mi-espacio">Salir a Mi espacio</a>`}<span>Paso ${state.formStep} de ${totalSteps}</span><button class="button primary" type="submit">${state.formStep === totalSteps ? "Enviar a revisión privada" : "Continuar"} ${icon("arrow-right")}</button></div></form></div></div></section>`
+    `<section class="page-content du-publication"><div class="container"><div class="form-layout"><aside class="form-sidebar">${stepperHTML(state.formKind,state.formStep)}<div class="sidebar-note">${icon("lock")}Tu expediente queda privado y pendiente de revisión. No se difunde ningún resumen automáticamente.<br><br>¿No tienes todo a mano?<br>Puedes guardar un borrador local.</div></aside><form class="form-main" data-form="submission"><div class="ux-form-tools"><p data-draft-status role="status">${saved.draft?.kind===state.formKind?'Borrador recuperado de este navegador.':'El borrador se guarda en este navegador al completar los campos.'}</p><button class="text-button" type="button" data-action="save-draft">Guardar borrador</button></div><div data-form-errors class="ux-form-errors" role="alert" tabindex="-1" hidden></div><div class="jr-form-progress" role="progressbar" aria-label="Progreso del registro" aria-valuemin="0" aria-valuemax="${totalSteps}" aria-valuenow="${state.formStep}"><span style="width:${state.formStep/totalSteps*100}%"></span></div><div class="jr-form-orientation"><span>${state.formStep===1?'Primero, los datos esenciales':state.formStep===totalSteps?'Revisa antes de enviar':'Completa lo que conoces'}</span><span>Documentos al final · Borrador local disponible</span></div>${body}<div class="form-navigation">${state.formStep > 1 ? `<button class="button" type="button" data-action="form-back">Atrás</button>` : `<a class="text-button" href="#/mi-espacio">Salir a Mi espacio</a>`}<span>Paso ${state.formStep} de ${totalSteps}</span><button class="button primary" type="submit">${state.formStep === totalSteps ? (phoneEntry.isPreview()?"Guardar borrador de demostración":"Enviar a revisión privada") : "Continuar"} ${icon("arrow-right")}</button></div></form></div></div></section>`
   );
 }
 const compensationNames = {
@@ -884,6 +888,7 @@ function captureForm() {
   }
 }
 function saveDraft(silent = false) {
+  clearTimeout(draftSaveTimer);
   captureForm();
   saved.draft = {
     kind: state.formKind,
@@ -1033,6 +1038,7 @@ function render() {
   else html = notFound();
   $("#contenido").innerHTML = html;
   hydrateIcons();
+  phoneEntry.mount($('#contenido'),render);
   mountPortalPage($('#contenido'));mountLegalAccess($('#contenido'));
   for(const form of $$('#contenido form'))if(!form.closest('.portal-page')&&form.matches('[data-form="submission"],[data-sales-request],[data-service-request],[data-profile-form]'))form.insertAdjacentHTML('beforeend',legalButtons());
   mountTerrainDetail($('[data-terrain-detail]'));
@@ -1431,6 +1437,7 @@ async function action(actionName, el, event) {
     render();
   }
   if (actionName === "add-file-link") {
+    if(phoneEntry.isPreview()){toast("Los adjuntos requieren el acceso real del portal. Esta maqueta conserva solo el borrador local.");return;}
     captureForm();
     if (state.files.length>=20) {toast("Puedes adjuntar hasta 20 documentos.");return;}
     const key=state.form.client_id;
@@ -1669,6 +1676,7 @@ document.addEventListener("change", async (event) => {
     } else saveDraft(true);
   }
   if (el.id === "file-input") {
+    if(phoneEntry.isPreview()){el.value='';toast("La carga de documentos requiere el acceso real del portal.");return;}
     captureForm();const key=state.form.client_id,files=[...el.files];
     if(state.files.length+files.length>20){toast("Puedes adjuntar hasta 20 documentos.");return;}
     const messages=[];el.disabled=true;
@@ -1753,6 +1761,9 @@ document.addEventListener("focusout", (event) => {
   captureForm();
 });
 document.addEventListener("input", (event) => {
+  if(event.target.closest('[data-form="submission"]')&&!event.target.matches('[data-money],input[type="file"]')){
+    clearTimeout(draftSaveTimer);const status=$('[data-draft-status]');if(status)status.textContent="Guardando en este navegador…";draftSaveTimer=setTimeout(()=>{if($('[data-form="submission"]'))saveDraft(true);},350);
+  }
   if (event.target.matches("[data-money]")) {
     if (!event.isComposing) updateMoneyField(event.target);
     return;
@@ -1902,6 +1913,7 @@ document.addEventListener("submit", async (event) => {
       render();
       focusFormStep();
     } else {
+      if(phoneEntry.isPreview()){saveDraft(true);modal('<h2 id="dialog-title">Borrador de demostración guardado</h2><p>Puedes retomarlo desde Mi espacio en este navegador. No se envió un expediente ni se publicó la propiedad.</p><a class="button primary" href="#/mi-espacio">Ir a Mi espacio →</a>');return;}
       if(state.files.some(f=>!f.id)){showFormIssue("Vuelve a seleccionar los archivos anteriores para subirlos, o retira sus referencias locales.");return;}
       state.submitting=true;const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent='Guardando expediente privado…';
       try {
@@ -1976,7 +1988,7 @@ $("#dialog").addEventListener("click", (event) => {
       closeModal();
   }
 });
-window.addEventListener('pagehide',()=>{if(isCatalogHash(location.hash))captureSearchContext(state,location.hash);});
+window.addEventListener('pagehide',()=>{if($('[data-form="submission"]'))saveDraft(true);if(isCatalogHash(location.hash))captureSearchContext(state,location.hash);});
 for(const name of ['wheel','touchstart'])window.addEventListener(name,()=>{pendingResultsContext=null;},{passive:true});
 window.addEventListener("hashchange", enterRoute);
 enterRoute();

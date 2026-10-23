@@ -38,6 +38,7 @@ export class ParcelEditor {
   updateMessage(){const el=this.host?.querySelector('.parcel-message');if(el){el.textContent=this.message;el.classList.toggle('error',!!this.error);}}
   change(geometry,source,confirmed=false){Object.assign(this.options,{geometry,source,confirmed});this.options.onChange?.({geometry,source,confirmed});}
   async importFile(file) {
+    if(this.options.localPreview){this.message="En esta maqueta puedes dibujar el perímetro. Importar archivos requiere el acceso real del portal.";this.error=true;this.updateMessage();return;}
     if(this.options.documentCount>=20){this.message='Puedes vincular hasta 20 documentos. Retira una referencia en Soportes antes de importar otro archivo.';this.error=true;this.updateMessage();return;}
     if(file.size>10_000_000){this.message='El archivo supera 10 MB. Agrega un enlace de descarga en Soportes.';this.error=true;this.updateMessage();return;}
     const generation=this.generation;this.busy=true;this.message='Guardando e interpretando el archivo geográfico…';this.error=false;this.render();

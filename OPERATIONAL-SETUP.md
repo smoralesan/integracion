@@ -38,3 +38,8 @@ Solo GET de `/api/catalog`, `/api/catalog/:id` y `/api/catalog/:id/photos/:photo
 El contexto de búsqueda se conserva en sessionStorage y el historial de la misma pestaña durante un máximo de 24 horas: filtros, lista/mapa, encuadre, posición y referencia de la ficha. La restauración permite solo campos de búsqueda; no restaura identidad ni roles. El selector de Mi espacio guarda una preferencia de navegación en el almacenamiento local, sin cambiar permisos.
 
 La asesoría de valor base usa el seguimiento existente de solicitudes de servicio. Su alcance, honorarios, impuestos, responsable y plazo se acuerdan mediante una cotización; no hay tarifa fija ni checkout activado. El piloto con personas reales está preparado en `GUIA-PRUEBAS-USABILIDAD.md`; aún requiere participantes.
+
+
+### Maqueta de acceso por celular
+
+Las rutas de publicar muestran una entrada de celular +57 y código de prueba 123456. Es una demostración de interfaz: no envía SMS, no verifica titularidad, no crea identidad ni modifica permisos. No persiste el número ni el código. Una marca `preview` en sessionStorage permite retomar la maqueta en la misma pestaña; no autoriza llamadas privadas. Los borradores siguen guardados solo en localStorage y se muestran como locales. En modo maqueta no se suben documentos, importan archivos al servidor ni envían expedientes. El acceso actual del portal sigue disponible mediante la autenticación de Sites y `acceso=actual`, que exige identidad real. El guardado en cuenta y la recuperación entre dispositivos siguen pendientes de integración.
