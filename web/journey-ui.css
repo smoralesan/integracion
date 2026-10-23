@@ -5,3 +5,5 @@
 @media(max-width:760px){body:has(.jr-real-mobile-contact) .exp-compare-dock,body:has(.tu-mobile-contact) .exp-compare-dock{bottom:90px}body:has(.jr-real-mobile-contact) .site-footer,body:has(.tu-mobile-contact) .site-footer{padding-bottom:90px}}
 
 .jr-filter-error{grid-column:1/-1;color:#a43e39;font-size:12px;line-height:1.8}.jr-filter-error[hidden]{display:none}
+
+.jr-publications-access{font-size:12px;line-height:1.8;color:#6f849e;padding:12px 16px;background:#f3f7fc;border-radius:6px;margin:0 0 22px}
