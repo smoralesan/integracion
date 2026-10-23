@@ -1,3 +1,4 @@
+import {developmentSectors} from './development-sectors.js';
 // Decorative reference photos. Only the active landing loads its image.
 export const specialistPhotos = {
   "abogados": {
@@ -127,3 +128,11 @@ export const specialistPhotos = {
     "mobilePosition": "center"
   }
 };
+
+for(const sector of developmentSectors)specialistPhotos[sector.slug]={...specialistPhotos.desarrolladores,subject:sector.focus};
+
+Object.assign(specialistPhotos['desarrolladores-hoteleros'],{...specialistPhotos['disenadores-de-interiores'],subject:'Espacios interiores · Imagen de referencia'});
+Object.assign(specialistPhotos['desarrolladores-logisticos'],{...specialistPhotos['disenadores-viales-urbanismo'],subject:'Conectividad urbana, vial y férrea · Imagen de referencia'});
+Object.assign(specialistPhotos['desarrolladores-industriales'],{src:'./assets/proyecto-construccion.jpg',subject:'Desarrollo y ejecución de obra · Imagen de referencia'});
+Object.assign(specialistPhotos['desarrolladores-de-infraestructura'],specialistPhotos['disenadores-viales-urbanismo']);
+Object.assign(specialistPhotos['desarrolladores-comerciales'],{...specialistPhotos.comercializadores,subject:'Desarrollo comercial · Imagen de referencia'});

@@ -11,7 +11,7 @@ export const images = {
 };
 export const properties = [
   {
-    id: "TER-DEMO-001",
+    id: "TER-DEMO-001",intended_use:"residencial",
     landContent: "land-only",
     land_type: "Urbano",
     type: "terreno",
@@ -30,7 +30,7 @@ export const properties = [
     need: "Desarrollador y estructurador",
   },
   {
-    id: "TER-DEMO-002",
+    id: "TER-DEMO-002",intended_use:"residencial",
     landContent: "land-project",
     land_type: "Urbano",
     developmentProject: {
@@ -80,7 +80,7 @@ export const properties = [
     need: "Estructurador y aliados",
   },
   {
-    id: "TER-DEMO-003",
+    id: "TER-DEMO-003",intended_use:"mixto",
     landContent: "land-project",
     land_type: "Urbano",
     developmentProject: {

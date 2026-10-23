@@ -1,3 +1,4 @@
+import {sectorPageResponse} from './sector-pages.js';
 import {notifyMutation} from './notifications.js';
 import { handleApi } from './api.js';
 import {specialistRouteRedirect} from './site-routes.js';
@@ -6,6 +7,7 @@ import {mapboxConfigResponse} from './mapbox-config.js';
 export default {
   async fetch(request,env,ctx) {
     const result=await handleApi(request,env,ctx);if(result){if(result.ok&&['POST','PATCH'].includes(request.method))ctx.waitUntil(notifyMutation(request,result,env).catch(()=>{}));return result;}
+    const seo=sectorPageResponse(request,assets);if(seo)return seo;
     const url=new URL(request.url),redirect=specialistRouteRedirect(url);
     if(redirect){
       if(!['GET','HEAD'].includes(request.method))return new Response('Método no permitido',{status:405});

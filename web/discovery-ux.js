@@ -10,7 +10,7 @@ export function discoveryFiltersHTML({state,icon,priceLimits,filterChipsHTML}){
 const categoryGroup=s=>s.specialty||s.slug==='tecnicos'?'tecnicos':s.slug==='abogados'?'legal':['inversionistas','financiadores','fiduciarias','comercializadores'].includes(s.slug)?'negocio':'desarrollo';
 export function specialistMatches(s,query,group='all'){
  if(group!=='all'&&categoryGroup(s)!==group)return false;
- if(!query&&group==='all'&&s.specialty)return false;
+ if(!query&&group==='all'&&(s.specialty||s.parentSlug))return false;
  if(group==='tecnicos'&&s.slug==='tecnicos')return false;
  return searchText([s.label,s.intro,...s.scope.flat()].join(' ')).includes(searchText(query));
 }

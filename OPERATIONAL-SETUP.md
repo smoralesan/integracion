@@ -46,3 +46,8 @@ Las rutas de publicar muestran una entrada de correo electrónico y código de p
 
 
 El recorrido local completo permite varios borradores por ID de propiedad, Guardar y salir, recuperación desde Mi espacio, perímetro y soporte ficticios opcionales, confirmación final y edición posterior. La migración conserva el borrador local anterior. Finalizar crea o actualiza un registro de demostración idempotente y retira únicamente su borrador; no toca otros terrenos o proyectos. Ninguna finalización ni soporte de ejemplo llama al backend ni envía correos. Los expedientes reales conservan su autenticación y validaciones.
+
+
+### Sectores y búsqueda territorial
+
+La búsqueda de terrenos incluye Departamento → Municipio oficial DIVIPOLA, uso a evaluar y entrada al dibujo de una zona. Los sectores residencial, hotelero, logístico, industrial, infraestructura, comercial y dotacional están separados en landings de desarrolladores y en los tipos de proyecto del perfil profesional, con selección múltiple. El campo de uso propuesto del lote es una intención y nunca certifica aptitud. El catálogo público consultado no tenía resúmenes publicados; no se confirmó oferta industrial o logística apta. Las landings de desarrolladores cuentan con rutas HTTP propias, HTML inicial, título, descripción, canonical y sitemap, sin depender del fragmento de la SPA para entregar el contenido. Solo estas páginas de captación se habilitan para indexación; el resto de la maqueta conserva sus directivas previas.

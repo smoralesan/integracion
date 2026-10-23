@@ -6,7 +6,7 @@ const text=v=>typeof v==='string'?v.slice(0,160):'';
 export function normalizeSearchContext(value,now=Date.now()){
  if(!value||value.version!==1||!isCatalogHash(value.hash)||!Number.isFinite(value.at)||value.at>now+60000||now-value.at>ttl)return null;
  const f=value.filters||{},filters={};
- for(const key of ['query','min','max','maxPrice','mapSearchText','pendingLocationQuery'])filters[key]=text(f[key]);
+ for(const key of ['query','min','max','maxPrice','mapSearchText','pendingLocationQuery','searchDepartment','searchMunicipality','intendedUse'])filters[key]=text(f[key]);
  filters.type=['terreno','proyecto'].includes(f.type)?f.type:'';
  filters.reactivationFilter=['only','exclude'].includes(f.reactivationFilter)?f.reactivationFilter:'';
  filters.mode=['Venta','Aporte','Alianzas'].includes(f.mode)?f.mode:'';

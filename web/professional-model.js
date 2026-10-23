@@ -1,7 +1,7 @@
 import {technicalSpecialties} from './ally-categories.js';
 import {getDepartment,getMunicipality} from './colombia-locations.js';
 export const availabilityOptions=[['available','Disponible para nuevos proyectos'],['limited','Disponibilidad limitada'],['by_agreement','A convenir según el proyecto'],['unavailable','Sin disponibilidad por ahora']];
-export const projectTypeOptions=['Residencial','Comercial','Industrial','Turístico','Mixto','Urbanismo e infraestructura'];
+export const projectTypeOptions=['Residencial','Hotelero','Logístico','Industrial','Infraestructura','Comercial','Dotacional','Turístico','Mixto','Urbanismo e infraestructura'];
 export const professionalKeys=['specialties','services','experience','experienceYears','projectTypes','coverage','nationwide','canTravel','availability','portfolio','contactEmail','phone','shareWithTeam'];
 const text=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
 export function safePortfolioUrl(value){try{const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password||url.href.length>2048)throw Error();return url.href;}catch{throw Error('Los enlaces del portafolio deben usar HTTPS y no incluir credenciales.');}}

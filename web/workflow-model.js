@@ -6,7 +6,7 @@ export const statusLabel=record=>STATUS_LABELS[typeof record==='string'?record:s
 export function permittedTransitions(record,role){return (TRANSITIONS[statusOf(record)]||[]).filter(s=>role==='admin'||!['approved','published'].includes(s)&&statusOf(record)!=='published');}
 export function publicSummary(record){
   const f=record.form||{},summary={id:record.publicationId,reference:record.reference,kind:record.kind};
-  for(const key of ['title','city','region','land_type','negotiation','price_method'])if(typeof f[key]==='string')summary[key]=f[key].slice(0,160);
+  for(const key of ['title','city','region','land_type','intended_use','department_code','municipality_code','negotiation','price_method'])if(typeof f[key]==='string')summary[key]=f[key].slice(0,160);
   for(const key of ['area','amount','amount_usd'])if(typeof f[key]==='string'&&/^\d{1,15}(?:\.\d{1,2})?$/.test(f[key]))summary[key]=f[key];
   return {...summary,...publicExperience(record)};
 }

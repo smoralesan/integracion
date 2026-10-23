@@ -1,4 +1,4 @@
-import {professionalView} from './professional-model.js';
+import {professionalView,projectTypeOptions} from './professional-model.js';
 import {professionalFieldsHTML,specialtyChoices,captureProfessional,bindProfessional} from './professional-fields.js';
 import {allyCategories,technicalSpecialties} from './ally-categories.js';
 import {api} from './records-api.js';
@@ -12,7 +12,7 @@ export class ProfileEditor{
     if(this.host===host)return;
     this.dispose();if(!host)return;this.host=host;const generation=this.generation;
     host.innerHTML='<p role="status">Cargando tu perfil…</p>';
-    try{const {profile}=await api('/api/profile');if(generation!==this.generation)return;this.profile=profile;this.draft=profile?{...profile,...professionalView(profile)}:{...professionalView(),kind:'person',name:'',headline:'',shareInProjects:false,revision:0};if(allyCategories.includes(defaults.category)){this.draft.category=defaults.category;this.draft.specialty=defaults.category==='Técnicos'&&technicalSpecialties.includes(defaults.specialty)?defaults.specialty:'';this.draft.specialties=defaults.category==='Técnicos'?[...new Set([this.draft.specialty,...this.draft.specialties].filter(Boolean))]:[];}this.image=undefined;this.render();}
+    try{const {profile}=await api('/api/profile');if(generation!==this.generation)return;this.profile=profile;this.draft=profile?{...profile,...professionalView(profile)}:{...professionalView(),kind:'person',name:'',headline:'',shareInProjects:false,revision:0};if(allyCategories.includes(defaults.category)){this.draft.category=defaults.category;this.draft.specialty=defaults.category==='Técnicos'&&technicalSpecialties.includes(defaults.specialty)?defaults.specialty:'';this.draft.specialties=defaults.category==='Técnicos'?[...new Set([this.draft.specialty,...this.draft.specialties].filter(Boolean))]:[];}if(Array.isArray(defaults.projectTypes))this.draft.projectTypes=[...new Set([...this.draft.projectTypes,...defaults.projectTypes.filter(t=>projectTypeOptions.includes(t))])];this.image=undefined;this.render();}
     catch(error){if(generation!==this.generation)return;host.innerHTML=`<p role="alert">${escape(error.message)}</p><a class="button outline" href="#/mi-espacio">Volver a Mi espacio</a>`;}
   }
   capture(){const form=this.host?.querySelector('form');if(!form)return;const data=new FormData(form);Object.assign(this.draft,{kind:data.get('kind'),name:String(data.get('name')||''),headline:String(data.get('headline')||''),category:String(data.get('category')||''),specialty:String(data.get('specialty')||''),shareInProjects:data.has('shareInProjects')});Object.assign(this.draft,captureProfessional(form,this.draft));}
