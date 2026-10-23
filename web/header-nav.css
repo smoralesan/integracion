@@ -1,10 +1,10 @@
 /* Disclosure navigation: click or keyboard, shared desktop/mobile content. */
 .primary-navigation{gap:24px;align-self:stretch;align-items:center}
-.mega-trigger{display:flex;align-items:center;gap:9px;padding:15px 0;border:0;background:none;color:#243c5b;font:inherit;cursor:pointer;white-space:nowrap}
+.mega-trigger{display:flex;align-items:center;gap:9px;padding:15px 0;border:0;background:none;color:#243c5b;font:inherit;font-size:15px;cursor:pointer;white-space:nowrap}
 .mega-chevron{width:6px;height:6px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg);margin-top:-3px;transition:transform .15s}
 .mega-trigger[aria-expanded=true]{color:#245caa}
 .mega-trigger[aria-expanded=true] .mega-chevron{transform:rotate(225deg);margin-top:3px}
-.primary-navigation .mega-how{padding:15px 0;border:0;color:#5d718b}
+.primary-navigation .mega-how{padding:15px 0;border:0;color:#5d718b;font-size:15px}
 .mega-panel{position:absolute;left:0;right:0;top:100%;background:#fff;border-top:1px solid #e6edf5;border-bottom:1px solid #dfe7f0;box-shadow:0 18px 30px #142f4d16;white-space:normal}
 .mega-panel[hidden]{display:none!important}
 .mega-grid{display:grid;grid-template-columns:1.05fr 1.35fr 1fr;gap:42px;padding-top:34px;padding-bottom:34px;align-items:start}
