@@ -1,3 +1,7 @@
+import {captureSearchContext,readSearchContext,normalizeSearchContext,isCatalogHash,restoreSearchScroll} from './search-journey.js';
+import {accessGateHTML} from './access-gate.js';
+import {normalizeSpaceObjective} from './space-intent.js';
+import {premiumValuationPage} from './premium-valuation.js';
 import {catalogGroupsHTML,mountJourney,toggleSearchFilters} from './journey-ui.js';
 import {mountActivity} from './activity-center.js';
 import {OpportunityExperience,comparisonButton,availabilityHTML,publicOpportunityHTML,ownerExperienceHTML,teamExperienceHTML,reactivationContextHTML} from './opportunity-experience.js';
@@ -177,6 +181,7 @@ function readStore() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || "{}");
     return {
+      objective:normalizeSpaceObjective(raw.objective),
       favorites: Array.isArray(raw.favorites) ? raw.favorites : [],
       searches: Array.isArray(raw.searches) ? raw.searches : [],
       submissions: Array.isArray(raw.submissions) ? raw.submissions : [],
@@ -283,14 +288,22 @@ const landMap = new LandMap();
 const parcelEditor = new ParcelEditor();
 const reviewDesk = new ReviewDesk(()=>{if(location.hash.startsWith('#/equipo'))render();});
 async function loadSession(){
-  try{state.session=await api('/api/session');}catch{state.session={teamRole:null};}
+  try{state.session=await api('/api/session');}catch{state.session={authenticated:false,teamRole:null};}
   document.querySelectorAll('[data-team-link]').forEach(a=>a.hidden=!state.session.teamRole);
   if(location.hash==='#/mi-espacio')render();
 }
+let catalogGeneration=0,pendingResultsContext=null,pendingExplicitReturn=null,initialNavigation=true;
 async function refreshPublished(append=false){
-  try{const result=await api('/api/catalog'+(append&&state.catalogCursor?'?cursor='+encodeURIComponent(state.catalogCursor):''));state.catalogRecords=append?[...state.catalogRecords,...result.records]:result.records;state.catalogCursor=result.cursor;state.catalogError='';}
-  catch(error){state.catalogError=error.message;}
-  state.catalogLoaded=true;if(['#/oportunidades','#/buscar','#/proyectos-siniestrados'].includes(location.hash.split('?')[0]))render();
+  const generation=++catalogGeneration,restore=pendingResultsContext;
+  try{
+    let result=await api('/api/catalog'+(append&&state.catalogCursor?'?cursor='+encodeURIComponent(state.catalogCursor):'')),records=append?[...state.catalogRecords,...result.records]:result.records,cursor=result.cursor,pages=0;
+    while(!append&&restore&&records.length<restore.catalogLimit&&cursor&&pages<9){const next=await api('/api/catalog?cursor='+encodeURIComponent(cursor));records.push(...next.records);cursor=next.cursor;pages++;}
+    if(generation!==catalogGeneration)return;
+    state.catalogRecords=records;state.catalogCursor=cursor;state.catalogError='';
+  }catch(error){if(generation!==catalogGeneration)return;state.catalogError=error.message;}
+  state.catalogLoaded=true;
+  if(isCatalogHash(location.hash)){const y=window.scrollY;render();if(restore&&pendingResultsContext===restore&&restore.hash===location.hash)restoreSearchScroll(restore);else window.scrollTo({top:y,behavior:'instant'});}
+  if(pendingResultsContext===restore)pendingResultsContext=null;
 }
 async function loadPublication(id){
   state.publicRecord=null;state.publicError='';
@@ -301,7 +314,7 @@ async function loadPublication(id){
 }
 function publicationsHTML(){
   if(!state.catalogLoaded)return '<section class="published-catalog"><p role="status">Consultando resúmenes publicados…</p></section>';
-  if(state.catalogError)return '<p class="jr-publications-access">'+(state.catalogError.includes('Inicia sesión')?'Las publicaciones revisadas requieren iniciar sesión. A continuación puedes explorar las fichas de ejemplo.':'No pudimos cargar las publicaciones revisadas. Puedes explorar los ejemplos y volver a intentarlo más tarde.')+'</p>';
+  if(state.catalogError)return '<p class="jr-publications-access">No pudimos cargar las publicaciones. Puedes explorar los ejemplos o <button type="button" class="text-button" data-action="retry-publications">volver a intentarlo</button>.</p>';
   if(!state.catalogRecords.length&&!state.catalogCursor)return '<section class="ux-catalog-empty"><h2>Publicaciones revisadas</h2><p>Aún no hay resúmenes publicados disponibles. Más abajo puedes explorar fichas de ejemplo para conocer el recorrido.</p><a class="text-link" href="#/publicar/terreno">Presentar mi terreno →</a></section>';
   const directoryRecords=state.catalogRecords.filter(r=>matchesDirectory(r,state.directoryScope)&&matchesOpportunityFilters(r,state));
   return `<section class="published-catalog"><div class="section-heading"><div><h2>Resúmenes publicados</h2><p>${directoryRecords.length} ${directoryRecords.length===1?'coincidencia':'coincidencias'} entre ${state.catalogRecords.length} ${state.catalogRecords.length===1?'publicación cargada':'publicaciones cargadas'}${state.catalogCursor?'; hay más por cargar':''}. Información autorizada por su titular.</p></div></div><div class="published-grid">${[...directoryRecords.reduce((groups,r)=>{const key=r.assetReference||r.id;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);return groups;},new Map()).values()].map(group=>{const r=group[0];return `<article>${availabilityHTML(r)}${summaryHTML(r)}<a class="button outline" href="#/publicacion/${r.id}">Ver ficha</a>${comparisonButton(r)}${group.length>1?`<details><summary>${group.length} presentaciones vinculadas al mismo inmueble</summary>${group.slice(1).map(x=>`<p><a href="#/publicacion/${x.id}">${escape(x.reference)} · ${escape(x.title)}</a></p>`).join('')}<p>Revisa representación y exclusividad en cada ficha. Las autorizaciones se gestionan por separado.</p></details>`:''}</article>`;}).join('')}</div>${!directoryRecords.length?'<p>Aún no hay coincidencias entre los resúmenes cargados.</p>':''}${state.catalogCursor?'<button class="button outline" data-action="more-publications">Cargar más publicaciones</button>':''}</section>`;
@@ -419,6 +432,8 @@ function syncMap() {
   landMap.mount(host, {
     context: context === "hero" ? "home" : context,
     richPopup: context === "hero",
+    initialCamera:context==='search'&&state.searchCameraRevision===state.mapFitRevision?state.searchCamera:null,
+    onViewChange:camera=>{if(context==='search'){state.searchCamera=camera;state.searchCameraRevision=state.mapFitRevision;}},
     geometry: context === "detail" ? demoTerrainGeometry(stage.dataset.propertyId) : null,
     hideMarkers: context === "detail" && !!demoTerrainGeometry(stage.dataset.propertyId),
     items,
@@ -950,7 +965,7 @@ function spacePage() {
       "Tu actividad",
       btn("Vender mi terreno", "#/publicar/terreno", "outline"),
     ) +
-    `<section class="page-content"><div class="container"><div class="info-box">${icon("lock")}<span><strong>Tu actividad, en su lugar.</strong> Los expedientes enviados y el seguimiento se guardan en tu cuenta. Los favoritos, búsquedas y borradores se conservan en este navegador.</span></div>${spaceActionsHTML({draft:saved.draft,team:!!state.session?.teamRole})}${privateRecordsHTML()}<div data-activity-center></div><section class="ux-local-section"><h2>Guardado en este navegador</h2><p>Favoritos, búsquedas y borradores para retomar después. Los expedientes enviados y el seguimiento se consultan arriba.</p><div class="space-stats"><div class="space-stat"><strong>${saved.favorites.length}</strong><span>Favoritos</span></div><div class="space-stat"><strong>${saved.searches.length}</strong><span>Búsquedas guardadas</span></div><div class="space-stat"><strong>${saved.submissions.length}</strong><span>Registros de ejemplo</span></div></div><div class="space-tabs" role="tablist" aria-label="Actividad">${[
+    `<section class="page-content"><div class="container"><div class="info-box">${icon("lock")}<span><strong>Tu actividad, en su lugar.</strong> Los expedientes enviados y el seguimiento se guardan en tu cuenta. Los favoritos, búsquedas y borradores se conservan en este navegador.</span></div>${spaceActionsHTML({draft:saved.draft,team:!!state.session?.teamRole,objective:saved.objective})}${state.session?.authenticated?privateRecordsHTML()+'<div data-activity-center></div>':state.session?accessGateHTML({hash:'#/mi-espacio',title:'Tu seguimiento, desde tu cuenta',description:'Inicia sesión para consultar expedientes, intereses y solicitudes. Tus favoritos y búsquedas locales siguen disponibles más abajo.'}):'<p role="status">Consultando tu cuenta…</p>'}<section class="ux-local-section"><h2>Guardado en este navegador</h2><p>Favoritos, búsquedas y borradores para retomar después. Los expedientes enviados y el seguimiento se consultan arriba.</p><div class="space-stats"><div class="space-stat"><strong>${saved.favorites.length}</strong><span>Favoritos</span></div><div class="space-stat"><strong>${saved.searches.length}</strong><span>Búsquedas guardadas</span></div><div class="space-stat"><strong>${saved.submissions.length}</strong><span>Registros de ejemplo</span></div></div><div class="space-tabs" role="tablist" aria-label="Actividad">${[
       ["favorites", "Favoritos"],
       ["searches", "Búsquedas"],
       ["submissions", "Borrador e historial local"],
@@ -985,6 +1000,7 @@ function render() {
   else if (path === '/alternativas-home/hero') html=home(true);
   else if (path === '/alternativas-home') html=homeOptionsIndex();
   else if (path.startsWith('/alternativas-home/')) html=homeAlternative(path.split('/')[2],{cards:properties.slice(0,3).map(propertyCard).join(''),map:path.endsWith('/mapa')?mapHTML('home'):''});
+  else if(path==='/asesoria-valor-terreno')html=premiumValuationPage();
   else if (path === "/comparar") html=pageHeader("Comparar terrenos","Hasta cuatro alternativas, con datos declarados y monedas separadas.","Tu evaluación")+'<section class="page-content"><div class="container" data-exp-comparison></div></section>';
   else if (path === "/buscar") html = catalog(true);
   else if (path === "/oportunidades") html = catalog();
@@ -1035,7 +1051,7 @@ function render() {
   opportunityExperience.mount($('#contenido'),{owner:state.remoteRecord,team:reviewDesk.record});
   mountActivity($('#contenido'),{team:!!state.session?.teamRole});
   salesUI.mount($('[data-sales-host]'),{mode:path.startsWith('/interes/')?'form':'list',audience:path.startsWith('/equipo-comercial')?'team':path.startsWith('/interesados-recibidos')?'seller':'buyer',id:(path.startsWith('/mis-intereses/')||path.startsWith('/interesados-recibidos/')||path.startsWith('/equipo-comercial/'))?path.split('/')[2]:null,sourceKind:path.split('/')[2]==='publicacion'?'publication':'demo',sourceId:path.startsWith('/interes/')?path.split('/')[3]:null,recordId:new URLSearchParams(location.hash.split('?')[1]||'').get('expediente')||'',consultation:new URLSearchParams(location.hash.split('?')[1]||'').get('consulta')||''});
-  serviceRequestsUI.mount($('[data-service-host]'),{mode:path.startsWith('/solicitar-servicio/')?'form':path==='/equipo-aliados'?'allies':'requests',slug:path.startsWith('/solicitar-servicio/')?path.split('/')[2]:null,team:path.startsWith('/equipo-'),id:(path.startsWith('/mis-solicitudes/')||path.startsWith('/equipo-solicitudes/'))?path.split('/')[2]:null,query:new URLSearchParams(location.hash.split('?')[1]||'').get('especialidad')||'',departmentCode:new URLSearchParams(location.hash.split('?')[1]||'').get('departamento')||''});
+  serviceRequestsUI.mount($('[data-service-host]'),{mode:path.startsWith('/solicitar-servicio/')?'form':path==='/equipo-aliados'?'allies':'requests',slug:path.startsWith('/solicitar-servicio/')?path.split('/')[2]:null,team:path.startsWith('/equipo-'),id:(path.startsWith('/mis-solicitudes/')||path.startsWith('/equipo-solicitudes/'))?path.split('/')[2]:null,query:new URLSearchParams(location.hash.split('?')[1]||'').get('especialidad')||'',departmentCode:new URLSearchParams(location.hash.split('?')[1]||'').get('departamento')||'',service:new URLSearchParams(location.hash.split('?')[1]||'').get('servicio')||''});
   profileEditor.mount($('[data-profile-editor]'),path.startsWith('/registro/aliado/')?specialistDefaults(specialistBySlug(path.slice('/registro/aliado/'.length))):{});
   $$(".primary-navigation a").forEach(a => {
     if(a.getAttribute("href") === "#" + path) a.setAttribute("aria-current", "page");
@@ -1055,14 +1071,18 @@ function enterRoute() {
   const path = (location.hash || "#/").slice(1).split("?")[0];
   if(path==='/alternativas-home/terrenos'){location.replace('#/');return;}
   if(path.startsWith('/oportunidad/'))state.detailMapStyle=terrainDefaultMapStyle(properties.find(p=>p.id===path.split('/')[2]));
-  if(path==='/buscar'&&!state.type&&!state.searchTypeExplicit)state.type='terreno';
-  if(path==='/proyectos-siniestrados')Object.assign(state,{type:'proyecto',reactivationFilter:'only'});
-  if(path==='/oportunidades'){
+  const restore=isCatalogHash(location.hash)?(pendingExplicitReturn||normalizeSearchContext(history.state?.iiCatalogSearch)||(initialNavigation?readSearchContext(location.hash):null)):null;
+  pendingExplicitReturn=null;initialNavigation=false;
+  const restoring=restore?.hash===location.hash;
+  if(path==='/buscar'&&!restoring&&!state.type&&!state.searchTypeExplicit)state.type='terreno';
+  if(path==='/proyectos-siniestrados'&&!restoring)Object.assign(state,{type:'proyecto',reactivationFilter:'only'});
+  if(path==='/oportunidades'&&!restoring){
     state.directoryScope=readDirectoryScope(location.hash);
     const opportunityType=new URLSearchParams(location.hash.split('?')[1]||'').get('tipo');
     if(['terreno','proyecto','todos'].includes(opportunityType)&&!state.directoryScope)Object.assign(state,{query:'',type:opportunityType==='todos'?'':opportunityType,reactivationFilter:opportunityType==='proyecto'?(new URLSearchParams(location.hash.split('?')[1]||'').get('estado')==='reactivacion'?'only':'exclude'):'',mode:'',maxPrice:'',min:'',max:'',zone:[],sectors:[],drawPoints:[],mapPlace:null,placeBounds:null,mapSearchText:'',view:'list',mapFitRevision:state.mapFitRevision+1});
     if(state.directoryScope)Object.assign(state,{query:'',type:'terreno',reactivationFilter:'',mode:'',maxPrice:'',min:'',max:'',zone:[],sectors:[],drawPoints:[],mapPlace:null,placeBounds:null,mapSearchText:'',pendingLocationQuery:'',view:'list',mapFitRevision:state.mapFitRevision+1});
   }
+  if(restoring){Object.assign(state,restore.filters,{placeResults:[],mapPlace:null,drawPoints:[],drawing:false,mapFitRevision:state.mapFitRevision+1});state.searchCamera=restore.camera;state.searchCameraRevision=state.mapFitRevision;pendingResultsContext=restore;}
   if (path.startsWith("/publicar/")) {
     const kind = path.endsWith("proyecto") ? "proyecto" : "terreno";
     const draft = saved.draft?.kind === kind ? saved.draft : null;
@@ -1093,7 +1113,7 @@ function enterRoute() {
   if (['/oportunidades','/buscar','/proyectos-siniestrados'].includes(path))refreshPublished();
   if (path.startsWith('/publicacion/'))loadPublication(path.split('/')[2]);
   if (path.startsWith("/mi-expediente/")) loadRemoteRecord(path.split('/')[2]);
-  window.scrollTo({ top: 0, behavior: "instant" });
+  if(restoring)restoreSearchScroll(restore);else window.scrollTo({ top: 0, behavior: "instant" });
   if (path === "/buscar" && state.pendingLocationQuery) {
     const query = state.pendingLocationQuery;
     state.pendingLocationQuery = "";
@@ -1218,7 +1238,7 @@ function redrawMap() {
 }
 function redrawResults() {
   const path = location.hash || "#/";
-  if (path.startsWith("#/buscar") || path.startsWith("#/oportunidades")) {
+  if (isCatalogHash(path)) {
     const scroll = window.scrollY;
     render();
     window.scrollTo({ top: scroll, behavior: "instant" });
@@ -1250,6 +1270,10 @@ function resetFilters() {
   else render();
 }
 async function action(actionName, el, event) {
+  if(actionName==='return-search'){event?.preventDefault();const context=readSearchContext();if(context){pendingExplicitReturn=context;if(location.hash===context.hash)enterRoute();else location.hash=context.hash;}else location.hash='#/buscar';return;}
+  if(actionName==='retry-publications'){refreshPublished();return;}
+  if(actionName==='space-objective'){saved.objective=normalizeSpaceObjective(el.dataset.objective);persist();render();document.querySelector('[data-objective="'+saved.objective+'"]').focus({preventScroll:true});return;}
+
   if(actionName==='link-project-profile'){
     if(!state.remoteRecord)return;el.disabled=true;
     try{state.remoteRecord=await api('/api/records/'+state.remoteRecord.id+'/profile',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({revision:state.remoteRecord.revision})});render();toast('Tu perfil quedó vinculado al proyecto privado.');}
@@ -1567,6 +1591,9 @@ async function action(actionName, el, event) {
     );
 }
 document.addEventListener("click", (event) => {
+  const next=event.target.closest('a[href]');
+  if(next&&isCatalogHash(location.hash)&&next.getAttribute('href')!==location.hash)captureSearchContext(state,location.hash,next.getAttribute('href'));
+
   const directoryShortcut=event.target.closest(".footer-directory a");
   if(directoryShortcut?.getAttribute("href")===location.hash){event.preventDefault();enterRoute();return;}
   if (event.target.closest(".skip-link")) {
@@ -1949,6 +1976,8 @@ $("#dialog").addEventListener("click", (event) => {
       closeModal();
   }
 });
+window.addEventListener('pagehide',()=>{if(isCatalogHash(location.hash))captureSearchContext(state,location.hash);});
+for(const name of ['wheel','touchstart'])window.addEventListener(name,()=>{pendingResultsContext=null;},{passive:true});
 window.addEventListener("hashchange", enterRoute);
 enterRoute();
 loadSession();

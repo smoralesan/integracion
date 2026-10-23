@@ -57,8 +57,15 @@ const allowedFields=['valuation_assistance','title','city','region','department_
 export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
   const url=new URL(request.url);if(!url.pathname.startsWith('/api/'))return null;
   try {
-    const prefix=await ownerPrefix(request),bucket=env.BUCKET;
+    const publicRead=request.method==='GET'&&/^\/api\/catalog(?:\/[\w-]+(?:\/photos\/[\w-]+)?)?$/.test(url.pathname);
+    const prefix=publicRead?null:await ownerPrefix(request),bucket=env.BUCKET;
     if(!bucket) error(503,'El almacenamiento privado todavía no está disponible. No se guardó el archivo.');
+    if(publicRead){
+      const context={bucket,prefix:null,json,error,bodyBytes,text,documentMeta,uuid,role:null};
+      const result=url.pathname.includes('/photos/')?await opportunityApi(request,env,context):await reviewApi(request,env,context);
+      if(result)return result;
+      error(404,'Publicación no disponible.');
+    }
     if(!['GET','HEAD'].includes(request.method)) {
       if(request.headers.get('origin')!==url.origin) error(403,'La solicitud debe originarse en este portal.');
       if(request.headers.get('sec-fetch-site')==='cross-site') error(403,'Origen no autorizado.');

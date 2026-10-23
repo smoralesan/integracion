@@ -1,3 +1,4 @@
+import {accessGateHTML} from './access-gate.js';
 import {terrainPreparationHTML,mountTerrainPreparation} from './terrain-evaluation.js';
 import {terrainConsultPreset,terrainConsultReasons} from './terrain-detail.js';
 import {api} from './records-api.js';
@@ -19,7 +20,7 @@ export class SalesUI{
    else if(o.id)data={record:await api(this.endpoint()+'/'+o.id)};
    else{const result=await api(this.endpoint());data={rows:result.leads,cursor:result.cursor};}
    if(generation!==this.generation)return;Object.assign(this,data);this.render();
-  }catch(error){if(generation!==this.generation)return;host.innerHTML=navigation(o.audience)+`<p role="alert">${e(error.message)}</p><a class="button outline" href="#/oportunidades">Ver catálogo</a>`;}
+  }catch(error){if(generation!==this.generation)return;host.innerHTML=navigation(o.audience)+(error.status===401?accessGateHTML({hash:location.hash,title:'Inicia sesión para contactar',description:'Con tu cuenta podrás enviar tu interés y consultar el seguimiento de esta oportunidad.'}):`<p role="alert">${e(error.message)}</p><a class="button outline" href="#/oportunidades">Ver catálogo</a>`);}
  }
  endpoint(){return this.options.audience==='team'?'/api/team/purchase-leads':this.options.audience==='seller'?'/api/received-leads':'/api/purchase-leads';}
  render(){if(!this.host)return;this.host.innerHTML=navigation(this.options.audience)+(this.options.mode==='form'?this.formHTML():this.options.id?this.detailHTML():this.listHTML());this.bind();}

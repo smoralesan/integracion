@@ -134,6 +134,7 @@ export class LandMap {
         this.root.dataset.mapReady = "true";
         this.options.onReady?.();
       });
+      this.map.on('moveend',()=>{if(this.options.context==='search'){const center=this.map.getCenter();this.options.onViewChange?.({center:[center.lng,center.lat],zoom:this.map.getZoom(),bearing:this.map.getBearing(),pitch:this.map.getPitch()});}});
       this.map.on("click", (event) => {
         if (this.options.drawing)
           this.options.onPoint?.([
@@ -314,6 +315,7 @@ export class LandMap {
   }
   fitView() {
     const o = this.options;
+    if(o.context==='search'&&o.initialCamera){this.map.jumpTo(o.initialCamera);return;}
     if (o.place) {
       this.locate(o.place);
       return;

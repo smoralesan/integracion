@@ -25,6 +25,7 @@ export async function reviewApi(request,env,context){
   }
   async function data(limit=16000){return JSON.parse(new TextDecoder().decode(await bodyBytes(request,limit)));}
   async function visibleRecord(locator){
+    if(!locator||!uuid.test(locator.id||'')||!/^users\/[0-9a-f]{64}\/records\/[0-9a-f-]{36}\.json$/.test(locator.recordKey||''))return null;
     const object=await bucket.get(locator.recordKey);if(!object)return null;const r=await object.json();
     if(statusOf(r)!=='published'||!r.publicationConsent?.authorized||r.publicationId!==locator.id)return null;
     if(r.publicationConsent.version==='detail-v2'){const ownerPrefix=locator.recordKey.split('records/')[0];const files=await Promise.all((r.files||[]).map(async f=>{const meta=await bucket.get(ownerPrefix+'documents/'+f.id+'/meta.json');if(!meta)return null;const m=await meta.json();return Date.parse(m.expiresAt)>Date.now()?{...f,expiresAt:m.expiresAt}:null;}));r.files=files.filter(Boolean);}

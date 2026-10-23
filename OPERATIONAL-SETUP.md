@@ -30,3 +30,11 @@ Referencia técnica: https://developers.brevo.com/reference/send-transac-email
 `MAPBOX_PUBLIC_TOKEN` se configura en Sites y se entrega exclusivamente mediante `/mapbox-config.js`. Debe ser un token público `pk` con alcance de navegador. Los tokens secretos `sk` se rechazan. Esta configuración es pública por diseño cuando se utiliza el mapa, aunque Sites guarde el valor de forma reservada. El archivo del repositorio contiene un valor vacío. Para el preview local se admite `MAPBOX_PUBLIC_TOKEN` en el entorno o `.local-data/mapbox-public.json` (ignorado por Git).
 
 GitHub recibió una copia inicial del código mediante la conexión autorizada de la app. Git de este equipo usa otra cuenta y requiere ajustar su autenticación antes de enviar por terminal; no se cambiaron sus credenciales. Los historiales de Sites y de la copia inicial de GitHub son independientes.
+
+## Consulta pública y retorno a resultados
+
+Solo GET de `/api/catalog`, `/api/catalog/:id` y `/api/catalog/:id/photos/:photoId` admiten visitantes sin identidad. Se verifica de nuevo estado publicado, consentimiento y selección/vigencia de cada fotografía. No se publica el registro interno, contacto del propietario, documentos originales ni notas del equipo. Las mutaciones, reportes y seguimientos siguen exigiendo identidad y origen autorizado.
+
+El contexto de búsqueda se conserva en sessionStorage y el historial de la misma pestaña durante un máximo de 24 horas: filtros, lista/mapa, encuadre, posición y referencia de la ficha. La restauración permite solo campos de búsqueda; no restaura identidad ni roles. El selector de Mi espacio guarda una preferencia de navegación en el almacenamiento local, sin cambiar permisos.
+
+La asesoría de valor base usa el seguimiento existente de solicitudes de servicio. Su alcance, honorarios, impuestos, responsable y plazo se acuerdan mediante una cotización; no hay tarifa fija ni checkout activado. El piloto con personas reales está preparado en `GUIA-PRUEBAS-USABILIDAD.md`; aún requiere participantes.
