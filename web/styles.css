@@ -3872,4 +3872,7 @@ dialog::backdrop {
 .footer-payments p{font-size:11px;line-height:1.7;color:#becbde;margin:0}
 .footer-payments-copy,.footer-payments-brand{min-width:0}
 .footer-payments-brand{width:320px;max-width:100%;flex-shrink:0}
+.footer-payments .footer-payments-provider{color:#fff;font-weight:600;margin:0 0 8px}
+.footer-payments-methods{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.footer-payments-methods li{font-size:11px;line-height:1.4;color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:3px 9px}
 @media(max-width:700px){.site-footer .footer-payments{align-items:flex-start;flex-direction:column;gap:17px;padding:20px}.footer-payments-brand{width:100%}}

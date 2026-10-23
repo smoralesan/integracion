@@ -29,4 +29,6 @@ Referencia técnica: https://developers.brevo.com/reference/send-transac-email
 
 `MAPBOX_PUBLIC_TOKEN` se configura en Sites y se entrega exclusivamente mediante `/mapbox-config.js`. Debe ser un token público `pk` con alcance de navegador. Los tokens secretos `sk` se rechazan. Esta configuración es pública por diseño cuando se utiliza el mapa, aunque Sites guarde el valor de forma reservada. El archivo del repositorio contiene un valor vacío. Para el preview local se admite `MAPBOX_PUBLIC_TOKEN` en el entorno o `.local-data/mapbox-public.json` (ignorado por Git).
 
+La política de seguridad de contenido (CSP) del Worker está en `worker/security-headers.js` y solo admite scripts propios y de Mapbox. Cualquier script, estilo o servicio externo nuevo debe añadirse ahí; de lo contrario el navegador lo bloquea.
+
 GitHub recibió una copia inicial del código mediante la conexión autorizada de la app. Git de este equipo usa otra cuenta y requiere ajustar su autenticación antes de enviar por terminal; no se cambiaron sus credenciales. Los historiales de Sites y de la copia inicial de GitHub son independientes.

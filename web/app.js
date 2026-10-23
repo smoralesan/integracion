@@ -273,7 +273,7 @@ function closeModal() {
   $("#dialog").close();
 }
 function pageHeader(title, description, eyebrow = "", action = "") {
-  return `<section class="page-header"><div class="container"><div class="breadcrumbs"><a href="#/">Inicio</a>${icon("chevron-right")}<span>${escape(title)}</span></div><div class="page-header-row"><div>${eyebrow ? `<div class="eyebrow">${eyebrow}</div>` : ""}<h1>${title}</h1><p>${description}</p></div>${action}</div></div></section>`;
+  return `<section class="page-header"><div class="container"><div class="breadcrumbs"><a href="#/">Inicio</a>${icon("chevron-right")}<span>${title}</span></div><div class="page-header-row"><div>${eyebrow ? `<div class="eyebrow">${eyebrow}</div>` : ""}<h1>${title}</h1><p>${description}</p></div>${action}</div></div></section>`;
 }
 function propertyCard(p) {
   const favorite = saved.favorites.includes(p.id);
@@ -1499,7 +1499,7 @@ async function action(actionName, el, event) {
       toast("Enlace copiado. La ficha contiene datos de ejemplo.");
     } catch {
       modal(
-        `<h2 id="dialog-title">Enlace de la ficha</h2><p>Puedes copiar esta dirección. Contiene únicamente información de demostración.</p><label class="form-field" style="margin-top:18px">Dirección<input readonly value="${escape(url.href)}" onclick="this.select()"></label>`,
+        `<h2 id="dialog-title">Enlace de la ficha</h2><p>Puedes copiar esta dirección. Contiene únicamente información de demostración.</p><label class="form-field" style="margin-top:18px">Dirección<input readonly value="${escape(url.href)}" data-select-on-focus></label>`,
       );
     }
   }
@@ -1717,6 +1717,9 @@ document.addEventListener("paste", (event) => {
   event.preventDefault();
   el.setRangeText(normalized, el.selectionStart, el.selectionEnd, "end");
   updateMoneyField(el);
+});
+document.addEventListener("focusin", (event) => {
+  if (event.target.matches("[data-select-on-focus]")) event.target.select();
 });
 document.addEventListener("focusout", (event) => {
   const el = event.target;
