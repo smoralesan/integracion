@@ -1,0 +1,21 @@
+{
+  "name": "integracion-inmobiliaria-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/preview.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@turf/area": "7.4.0",
+    "@turf/boolean-valid": "7.4.0",
+    "@turf/kinks": "7.4.0",
+    "@turf/rewind": "7.4.0",
+    "fast-xml-parser": "5.11.2",
+    "fflate": "0.8.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

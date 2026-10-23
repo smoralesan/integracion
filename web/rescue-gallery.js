@@ -1,0 +1,39 @@
+import {rescueFinanceHTML} from './reactivation-finance.js';
+const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeAsset=src=>typeof src==='string'&&/^\.\/assets\/[a-z0-9/_-]+\.(?:jpe?g|png|webp)$/i.test(src);
+// Referencias visuales públicas de la maqueta. No son fotografías del proyecto.
+export const demoRescueWorkGallery={illustrative:true,items:[
+ {src:'./assets/proyecto-construccion.jpg',title:'Vista general de obra',alt:'Referencia de una obra con losas y frentes de trabajo'},
+ {src:'./assets/specialists/ingenieros-estructurales.jpg',title:'Detalle de estructura',alt:'Referencia de refuerzo y elementos estructurales en construcción'},
+ {src:'./assets/specialists/interventores.jpg',title:'Refuerzo de losa',alt:'Referencia de una losa con acero de refuerzo'}
+]};
+export function rescueGalleryItems(p,view='work'){
+ if(p?.reactivation!==true)return [];
+ if(view==='render')return safeAsset(p.image)?[{src:p.image,title:'Referencia arquitectónica',alt:'Imagen arquitectónica ilustrativa del edificio; no representa el estado de obra',illustrative:true}]:[];
+ if(view!=='work')return [];
+ const gallery=p.workGallery;
+ return (Array.isArray(gallery?.items)?gallery.items:[]).slice(0,20).filter(item=>safeAsset(item?.src)).map(item=>({src:item.src,title:String(item.title||'Vista de obra'),alt:String(item.alt||item.title||'Vista de obra'),illustrative:gallery.illustrative===true}));
+}
+export function rescueGalleryHTML(p){
+ if(p?.reactivation!==true)return '';
+ const items=rescueGalleryItems(p),first=items[0],hasRender=rescueGalleryItems(p,'render').length;
+ return `<section class="rg-gallery" data-rescue-gallery="${e(p.id)}" aria-label="Galería del estado de obra"><header><div><span class="eyebrow">Registro visual del proyecto</span><h2>Estado actual de la obra</h2></div><span class="rg-example">${p.workGallery?.illustrative?'Galería de ejemplo':'Registro fotográfico'}</span></header><div class="rg-view-switch" role="group" aria-label="Tipo de imágenes"><button type="button" data-rg-view="work" aria-pressed="true">Estado de obra</button>${hasRender?'<button type="button" data-rg-view="render" aria-pressed="false">Referencia arquitectónica</button>':''}</div><div class="rg-main"><button type="button" class="rg-enlarge" data-rg-enlarge aria-label="Ampliar imagen de la galería" ${first?'':'hidden'}><img data-rg-image ${first?`src="${e(first.src)}"`:''} alt="${e(first?.alt||'')}" fetchpriority="high"><span class="rg-expand-label">Ampliar ↗</span></button><div class="rg-photo-empty" data-rg-empty ${first?'hidden':''}><strong>Fotografías de obra pendientes</strong><p>El registro del estado actual está por aportar.</p></div><div class="rg-main-navigation"><button type="button" data-rg-step="-1" aria-label="Imagen anterior" ${items.length>1?'':'disabled'}>←</button><span data-rg-counter role="status">${items.length?'1 / '+items.length:'Sin imágenes'}</span><button type="button" data-rg-step="1" aria-label="Imagen siguiente" ${items.length>1?'':'disabled'}>→</button></div></div><div class="rg-caption"><strong data-rg-caption>${e(first?.title||'Registro por completar')}</strong><span data-rg-kind>${p.workGallery?.illustrative?'Imagen ilustrativa · Fecha de toma por informar':'Fecha de toma por informar'}</span></div><div class="rg-thumbnails" data-rg-thumbnails role="group" aria-label="Elegir imagen de la galería">${items.map((item,i)=>`<button type="button" data-rg-index="${i}" aria-label="Ver imagen ${i+1}: ${e(item.title)}" aria-pressed="${i===0}"><img src="${e(item.src)}" alt="" loading="lazy"><span>${e(item.title)}</span></button>`).join('')}</div><p class="rg-photo-note" data-rg-note>${p.workGallery?.illustrative?'Estas referencias muestran cómo se verá el registro de obra. Las fotografías del proyecto, sus fechas y observaciones están por aportar.':'El estado de obra se evalúa con fotografías fechadas, visita y soportes técnicos.'}</p></section>`;
+}
+export function rescueOverviewHTML(p,{action=''}={}){
+ if(p?.reactivation!==true)return '';
+ return `<section class="rg-overview" aria-label="Estado de obra y resumen financiero">${rescueGalleryHTML(p)}<div class="rg-finance-column">${rescueFinanceHTML(p)}${action?`<div class="rg-contact-action">${action}</div>`:''}</div></section>`;
+}
+export function rescueGalleryZoomHTML(item){return `<div class="rg-image-dialog"><h2 id="dialog-title">${e(item.title)}</h2><img src="${e(item.src)}" alt="${e(item.alt)}"><p>${item.illustrative?'Imagen de referencia; no acredita el estado actual del proyecto.':'Registro visual pendiente de revisión con sus soportes.'}</p></div>`;}
+export function mountRescueGalleries(root,projects,onEnlarge){
+ if(!root)return;
+ for(const host of root.querySelectorAll('[data-rescue-gallery]')){
+  if(host.dataset.galleryMounted)return;host.dataset.galleryMounted='true';
+  const p=projects.find(p=>p.id===host.dataset.rescueGallery);if(!p)continue;
+  let view='work',index=0,workIndex=0;
+  const img=host.querySelector('[data-rg-image]'),thumbs=host.querySelector('[data-rg-thumbnails]'),empty=host.querySelector('[data-rg-empty]'),main=host.querySelector('[data-rg-enlarge]');
+  const update=()=>{const items=rescueGalleryItems(p,view);index=Math.max(0,Math.min(index,items.length-1));const item=items[index];main.hidden=!item;empty.hidden=!!item;if(item){img.src=item.src;img.alt=item.alt;}host.querySelector('[data-rg-caption]').textContent=item?.title||'Registro por completar';host.querySelector('[data-rg-kind]').textContent=view==='render'?'Imagen conceptual · No es avance de obra':item?.illustrative?'Imagen ilustrativa · Fecha de toma por informar':'Fecha de toma por informar';host.querySelector('[data-rg-counter]').textContent=items.length?(index+1)+' / '+items.length:'Sin imágenes';host.querySelector('[data-rg-note]').textContent=view==='render'?'Referencia arquitectónica ilustrativa del edificio. Los avances y las condiciones de la obra se documentan por separado.':p.workGallery?.illustrative?'Estas referencias muestran cómo se verá el registro de obra. Las fotografías del proyecto, sus fechas y observaciones están por aportar.':'El estado de obra se evalúa con fotografías fechadas, visita y soportes técnicos.';host.querySelectorAll('[data-rg-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.rgView===view)));host.querySelectorAll('[data-rg-step]').forEach(b=>b.disabled=items.length<2);thumbs.innerHTML=items.map((item,i)=>`<button type="button" data-rg-index="${i}" aria-label="Ver imagen ${i+1}: ${e(item.title)}" aria-pressed="${i===index}"><img src="${e(item.src)}" alt="" loading="lazy"><span>${e(item.title)}</span></button>`).join('');};
+  host.addEventListener('click',event=>{const mode=event.target.closest('[data-rg-view]'),thumb=event.target.closest('[data-rg-index]'),step=event.target.closest('[data-rg-step]');if(mode){if(view==='work')workIndex=index;view=mode.dataset.rgView;index=view==='work'?workIndex:0;update();}else if(thumb){index=Number(thumb.dataset.rgIndex);update();thumbs.querySelector(`[data-rg-index="${index}"]`)?.focus({preventScroll:true});}else if(step){const items=rescueGalleryItems(p,view);if(items.length){index=(index+Number(step.dataset.rgStep)+items.length)%items.length;update();}}else if(event.target.closest('[data-rg-enlarge]')){const item=rescueGalleryItems(p,view)[index];if(item)onEnlarge?.(item);}});
+  thumbs.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;const items=rescueGalleryItems(p,view);if(!items.length)return;event.preventDefault();index=event.key==='Home'?0:event.key==='End'?items.length-1:(index+(event.key==='ArrowRight'?1:-1)+items.length)%items.length;update();thumbs.querySelector(`[data-rg-index="${index}"]`)?.focus({preventScroll:true});});
+  img.addEventListener('error',()=>{main.hidden=true;empty.hidden=false;});
+ }
+}

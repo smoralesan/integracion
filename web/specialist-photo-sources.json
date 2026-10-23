@@ -1,0 +1,110 @@
+[
+  {
+    "slug": "estructuradores",
+    "page": "https://unsplash.com/photos/people-reviewing-architectural-blueprints-on-desk-3QzMBrvCeyQ",
+    "image": "https://images.unsplash.com/photo-1608303588026-884930af2559",
+    "subject": "Planos y evaluación del proyecto"
+  },
+  {
+    "slug": "desarrolladores",
+    "page": "https://unsplash.com/photos/aerial-view-of-modern-apartment-buildings-in-a-city-grGgaa21axQ",
+    "image": "https://images.unsplash.com/photo-1764232165240-73be9237845f",
+    "subject": "Desarrollo urbano"
+  },
+  {
+    "slug": "inversionistas",
+    "page": "https://unsplash.com/photos/business-people-collaborating-in-a-modern-office-meeting-VRT8k7BJ7wk",
+    "image": "https://images.unsplash.com/photo-1758518729711-1cbacd55efdb",
+    "subject": "Evaluación de oportunidades"
+  },
+  {
+    "slug": "financiadores",
+    "page": "https://unsplash.com/photos/business-people-meeting-on-sofas-in-a-modern-lobby-b9IKcVPCt3A",
+    "image": "https://images.unsplash.com/photo-1758518729593-275baa967f78",
+    "subject": "Análisis financiero"
+  },
+  {
+    "slug": "fiduciarias",
+    "page": "https://unsplash.com/photos/business-people-signing-a-contract-at-a-table-iPheGw7_UaI",
+    "image": "https://images.unsplash.com/photo-1758518731462-d091b0b4ed0d",
+    "subject": "Administración y acuerdos"
+  },
+  {
+    "slug": "comercializadores",
+    "page": "https://unsplash.com/photos/four-business-people-in-a-meeting-discussing-documents-YHC8oV7tcdM",
+    "image": "https://images.unsplash.com/photo-1758518727929-4506fc031e1c",
+    "subject": "Gestión comercial"
+  },
+  {
+    "slug": "tecnicos",
+    "page": "https://unsplash.com/photos/construction-workers-review-plans-at-a-job-site-IvEYfb-3B70",
+    "image": "https://images.unsplash.com/photo-1742112125567-3e8967bad60f",
+    "subject": "Coordinación técnica"
+  },
+  {
+    "slug": "ingenieros-estructurales",
+    "page": "https://unsplash.com/photos/rebar-structure-5oAUX3gT-V4",
+    "image": "https://images.unsplash.com/photo-1560596205-8fb48c7ef200",
+    "subject": "Diseño estructural"
+  },
+  {
+    "slug": "ingenieros-electricos",
+    "page": "https://unsplash.com/photos/electrician-testing-electrical-panel-with-multimeter-PkHf7BUWbtk",
+    "image": "https://images.unsplash.com/photo-1758101755915-462eddc23f57",
+    "subject": "Instalaciones eléctricas"
+  },
+  {
+    "slug": "disenadores-de-interiores",
+    "page": "https://unsplash.com/photos/modern-living-space-with-large-window-overlooking-nature-b6Bs19onFtY",
+    "image": "https://images.unsplash.com/photo-1774311237295-a65a4c1ff38a",
+    "subject": "Diseño interior"
+  },
+  {
+    "slug": "interventores",
+    "page": "https://unsplash.com/photos/construction-worker-inspects-rebar-on-a-building-site-dSjrv4w1g1Q",
+    "image": "https://images.unsplash.com/photo-1768677903496-becc4be07258",
+    "subject": "Inspección de obra"
+  },
+  {
+    "slug": "disenadores-hidraulicos",
+    "page": "https://unsplash.com/photos/industrial-pipes-and-machinery-in-a-factory-18CHs5JonWQ",
+    "image": "https://images.unsplash.com/photo-1765218933298-dc55fdfb517a",
+    "subject": "Redes e instalaciones hidráulicas"
+  },
+  {
+    "slug": "topografos",
+    "page": "https://unsplash.com/photos/surveyor-using-a-total-station-in-a-grassy-field-OIZPlqDEbPM",
+    "image": "https://images.unsplash.com/photo-1766830110938-0ea8a6d78ecb",
+    "subject": "Levantamiento topográfico"
+  },
+  {
+    "slug": "geotecnistas",
+    "page": "https://unsplash.com/photos/yellow-excavator-digging-soil-at-a-construction-site-gSlXYYX4U4g",
+    "image": "https://images.unsplash.com/photo-1780054984792-c5105f20390a",
+    "subject": "Condiciones del suelo"
+  },
+  {
+    "slug": "consultores-ambientales",
+    "page": "https://unsplash.com/photos/a-scenic-river-flowing-through-a-forest-with-mountains-O3a_Ow_MdoM",
+    "image": "https://images.unsplash.com/photo-1768347442280-24e6f8500d1c",
+    "subject": "Entorno natural"
+  },
+  {
+    "slug": "disenadores-viales-urbanismo",
+    "page": "https://unsplash.com/photos/aerial-view-of-a-highway-interchange-in-a-city-OHsUNLbS-VM",
+    "image": "https://images.unsplash.com/photo-1757997623209-5b322a3854f0",
+    "subject": "Infraestructura vial"
+  },
+  {
+    "slug": "presupuestos-programacion",
+    "page": "https://unsplash.com/photos/calculator-and-papers-in-a-folder-on-a-dark-surface-_1QHMYHNeN0",
+    "image": "https://images.unsplash.com/photo-1772588627474-ae6acc69ac42",
+    "subject": "Planeación y costos"
+  },
+  {
+    "slug": "coordinadores-bim",
+    "page": "https://unsplash.com/photos/person-using-a-laptop-with-architectural-design-on-screen-qDV-a0huFQk",
+    "image": "https://images.unsplash.com/photo-1772093923891-ea43e4b0faf3",
+    "subject": "Coordinación digital del diseño"
+  }
+]

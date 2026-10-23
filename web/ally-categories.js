@@ -1,0 +1,3 @@
+export const technicalSpecialties=['Ingenieros estructurales','Ingenieros eléctricos','Diseñadores de interiores','Interventores','Diseñadores hidráulicos','Topógrafos','Geotecnistas','Consultores ambientales','Diseñadores viales y de urbanismo','Especialistas en presupuestos y programación','Coordinadores BIM'];
+export const allyCategories=['Abogados (legales)','Estructuradores','Desarrolladores','Arquitectos','Constructores','Inversionistas','Financiadores','Fiduciarias','Comercializadores','Técnicos'];
+export function validSpecialty(category,specialty){return category==='Técnicos'?technicalSpecialties.includes(specialty):!specialty;}
