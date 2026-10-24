@@ -1,0 +1,108 @@
+/* Shared surfaces for sample and authorized terrain details. */
+.tu-page,.exp-public-detail--terrain{
+  --land-white:#fff;
+  --land-neutral:#f6f8fb;
+  --land-accent:#eef4ff;
+  --land-line:#dfe6ef;
+  --land-accent-line:#d5e2f5;
+  --land-copy:#52677f;
+  --land-heading:#193b60;
+  background:var(--land-white);
+}
+/* The map, imagery, description and tabs keep the main white surface. */
+.tu-page .tu-content,.tu-page .tu-tabs,.exp-public-detail--terrain .jr-detail-tabs{
+  background:var(--land-white);
+}
+/* Technical information and supporting documents share one neutral tone. */
+.tu-page .tu-fold{
+  margin:14px 0;
+  padding:0 22px;
+  border:1px solid var(--land-line);
+  border-radius:12px;
+  background:var(--land-neutral);
+}
+.tu-page .tu-fold>summary{padding:18px 0;color:var(--land-heading);font-size:13px}
+.tu-page .tu-fold>div{padding:0 0 22px}
+.tu-page .tu-fold p,.tu-page .tu-fold .tu-review-list span{color:var(--land-copy)}
+.tu-page .tu-fold .tu-data dt{color:#64788e}
+.tu-page .tu-fold .tu-data dd{color:#294866}
+.tu-page #tu-panel-documentos{
+  background:var(--land-neutral);
+  border:1px solid var(--land-line);
+  border-radius:14px;
+  padding:26px;
+  margin-top:24px;
+}
+.tu-page #tu-panel-documentos .tu-fold{background:var(--land-white)}
+.tu-page #tu-panel-documentos p{color:var(--land-copy)}
+.tu-page #tu-panel-documentos .tu-document-list li{border-color:var(--land-line)}
+.tu-page #tu-panel-documentos .tu-document-list strong{color:var(--land-heading)}
+/* Contact and the associated construction project use the brand accent. */
+.tu-page .tu-contact,.tu-page .tu-side-note{
+  background:var(--land-accent);
+  border:1px solid var(--land-accent-line);
+  border-radius:14px;
+  padding:26px;
+}
+.tu-page .tu-contact-help,.tu-page .tu-handler-note,.tu-page .tu-contact>small,
+.tu-page .tu-side-note p,.tu-page .tu-side-note ol{color:var(--land-copy)}
+.tu-page .tu-side-note h2{color:var(--land-heading)}
+.tu-page .tu-side-note>.eyebrow{color:#4671a5}
+.tu-page .tu-handler{border-color:var(--land-accent-line)}
+.tu-page .tu-visit-row{
+  border:1px solid var(--land-accent-line);
+  border-radius:12px;
+  background:var(--land-accent);
+  padding:22px;
+}
+.tu-page .tu-visit-row p{color:var(--land-copy)}
+.tu-page .tu-panel>.construction-project{
+  padding:26px;
+  border:1px solid var(--land-accent-line);
+  border-radius:14px;
+  background:var(--land-accent);
+}
+.tu-page .construction-project>p,.tu-page .construction-project-heading p{color:var(--land-copy)}
+.tu-page .construction-metrics{gap:1px;border:1px solid var(--land-accent-line);border-radius:10px;background:var(--land-accent-line)}
+.tu-page .construction-metrics>div,.tu-page .construction-metrics>div:nth-child(odd){padding:17px;background:var(--land-white);border:0}
+.tu-page .construction-metrics dt{color:#62778f}
+.tu-page .construction-metrics dd{color:var(--land-heading)}
+.tu-page .construction-disclosure{border-color:var(--land-accent-line);background:transparent}
+.tu-page .construction-disclosure>summary{color:#315578}
+/* Apply the same roles to real public terrain records, without affecting projects. */
+.exp-public-detail--terrain .jr-public-top .exp-public-sidebar{
+  background:var(--land-accent);
+  border:1px solid var(--land-accent-line);
+  border-radius:14px;
+}
+.exp-public-detail--terrain .jr-detail-panel[id$="-panel-potencial"],
+.exp-public-detail--terrain .jr-detail-panel[id$="-panel-documentos"]{
+  padding:26px;
+  margin-top:24px;
+  border:1px solid var(--land-line);
+  border-radius:14px;
+  background:var(--land-neutral);
+}
+.exp-public-detail--terrain .jr-detail-panel>.exp-section{background:transparent}
+.exp-public-detail--terrain .jr-detail-panel>.exp-section:first-child{padding-top:0}
+.exp-public-detail--terrain .jr-detail-panel>.exp-section:last-child{border-bottom:0;padding-bottom:0}
+.exp-public-detail--terrain .exp-section>p,.exp-public-detail--terrain .exp-help{color:var(--land-copy)}
+.exp-public-detail--terrain .jr-real-mobile-contact,.tu-page .tu-mobile-contact{
+  background:var(--land-accent);
+  border-color:var(--land-accent-line);
+}
+@media(max-width:760px){
+  .tu-page .tu-contact{padding:20px;border:1px solid var(--land-accent-line);border-radius:12px}
+  .tu-page .tu-fold{padding:0 17px;margin:12px 0;border-radius:10px}
+  .tu-page .tu-fold>summary{padding:17px 0;font-size:12px}
+  .tu-page #tu-panel-documentos,.tu-page .tu-panel>.construction-project,
+  .exp-public-detail--terrain .jr-detail-panel[id$="-panel-potencial"],
+  .exp-public-detail--terrain .jr-detail-panel[id$="-panel-documentos"]{padding:20px;border-radius:12px;margin-top:20px}
+  .tu-page .tu-visit-row{padding:18px;gap:18px;flex-wrap:wrap}
+  .tu-page .tu-visit-row>.button{max-width:100%}
+  .tu-page .construction-metrics>div,.tu-page .construction-metrics>div:nth-child(odd){padding:13px}
+}
+.tu-page .tu-contact-mode,.tu-page .tu-contact-facts span,.tu-page .tu-handler small{color:#5c7290}
+.tu-page .tu-contact-facts strong,.tu-page .tu-handler strong{color:#294866}
+.tu-page .tu-side-note .tu-text-button{color:#245ca8}
+.tu-page #tu-panel-documentos .tu-document-list small{color:#856c40}
