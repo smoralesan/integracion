@@ -29,6 +29,6 @@
 .hero-reference .map-stage.is-drawing .map-tools{bottom:86px}
 @media(min-width:761px){.du-catalog .search-map{top:104px;height:min(660px,calc(100svh - 132px));min-height:420px}}
 
-.du-catalog .search-map{scroll-margin-top:104px}@media(max-width:760px){.du-catalog .search-map{scroll-margin-top:84px}}
+.du-catalog .search-layout{scroll-margin-top:104px}@media(max-width:760px){.du-catalog .search-layout{scroll-margin-top:84px}}
 
 body:has(.map-stage.is-drawing) .exp-compare-dock{display:none}

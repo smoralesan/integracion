@@ -1141,7 +1141,7 @@ function enterRoute() {
   if (path.startsWith('/publicacion/'))loadPublication(path.split('/')[2]);
   if (path.startsWith("/mi-expediente/")) loadRemoteRecord(path.split('/')[2]);
   if(restoring)restoreSearchScroll(restore);else window.scrollTo({ top: 0, behavior: "instant" });
-  if(!restoring&&state.drawing&&isCatalogHash(location.hash))requestAnimationFrame(()=>$(".search-map")?.scrollIntoView({block:"start",behavior:"instant"}));
+  if(!restoring&&state.drawing&&isCatalogHash(location.hash))requestAnimationFrame(()=>$(".search-layout")?.scrollIntoView({block:"start",behavior:"instant"}));
   if (path === "/buscar" && state.pendingLocationQuery) {
     const query = state.pendingLocationQuery;
     state.pendingLocationQuery = "";
