@@ -3873,3 +3873,7 @@ dialog::backdrop {
 .footer-payments-copy,.footer-payments-brand{min-width:0}
 .footer-payments-brand{width:320px;max-width:100%;flex-shrink:0}
 @media(max-width:700px){.site-footer .footer-payments{align-items:flex-start;flex-direction:column;gap:17px;padding:20px}.footer-payments-brand{width:100%}}
+
+.property-location>span{min-width:0;overflow-wrap:anywhere}
+.property-location:has(>span){align-items:flex-start}
+.property-location:has(>span)>svg{flex-shrink:0;margin-top:2px}

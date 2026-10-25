@@ -100,3 +100,7 @@
 .featured-opportunities .rf-card-label{margin-bottom:10px;gap:3px}
 .featured-opportunities .rf-card-metrics{gap:12px 10px}
 @media(max-width:700px){.featured-opportunities .featured-card-body{padding:14px 16px}.featured-opportunities .featured-card-facts{margin:10px 0 13px;gap:7px 12px}.featured-opportunities .exp-compare-button{min-height:44px}}
+
+.featured-card-location>span{min-width:0;overflow-wrap:anywhere}
+.featured-card-location:has(>span){align-items:flex-start}
+.featured-card-location:has(>span)>svg{margin-top:2px}

@@ -24,7 +24,7 @@ export async function opportunityApi(request,env,c){
    if(p.photoIds.includes(id)&&(meta.origin!=='file'||!['jpg','jpeg','png'].includes(meta.extension)))error(400,'La galería pública solo admite fotos JPG o PNG vigentes del expediente.');
   }
   if(p.shareGeometry&&!s.record.parcel?.geometry)error(400,'No hay un perímetro confirmado para compartir.');
-  s.record.publicPresentation=p;s.record.publicationConsent={authorized:true,version:'detail-v2',at:new Date().toISOString()};s.record.evidenceReview={};
+  s.record.publicPresentation=p;s.record.publicationConsent={authorized:true,version:'detail-v2',at:new Date().toISOString(),includesNeighborhood:data.includeNeighborhood===true};s.record.evidenceReview={};
   if(['approved','published'].includes(statusOf(s.record)))s.record.status='in_review';
   return json(ownerRecord(await save(s,key,data,'El titular autorizó una ficha ampliada. Su publicación queda sujeta a revisión del equipo.')));
  }

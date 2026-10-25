@@ -10,3 +10,10 @@ export function locationSummary(f) {
  if(terrainLocationMode(f)==='polygon')return f.parcel_geometry&&f.parcel_confirmed?'Polígono declarado · Confirmado por quien registra':'Polígono pendiente de completar o confirmar';
  try{normalizeLocationPin({coordinates:f.location_pin,confirmed:f.location_pin_confirmed});return 'Pin aproximado confirmado · Perímetro pendiente';}catch{return 'Pin aproximado pendiente de marcar o confirmar';}
 }
+
+// Public location text: the optional neighborhood stays on the same compact line.
+export function locationLabel(location={}) {
+ const clean=(value,max=160)=>typeof value==='string'?value.trim().slice(0,max):'';
+ const municipality=[clean(location.city),clean(location.region)].filter(Boolean).join(', ');
+ return [clean(location.neighborhood,120),municipality].filter(Boolean).join(' · ');
+}

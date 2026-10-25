@@ -48,7 +48,7 @@ import {homeOptionsIndex,homeAlternative,heroAlternative} from './home-options.j
 import {ReviewDesk, ownerWorkflowHTML, statusBadge, summaryHTML} from './review-ui.js';
 import {statusLabel} from './workflow-model.js';
 import { ParcelEditor } from "./parcel-editor.js";
-import {normalizeLocationPin,terrainLocationMode,locationSummary} from "./terrain-location.js";
+import {normalizeLocationPin,terrainLocationMode,locationSummary,locationLabel} from "./terrain-location.js";
 import { api, uploadDocument, addDocumentLink, saveRecord } from "./records-api.js";
 import {
   readAmount,
@@ -293,7 +293,7 @@ function pageHeader(title, description, eyebrow = "", action = "") {
 }
 function propertyCard(p) {
   const favorite = saved.favorites.includes(p.id);
-  return `<article class="property-card${p.type==='proyecto'?' property-card--project':''}"><div class="property-image"><a href="#/oportunidad/${p.id}" aria-label="Ver ${escape(p.title)}">${terrainPreviewHTML(p)||`<img src="${escape(p.image)}" alt="Imagen arquitectónica ilustrativa de un edificio individual" loading="lazy">`}</a><span class="pill${p.reactivation ? " warm" : ""}">${p.label}</span><button class="favorite ${favorite ? "saved" : ""}" data-action="favorite" data-id="${p.id}" aria-label="${favorite ? "Quitar de" : "Guardar en"} favoritos: ${escape(p.title)}" aria-pressed="${favorite}">${icon("heart")}</button></div><div class="property-body"><div class="property-reference">${p.id} · Ejemplo</div>${terrainCardTag(p)}<h3><a class="card-detail-link" href="#/oportunidad/${p.id}">${p.title}</a></h3><div class="property-location">${icon("pin")} ${p.city}, ${p.region}</div><div class="property-facts"><span>${p.area ? money(p.area) + " m²" : "Busca " + p.need.toLowerCase()}</span><span>${p.mode}</span></div>${rescueMetricsHTML(p)}<div class="property-bottom"><div class="property-price">${p.price ? "COP $" + money(p.price) : p.type === "terreno" ? "Condiciones por acordar" : "Conecta con el proyecto"}<small>${p.price ? "Precio ilustrativo · Negociable" : p.type === "terreno" ? "Abierto a propuestas" : "Participación por evaluar"}</small></div><a class="icon-button" href="#/oportunidad/${p.id}" aria-label="Ver oportunidad ${p.id}">${icon("arrow-up-right")}</a></div>${comparisonButton(p)}</div></article>`;
+  return `<article class="property-card${p.type==='proyecto'?' property-card--project':''}"><div class="property-image"><a href="#/oportunidad/${p.id}" aria-label="Ver ${escape(p.title)}">${terrainPreviewHTML(p)||`<img src="${escape(p.image)}" alt="Imagen arquitectónica ilustrativa de un edificio individual" loading="lazy">`}</a><span class="pill${p.reactivation ? " warm" : ""}">${p.label}</span><button class="favorite ${favorite ? "saved" : ""}" data-action="favorite" data-id="${p.id}" aria-label="${favorite ? "Quitar de" : "Guardar en"} favoritos: ${escape(p.title)}" aria-pressed="${favorite}">${icon("heart")}</button></div><div class="property-body"><div class="property-reference">${p.id} · Ejemplo</div>${terrainCardTag(p)}<h3><a class="card-detail-link" href="#/oportunidad/${p.id}">${p.title}</a></h3><div class="property-location">${icon("pin")}<span>${escape(locationLabel(p))}</span></div><div class="property-facts"><span>${p.area ? money(p.area) + " m²" : "Busca " + p.need.toLowerCase()}</span><span>${p.mode}</span></div>${rescueMetricsHTML(p)}<div class="property-bottom"><div class="property-price">${p.price ? "COP $" + money(p.price) : p.type === "terreno" ? "Condiciones por acordar" : "Conecta con el proyecto"}<small>${p.price ? "Precio ilustrativo · Negociable" : p.type === "terreno" ? "Abierto a propuestas" : "Participación por evaluar"}</small></div><a class="icon-button" href="#/oportunidad/${p.id}" aria-label="Ver oportunidad ${p.id}">${icon("arrow-up-right")}</a></div>${comparisonButton(p)}</div></article>`;
 }
 const emailEntry = new EmailEntry();
 let draftSaveTimer;
@@ -1826,7 +1826,7 @@ document.addEventListener("submit", async (event) => {
     if(!record||button.disabled)return;button.disabled=true;output.textContent='Guardando…';
     try{
       let payload={revision:record.revision||0},suffix=type==='owner-reply'?'reply':'publication-consent';
-      if(type==='publication-consent')payload.authorized=!record.publicationConsent?.authorized;
+      if(type==='publication-consent'){payload.authorized=!record.publicationConsent?.authorized;payload.includeNeighborhood=true;}
       else{
         payload.message=String(data.get('message')||'');payload.documentIds=[];
         const files=[...form.querySelector('[name="reply_files"]').files];

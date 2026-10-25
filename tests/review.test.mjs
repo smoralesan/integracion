@@ -10,7 +10,7 @@ function harness(){
     let payload=body;if(body&&!(body instanceof FormData)){headers.set('content-type','application/json');payload=JSON.stringify(body);}
     return handleApi(new Request('https://portal.test/api/'+path,{method,headers,...(payload?{body:payload}:{})}),env);
   };
-  const create=async(user='alice')=>{const response=await request('records',{id:crypto.randomUUID(),kind:'terreno',form:{title:'Lote ficticio',city:'Cartagena',region:'Bolívar',relationship:'owner',project_land_confirmed:true,description:'INFORMACIÓN RESERVADA',amount:'2000000000.50',area:'5200'},parcel:{geometry,confirmed:true},documentIds:[]},{user});assert.equal(response.status,201);return response.json();};
+  const create=async(user='alice')=>{const response=await request('records',{id:crypto.randomUUID(),kind:'terreno',form:{title:'Lote ficticio',city:'Cartagena',region:'Bolívar',neighborhood:'Manzanillo del Mar',relationship:'owner',project_land_confirmed:true,description:'INFORMACIÓN RESERVADA',amount:'2000000000.50',area:'5200'},parcel:{geometry,confirmed:true},documentIds:[]},{user});assert.equal(response.status,201);return response.json();};
   const find=async id=>(await(await request('team/records',null,{user:'admin'})).json()).records.find(r=>r.id===id).teamKey;
   const update=async(key,body,user='admin')=>request('team/records/'+encodeURIComponent(key),body,{user,method:'PATCH'});
   return {bucket,request,create,find,update};
@@ -78,4 +78,21 @@ test('older pending_review records remain readable and enter the workflow withou
   delete legacy.revision;delete legacy.publicationId;delete legacy.history;delete legacy.internalNotes;legacy.status='pending_review';await h.bucket.put(objectKey,JSON.stringify(legacy));
   const own=await(await h.request('records/'+r.id)).json();assert.equal(own.status,'received');assert.equal(own.revision,0);
   assert.equal((await h.update(key,{revision:0,status:'in_review'})).status,200);
+});
+
+test('Neighborhood publication requires a new authorization that includes the displayed location',async()=>{
+ const h=harness(),created=await h.create(),key=await h.find(created.id);
+ let r=await(await h.update(key,{revision:0,status:'in_review'})).json();
+ r=await(await h.update(key,{revision:r.revision,status:'approved'})).json();
+ r=await(await h.request('records/'+r.id+'/publication-consent',{revision:r.revision,authorized:true})).json();
+ r=await(await h.update(key,{revision:r.revision,status:'published'})).json();
+ let published=await(await h.request('catalog/'+r.publicationId)).json();
+ assert.equal(published.neighborhood,undefined,'An old authorization must not expose the private neighborhood');
+ r=await(await h.request('records/'+r.id+'/publication-consent',{revision:r.revision,authorized:false})).json();
+ r=await(await h.request('records/'+r.id+'/publication-consent',{revision:r.revision,authorized:true,includeNeighborhood:true})).json();
+ r=await(await h.update(key,{revision:r.revision,status:'published'})).json();
+ published=await(await h.request('catalog/'+r.publicationId)).json();
+ assert.equal(published.neighborhood,'Manzanillo del Mar');
+ assert.equal(published.description,undefined);
+ assert.equal(published.form,undefined);
 });

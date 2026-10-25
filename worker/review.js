@@ -101,7 +101,7 @@ export async function reviewApi(request,env,context){
     }else if(ownMatch[2]==='publication-consent'){
       if(typeof body.authorized!=='boolean')error(400,'Selecciona si autorizas la publicación del resumen.');
       record.publicationId||=crypto.randomUUID();
-      record.publicationConsent={authorized:body.authorized,at:now(),version:'summary-v1'};
+      record.publicationConsent={authorized:body.authorized,at:now(),version:'summary-v1',includesNeighborhood:body.authorized&&body.includeNeighborhood===true};
       if(!body.authorized&&record.status==='published')record.status='approved';
       event(record,body.authorized?'consent':'revoked',body.authorized?'El titular autorizó publicar el resumen mostrado.':'El titular retiró la autorización de publicación.');
     }else{

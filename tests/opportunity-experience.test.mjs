@@ -61,3 +61,11 @@ test('Avisos son privados, preferencias usan solo correo de cuenta y Brevo no en
 test('La captura monetaria de reactivación conserva centavos y valores desconocidos',()=>{assert.equal(readRescueAmount('1.234.567,89'),'1234567.89');assert.equal(readRescueAmount(''),'');assert.equal(readRescueAmount('0,00'),'0.00');assert.throws(()=>readRescueAmount('ABC'));});
 
 test('Los avisos al equipo solo usan una cuenta autenticada suscrita y con rol configurado',async()=>{const h=harness(),r=await seed(h);await h.call('notification-settings',{enabled:true},'admin');const request=new Request('https://portal.test/api/records',{method:'POST',headers:{'oai-authenticated-user-id':'alice'}});await notifyMutation(request,Response.json(r,{status:201}),{...h.env,BREVO_TEAM_EMAIL:'admin@example.test'});assert.equal((await(await h.call('notifications',null,'admin')).json()).notifications.length,1);assert.equal((await(await h.call('notifications',null,'bob')).json()).notifications.length,0);});
+
+test('Expanded presentations share neighborhoods only with the matching authorization',()=>{
+ const record={kind:'terreno',form:{neighborhood:'  El Prado  '},publicationConsent:{authorized:true,version:'detail-v2'}};
+ assert.equal(publicSummary(record).neighborhood,undefined);
+ assert.equal(publicSummary({...record,publicationConsent:{...record.publicationConsent,includesNeighborhood:true}}).neighborhood,'El Prado');
+ assert.equal(publicSummary({...record,publicationConsent:{...record.publicationConsent,authorized:false,includesNeighborhood:true}}).neighborhood,undefined);
+ assert.equal(publicSummary({...record,form:{neighborhood:'  '},publicationConsent:{...record.publicationConsent,includesNeighborhood:true}}).neighborhood,undefined);
+});
