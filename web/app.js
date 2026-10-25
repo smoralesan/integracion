@@ -1,3 +1,4 @@
+import {proposalDemoPage,mountProposalDemo} from './proposal-demo.js';
 import {contractMinutesPage,mountContractMinutes} from './contract-minutes.js';
 import {catalogRouteState,savedSearchHash,searchLocationLabel} from './catalog-navigation.js';
 import {terrainSearchLabel,terrainSearchQuery,terrainSearchFromQuery} from './terrain-search.js';
@@ -1037,6 +1038,7 @@ function render() {
   else if (path.startsWith('/alternativas-home/')) html=homeAlternative(path.split('/')[2],{cards:properties.slice(0,3).map(propertyCard).join(''),map:path.endsWith('/mapa')?mapHTML('home'):''});
   else if(path==='/minutas-de-contratos'||path.startsWith('/minutas-de-contratos/'))html=contractMinutesPage(path.slice('/minutas-de-contratos/'.length));
   else if(path==='/asesoria-valor-terreno')html=premiumValuationPage();
+  else if(path==='/propuestas-demo'||path.startsWith('/propuestas-demo/')||path.startsWith('/preparar-propuesta/'))html=proposalDemoPage();
   else if (path === "/comparar") html=pageHeader("Comparar terrenos","Hasta cuatro alternativas, con datos declarados y monedas separadas.","Tu evaluación")+'<section class="page-content"><div class="container" data-exp-comparison></div></section>';
   else if (path === "/buscar") html = catalog(true);
   else if (path === "/oportunidades") html = catalog();
@@ -1073,6 +1075,7 @@ function render() {
   mountLandSearch($('#contenido'),({searchDepartment,searchMunicipality,intendedUse,landContent,draw})=>{Object.assign(state,{searchDepartment,searchMunicipality,intendedUse,landContent,type:'terreno',reactivationFilter:'',query:'',directoryScope:null,zone:[],sectors:[],drawPoints:[],placeBounds:null,mapPlace:null,view:draw?'both':'list',drawing:draw,mapFitRevision:state.mapFitRevision+1});const params=new URLSearchParams();params.set('contenido',terrainSearchQuery(landContent)||'todos');if(searchMunicipality)params.set('municipio',searchMunicipality);if(intendedUse)params.set('uso',intendedUse);if(draw)params.set('zona','1');const hash='#/buscar'+(params.size?'?'+params:'');if(location.pathname!=='/'){location.href='/'+hash;return;}navigateCatalog(hash);});
   mountPortalPage($('#contenido'));mountLegalAccess($('#contenido'));
   mountContractMinutes($('#contenido'));
+  mountProposalDemo($('#contenido'),properties);
   for(const form of $$('#contenido form'))if(!form.closest('.portal-page')&&form.matches('[data-form="submission"],[data-sales-request],[data-service-request],[data-profile-form]'))form.insertAdjacentHTML('beforeend',legalButtons());
   mountTerrainDetail($('[data-terrain-detail]'));
   mountJourney($('#contenido'),{modal});
