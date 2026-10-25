@@ -29,3 +29,10 @@ test('El buscador de aliados acepta el enlace directo y conserva filtros',()=>{
  assert.equal(redirect('/aliados/buscar?q=Suarez&grupo=legal'),'https://portal.test/#/aliados/buscar?q=Suarez&grupo=legal');
  assert.equal(redirect('/aliados/buscar/extra'),null);
 });
+
+test('Minutas have direct routes and reject unknown document slugs',()=>{
+ assert.equal(redirect('/minutas-de-contratos'),'https://portal.test/#/minutas-de-contratos');
+ assert.equal(redirect('/minutas-de-contratos/aporte-terreno'),'https://portal.test/#/minutas-de-contratos/aporte-terreno');
+ assert.equal(redirect('/minutas-de-contratos/no-existe'),null);
+ assert.equal(redirect('/minutas-de-contratos/aporte-terreno/extra'),null);
+});

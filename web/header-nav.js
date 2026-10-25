@@ -15,6 +15,7 @@ const groups = [
     ['Buscar aliados','Busca por firma, especialidad o servicio.','#/aliados/buscar'],
     ['Ser un aliado','Presenta tus servicios como persona o empresa.','#/registro/aliado'],
     ['Abogados (legales)','Revisión jurídica de terrenos, contratos y acuerdos.','#/aliados/abogados'],
+    ['Minutas de contratos','Ejemplos editables para preparar y revisar tus acuerdos.','#/minutas-de-contratos'],
     ['Estructuradores','Evalúan la estructura técnica, financiera y jurídica.','#/aliados/estructuradores'],
     ['Constructores','Evalúan y ejecutan las obras del proyecto.','#/aliados/constructores'],
     ['Técnicos','Estudios, diseños, interventoría y coordinación especializada.','#/aliados/tecnicos'],

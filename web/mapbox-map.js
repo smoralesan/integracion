@@ -63,7 +63,7 @@ export class LandMap {
       if (generation !== this.generation || !host.isConnected) return;
       if (this.map) {
         if (host !== this.root) host.replaceWith(this.root);
-        this.map.resize();
+        this.resize();
         this.update();
         return;
       }
@@ -142,10 +142,8 @@ export class LandMap {
             Number(event.lngLat.lat.toFixed(7)),
           ]);
       });
-      this.resizeObserver = new ResizeObserver(() => {
-        this.map?.resize();
-        if(this.map&&['parcel','detail'].includes(this.options.context)&&this.options.geometry&&!this.options.drawing)this.fitView();
-      });
+      this.viewportSize = {width:this.root.clientWidth,height:this.root.clientHeight};
+      this.resizeObserver = new ResizeObserver(() => this.resize());
       this.resizeObserver.observe(this.root);
       this.update();
     } catch {
@@ -319,15 +317,26 @@ export class LandMap {
         });
     source.setData({ type: "FeatureCollection", features });
   }
-  fitView() {
+  resize() {
+    if(!this.map||!this.root)return;
+    const size={width:this.root.clientWidth,height:this.root.clientHeight};
+    if(!size.width||!size.height)return;
+    const changed=this.viewportSize&&(Math.abs(size.width-this.viewportSize.width)>1||Math.abs(size.height-this.viewportSize.height)>1);
+    this.viewportSize=size;
+    this.map.resize();
+    if(this.options.drawing)return;
+    if(changed&&this.options.context==='search')this.fitView({restoreCamera:false});
+    else if(['parcel','detail'].includes(this.options.context)&&this.options.geometry)this.fitView();
+  }
+  fitView({restoreCamera=true}={}) {
     const o = this.options;
-    if(o.context==='search'&&o.initialCamera){this.map.jumpTo(o.initialCamera);return;}
+    if(o.context==='search'&&o.initialCamera&&restoreCamera){this.map.jumpTo({...o.initialCamera,padding:0});return;}
     if (o.place) {
       this.locate(o.place);
       return;
     }
     if (o.context === "home") {
-      this.map.jumpTo({ center: [-75.5, 10.54], zoom: 11.3 });
+      this.map.jumpTo({ center: [-75.5, 10.54], zoom: 11.3, padding:0 });
       return;
     }
     const points = o.geometry
@@ -340,6 +349,7 @@ export class LandMap {
         center: points[0],
         zoom: o.context === "parcel" ? 16 : o.context === "detail" ? 11.6 : 11,
         duration: 450,
+        padding:0,
       });
     else
       this.map.fitBounds(
@@ -348,7 +358,8 @@ export class LandMap {
           [bounds[2], bounds[3]],
         ],
         {
-          padding: (o.context === "parcel" || (o.context === "detail" && o.geometry)) ? {top:60,bottom:60,left:45,right:45} : { top: 100, bottom: 105, left: 45, right: 45 },
+          padding: (o.context === "parcel" || (o.context === "detail" && o.geometry)) ? {top:60,bottom:60,left:45,right:45} : o.context==='search' ? {top:o.drawing?160:100,bottom:o.drawing?170:135,left:65,right:65} : { top: 100, bottom: 105, left: 45, right: 45 },
+          retainPadding: false,
           maxZoom: (o.context === "parcel" || (o.context === "detail" && o.geometry)) ? 19 : 14,
           duration: 450,
         },
@@ -364,7 +375,8 @@ export class LandMap {
           [bounds[2], bounds[3]],
         ],
         {
-          padding: { top: 80, bottom: 95, left: 30, right: 30 },
+          padding: { top: 80, bottom: 135, left: 45, right: 45 },
+          retainPadding: false,
           maxZoom: 14,
           duration: 500,
         },
@@ -374,6 +386,7 @@ export class LandMap {
         center: place.geometry.coordinates,
         zoom: 13,
         duration: 500,
+        padding:0,
       });
   }
   zoom(delta) {

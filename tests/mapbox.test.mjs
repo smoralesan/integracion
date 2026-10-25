@@ -124,3 +124,28 @@ test('a parcel pin centers on one coordinate without fabricating bounds, a ring 
  assert.equal(data.features.length,1);assert.equal(data.features[0].geometry.type,'Point');
  assert.deepEqual(data.features[0].geometry.coordinates,[-74.05982,4.65057]);
 });
+
+test('redimensionar resultados reencuadra los marcadores sin reutilizar una cámara de otro ancho',()=>{
+ const view=new LandMap(),fits=[],jumps=[];
+ view.root={clientWidth:390,clientHeight:600};view.viewportSize={width:600,height:600};
+ view.options={context:'search',items:[{coordinates:[-75.487,10.53]},{coordinates:[-74.19,11.24]}],zone:[],initialCamera:{center:[-75.5,10.5],zoom:12}};
+ view.map={resize:()=>{},fitBounds:(bounds,options)=>fits.push({bounds,options}),jumpTo:c=>jumps.push(c)};
+ view.resize();assert.equal(fits.length,1);assert.equal(jumps.length,0);
+ assert.deepEqual(fits[0].bounds,[[-75.487,10.53],[-74.19,11.24]]);
+ assert.equal(fits[0].options.retainPadding,false);
+ assert.ok(fits[0].options.padding.bottom>=130,'Las herramientas inferiores no deben ocultar los marcadores');
+ view.resize();assert.equal(fits.length,1,'Un repintado sin cambio de tamaño conserva el desplazamiento del usuario');
+});
+test('redimensionar durante el dibujo conserva la cámara y los puntos en curso',()=>{
+ const view=new LandMap();let resized=0;
+ view.root={clientWidth:390,clientHeight:600};view.viewportSize={width:600,height:600};
+ view.options={context:'search',drawing:true};
+ view.map={resize:()=>resized++,fitBounds:()=>assert.fail('No debe desplazar un polígono en curso')};
+ view.resize();assert.equal(resized,1);
+});
+test('restaurar una búsqueda elimina el margen heredado de otro contexto del mapa',()=>{
+ const view=new LandMap();let camera;
+ view.options={context:'search',initialCamera:{center:[-75.5,10.5],zoom:11}};
+ view.map={jumpTo:value=>camera=value};view.fitView();
+ assert.deepEqual(camera,{center:[-75.5,10.5],zoom:11,padding:0});
+});

@@ -104,3 +104,8 @@
 .featured-card-location>span{min-width:0;overflow-wrap:anywhere}
 .featured-card-location:has(>span){align-items:flex-start}
 .featured-card-location:has(>span)>svg{margin-top:2px}
+/* Search previews keep the full map and its attribution at the source ratio. */
+.du-catalog .property-card:has(.terrain-preview){display:block}
+.du-catalog .property-image:has(.terrain-preview){height:auto;min-height:0;aspect-ratio:16/9}
+.du-catalog .property-image:has(.terrain-preview)>a{position:absolute;inset:0;width:100%;height:100%}
+.du-catalog .property-image:has(.terrain-preview) .favorite{top:12px;bottom:auto;right:12px}

@@ -1,3 +1,4 @@
+import {contractMinutesPage,mountContractMinutes} from './contract-minutes.js';
 import {catalogRouteState,savedSearchHash,searchLocationLabel} from './catalog-navigation.js';
 import {terrainSearchLabel,terrainSearchQuery,terrainSearchFromQuery} from './terrain-search.js';
 import {landSearchHTML,mountLandSearch,matchesLandSearch} from './land-search.js';
@@ -244,6 +245,7 @@ const state = {
   placeResults: [],
   placeBounds: null,
   selected: properties[0].id,
+  searchSelected: "",
   session:null,
   catalogRecords:[], catalogLoaded:false, catalogError:"", catalogCursor:null,
   publicRecord:null, publicError:"",
@@ -449,7 +451,7 @@ function syncMap() {
         ? properties
         : filtered();
   const selected =
-    context === "detail" ? stage.dataset.propertyId : state.selected;
+    context === "detail" ? stage.dataset.propertyId : context === "search" ? state.searchSelected : state.selected;
   const rootReady = landMap.root?.dataset.mapReady === "true";
   if (rootReady) mapStatus(null);
   landMap.mount(host, {
@@ -484,7 +486,8 @@ function syncMap() {
       redrawMap();
     },
     onSelect: (id) => {
-      state.selected = id;
+      if(context==='search')state.searchSelected=id;
+      else state.selected = id;
       redrawMap();
     },
   });
@@ -1032,6 +1035,7 @@ function render() {
   else if (path === '/alternativas-home/hero') html=home(true);
   else if (path === '/alternativas-home') html=homeOptionsIndex();
   else if (path.startsWith('/alternativas-home/')) html=homeAlternative(path.split('/')[2],{cards:properties.slice(0,3).map(propertyCard).join(''),map:path.endsWith('/mapa')?mapHTML('home'):''});
+  else if(path==='/minutas-de-contratos'||path.startsWith('/minutas-de-contratos/'))html=contractMinutesPage(path.slice('/minutas-de-contratos/'.length));
   else if(path==='/asesoria-valor-terreno')html=premiumValuationPage();
   else if (path === "/comparar") html=pageHeader("Comparar terrenos","Hasta cuatro alternativas, con datos declarados y monedas separadas.","Tu evaluación")+'<section class="page-content"><div class="container" data-exp-comparison></div></section>';
   else if (path === "/buscar") html = catalog(true);
@@ -1068,6 +1072,7 @@ function render() {
   emailEntry.mount($('#contenido'),render);
   mountLandSearch($('#contenido'),({searchDepartment,searchMunicipality,intendedUse,landContent,draw})=>{Object.assign(state,{searchDepartment,searchMunicipality,intendedUse,landContent,type:'terreno',reactivationFilter:'',query:'',directoryScope:null,zone:[],sectors:[],drawPoints:[],placeBounds:null,mapPlace:null,view:draw?'both':'list',drawing:draw,mapFitRevision:state.mapFitRevision+1});const params=new URLSearchParams();params.set('contenido',terrainSearchQuery(landContent)||'todos');if(searchMunicipality)params.set('municipio',searchMunicipality);if(intendedUse)params.set('uso',intendedUse);if(draw)params.set('zona','1');const hash='#/buscar'+(params.size?'?'+params:'');if(location.pathname!=='/'){location.href='/'+hash;return;}navigateCatalog(hash);});
   mountPortalPage($('#contenido'));mountLegalAccess($('#contenido'));
+  mountContractMinutes($('#contenido'));
   for(const form of $$('#contenido form'))if(!form.closest('.portal-page')&&form.matches('[data-form="submission"],[data-sales-request],[data-service-request],[data-profile-form]'))form.insertAdjacentHTML('beforeend',legalButtons());
   mountTerrainDetail($('[data-terrain-detail]'));
   mountJourney($('#contenido'),{modal});
@@ -1111,6 +1116,7 @@ function enterRoute() {
   const restore=isCatalogHash(location.hash)&&!navigation?(pendingExplicitReturn||normalizeSearchContext(history.state?.iiCatalogSearch)||(initialNavigation?readSearchContext(location.hash):null)):null;
   pendingExplicitReturn=null;initialNavigation=false;
   const restoring=restore?.hash===location.hash;
+  if(isCatalogHash(location.hash))state.searchSelected='';
   if(isCatalogHash(location.hash)&&!restoring&&!navigation)Object.assign(state,catalogRouteState(location.hash),{mapFitRevision:state.mapFitRevision+1});
   if(restoring){Object.assign(state,restore.filters,{placeResults:[],mapPlace:null,drawPoints:[],drawing:false,mapFitRevision:state.mapFitRevision+1});state.searchCamera=restore.camera;state.searchCameraRevision=state.mapFitRevision;pendingResultsContext=restore;}
   if (path.startsWith("/publicar/")) {
