@@ -17,30 +17,30 @@
 .tu-page .tu-fold{
   margin:14px 0;
   padding:0 22px;
-  border:1px solid var(--land-line);
+  border:0;
   border-radius:12px;
   background:var(--land-neutral);
 }
-.tu-page .tu-fold>summary{padding:18px 0;color:var(--land-heading);font-size:13px}
+.tu-page .tu-fold>summary{padding:18px 0;color:var(--land-heading);font-size:15px}
 .tu-page .tu-fold>div{padding:0 0 22px}
 .tu-page .tu-fold p,.tu-page .tu-fold .tu-review-list span{color:var(--land-copy)}
 .tu-page .tu-fold .tu-data dt{color:#64788e}
 .tu-page .tu-fold .tu-data dd{color:#294866}
 .tu-page #tu-panel-documentos{
   background:var(--land-neutral);
-  border:1px solid var(--land-line);
+  border:0;
   border-radius:14px;
   padding:26px;
   margin-top:24px;
 }
-.tu-page #tu-panel-documentos .tu-fold{background:var(--land-white)}
+.tu-page #tu-panel-documentos .tu-fold{background:transparent;border:0;border-top:1px solid var(--land-line);border-radius:0;padding:0;margin-top:24px}
 .tu-page #tu-panel-documentos p{color:var(--land-copy)}
 .tu-page #tu-panel-documentos .tu-document-list li{border-color:var(--land-line)}
 .tu-page #tu-panel-documentos .tu-document-list strong{color:var(--land-heading)}
 /* Contact and the associated construction project use the brand accent. */
 .tu-page .tu-contact,.tu-page .tu-side-note{
   background:var(--land-accent);
-  border:1px solid var(--land-accent-line);
+  border:0;
   border-radius:14px;
   padding:26px;
 }
@@ -50,7 +50,7 @@
 .tu-page .tu-side-note>.eyebrow{color:#4671a5}
 .tu-page .tu-handler{border-color:var(--land-accent-line)}
 .tu-page .tu-visit-row{
-  border:1px solid var(--land-accent-line);
+  border:0;
   border-radius:12px;
   background:var(--land-accent);
   padding:22px;
@@ -58,13 +58,13 @@
 .tu-page .tu-visit-row p{color:var(--land-copy)}
 .tu-page .tu-panel>.construction-project{
   padding:26px;
-  border:1px solid var(--land-accent-line);
+  border:0;
   border-radius:14px;
   background:var(--land-accent);
 }
 .tu-page .construction-project>p,.tu-page .construction-project-heading p{color:var(--land-copy)}
-.tu-page .construction-metrics{gap:1px;border:1px solid var(--land-accent-line);border-radius:10px;background:var(--land-accent-line)}
-.tu-page .construction-metrics>div,.tu-page .construction-metrics>div:nth-child(odd){padding:17px;background:var(--land-white);border:0}
+.tu-page .construction-metrics{gap:0 28px;border:0;border-radius:0;background:transparent}
+.tu-page .construction-metrics>div,.tu-page .construction-metrics>div:nth-child(odd){padding:20px 0;background:transparent;border:0;border-bottom:1px solid var(--land-accent-line)}
 .tu-page .construction-metrics dt{color:#62778f}
 .tu-page .construction-metrics dd{color:var(--land-heading)}
 .tu-page .construction-disclosure{border-color:var(--land-accent-line);background:transparent}
@@ -72,14 +72,14 @@
 /* Apply the same roles to real public terrain records, without affecting projects. */
 .exp-public-detail--terrain .jr-public-top .exp-public-sidebar{
   background:var(--land-accent);
-  border:1px solid var(--land-accent-line);
+  border:0;
   border-radius:14px;
 }
 .exp-public-detail--terrain .jr-detail-panel[id$="-panel-potencial"],
 .exp-public-detail--terrain .jr-detail-panel[id$="-panel-documentos"]{
   padding:26px;
   margin-top:24px;
-  border:1px solid var(--land-line);
+  border:0;
   border-radius:14px;
   background:var(--land-neutral);
 }
@@ -92,17 +92,103 @@
   border-color:var(--land-accent-line);
 }
 @media(max-width:760px){
-  .tu-page .tu-contact{padding:20px;border:1px solid var(--land-accent-line);border-radius:12px}
+  .tu-page .tu-contact{padding:22px;border:0;border-radius:12px}
   .tu-page .tu-fold{padding:0 17px;margin:12px 0;border-radius:10px}
-  .tu-page .tu-fold>summary{padding:17px 0;font-size:12px}
+  .tu-page .tu-fold>summary{padding:17px 0;font-size:14px}
   .tu-page #tu-panel-documentos,.tu-page .tu-panel>.construction-project,
   .exp-public-detail--terrain .jr-detail-panel[id$="-panel-potencial"],
   .exp-public-detail--terrain .jr-detail-panel[id$="-panel-documentos"]{padding:20px;border-radius:12px;margin-top:20px}
   .tu-page .tu-visit-row{padding:18px;gap:18px;flex-wrap:wrap}
   .tu-page .tu-visit-row>.button{max-width:100%}
-  .tu-page .construction-metrics>div,.tu-page .construction-metrics>div:nth-child(odd){padding:13px}
+  .tu-page .construction-metrics>div,.tu-page .construction-metrics>div:nth-child(odd){padding:16px 0}
 }
 .tu-page .tu-contact-mode,.tu-page .tu-contact-facts span,.tu-page .tu-handler small{color:#5c7290}
 .tu-page .tu-contact-facts strong,.tu-page .tu-handler strong{color:#294866}
 .tu-page .tu-side-note .tu-text-button{color:#245ca8}
 .tu-page #tu-panel-documentos .tu-document-list small{color:#856c40}
+
+/* A readable text scale and a clearer hierarchy for the key facts. */
+.tu-page .tu-header p{font-size:15px;line-height:1.7;color:#4c6682;gap:9px}
+.tu-page .tu-header p .ui-icon{width:17px;height:17px;flex-shrink:0}
+.tu-page .tu-header p>span{font-size:12px;color:#61768c}
+.tu-page .tu-breadcrumb{font-size:12px;color:#64788e}
+.tu-page .tu-labels small{font-size:12px;color:#63788e}
+.tu-page .tu-contact-mode{font-size:12px;line-height:1.5;letter-spacing:1.2px;color:#315b91}
+.tu-page .tu-price{font-size:clamp(28px,2.4vw,34px);font-weight:650;line-height:1.18;margin:15px 0 9px;color:#153a61;font-variant-numeric:tabular-nums}
+.tu-page .tu-contact>small,.tu-page .tu-unit-price{font-size:13px;line-height:1.65;color:var(--land-copy)}
+.tu-page .tu-contact-facts{gap:26px;margin-top:10px;padding:22px 0 25px}
+.tu-page .tu-contact-facts span{font-size:12px;line-height:1.6}
+.tu-page .tu-contact-facts strong{font-size:17px;line-height:1.4;font-weight:600}
+.tu-page .tu-contact-facts>div:first-child strong{font-size:24px;color:#153a61;letter-spacing:-.4px}
+.tu-page .tu-contact>.button{min-height:48px;font-size:14px}
+.tu-page .tu-contact-help,.tu-page .tu-handler-note{font-size:12px;line-height:1.75}
+.tu-page .tu-handler strong{font-size:12px}
+.tu-page .tu-handler small{font-size:12px;line-height:1.6}
+.tu-page .tu-panel p{font-size:15px;line-height:1.85;color:var(--land-copy)}
+.tu-page .tu-panel h3{font-size:16px;color:var(--land-heading)}
+.tu-page .tu-panel-intro{margin-bottom:28px}
+.tu-page .tu-overview-columns{gap:30px;margin:28px 0}
+.tu-page .tu-data dt{font-size:12px;line-height:1.6;color:#5b7189}
+.tu-page .tu-data dd{font-size:14px;line-height:1.8;color:#294866}
+.tu-page .tu-inline-note,.tu-page .tu-review-list span{font-size:13px;line-height:1.8;color:var(--land-copy)}
+.tu-page .tu-review-list strong{font-size:14px;color:var(--land-heading)}
+.tu-page .tu-tabs{gap:25px;overflow-x:auto;scrollbar-width:thin}
+.tu-page .tu-tabs>button,.tu-page .tu-tabs:has(button:nth-child(5))>button{font-size:14px;white-space:nowrap;flex-shrink:0}
+.tu-page .tu-demo-note,.tu-page .tu-section-footnote,.tu-page .tu-panel .tu-legal-note{font-size:12px;line-height:1.8;color:#62768e}
+.tu-page .tu-document-list strong{font-size:14px;font-weight:600}
+.tu-page .tu-document-list p{font-size:14px;line-height:1.75}
+.tu-page .tu-document-list small{font-size:12px;line-height:1.6}
+.tu-page .tu-status-line strong{font-size:14px;color:#81663b}
+.tu-page #tu-panel-documentos .tu-visit-row{padding:26px 0 0;border:0;border-top:1px solid var(--land-line);border-radius:0;background:transparent;margin-top:28px}
+.tu-page .tu-side-note p,.tu-page .tu-side-note ol{font-size:13px;line-height:1.85}
+.tu-page .tu-side-note .tu-text-button{font-size:14px}
+.tu-page .tu-panel .construction-metrics dt{font-size:13px;line-height:1.6;color:#5b7189}
+.tu-page .tu-panel .construction-metrics dd{font-size:20px;line-height:1.5;font-weight:600}
+.tu-page .tu-panel .construction-project>p{font-size:15px;line-height:1.85}
+.tu-page .construction-project-heading p,.tu-page .tu-panel .construction-disclosure p{font-size:13px;line-height:1.8}
+.tu-page .tu-panel .construction-disclosure>summary{font-size:14px}
+/* Equivalent reading hierarchy on authorized public terrain records. */
+.exp-public-detail--terrain>header>p:first-of-type{font-size:15px;color:#4c6682;line-height:1.7}
+.exp-public-detail--terrain .jr-public-price{font-size:32px;line-height:1.2;color:#153a61;font-weight:650;overflow-wrap:anywhere}
+.exp-public-detail--terrain .jr-public-price small{font-size:12px;line-height:1.6;color:var(--land-copy);margin-top:9px}
+.exp-public-detail--terrain .exp-public-sidebar .exp-facts{padding:20px 0}
+.exp-public-detail--terrain .exp-public-sidebar .exp-facts dt{font-size:12px;line-height:1.6;color:#5b7189}
+.exp-public-detail--terrain .exp-public-sidebar .exp-facts dd{font-size:17px;line-height:1.5;color:#294866;font-weight:600}
+.exp-public-detail--terrain .exp-public-sidebar .exp-facts>div:first-child dd{font-size:23px}
+.exp-public-detail--terrain .exp-public-sidebar>.button{font-size:14px;min-height:48px}
+.exp-public-detail--terrain .exp-section>p,.exp-public-detail--terrain .exp-section>ol{font-size:15px;line-height:1.85;color:var(--land-copy)}
+.exp-public-detail--terrain .exp-facts dt{font-size:13px;color:#5b7189}
+.exp-public-detail--terrain .exp-facts dd{font-size:14px;line-height:1.8;color:#294866}
+.exp-public-detail--terrain .exp-help,.exp-public-detail--terrain .jr-source-note,.exp-public-detail--terrain .jr-field-state{font-size:12px;line-height:1.75;color:#5d728b}
+.exp-public-detail--terrain .jr-detail-tabs button{font-size:14px}
+@media(max-width:760px){
+  .tu-page .tu-header p{font-size:14px;gap:8px}
+  .tu-page .tu-header p>span{font-size:11px}
+  .tu-page .tu-contact{display:block}
+  .tu-page .tu-price{font-size:30px;margin:12px 0 8px;line-height:1.25}
+  .tu-page .tu-contact-mode{font-size:11px}
+  .tu-page .tu-contact>small,.tu-page .tu-unit-price{font-size:12px}
+  .tu-page .tu-contact-facts{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:18px 0;margin:20px 0 0;border-block:1px solid var(--land-accent-line)}
+  .tu-page .tu-contact-facts>div:first-child strong{font-size:23px}
+  .tu-page .tu-contact-facts strong{font-size:16px}
+  .tu-page .tu-handler{margin-top:18px;padding-top:0;border:0}
+  .tu-page .tu-handler strong,.tu-page .tu-handler small{font-size:11px}
+  .tu-page .tu-panel p{font-size:14px;line-height:1.85}
+  .tu-page .tu-panel h3{font-size:15px}
+  .tu-page .tu-data dt{font-size:12px}
+  .tu-page .tu-data dd{font-size:13px}
+  .tu-page .tu-tabs{gap:18px;justify-content:flex-start}
+  .tu-page .tu-tabs>button,.tu-page .tu-tabs:has(button:nth-child(5))>button{font-size:12px;min-height:50px}
+  .tu-page .tu-document-list strong,.tu-page .tu-document-list p{font-size:13px}
+  .tu-page .tu-document-list li>div{min-width:0;flex-basis:calc(100% - 40px)}
+  .tu-page .tu-document-list small{font-size:11px}
+  .tu-page .tu-demo-note,.tu-page .tu-section-footnote,.tu-page .tu-panel .tu-legal-note{font-size:11px}
+  .tu-page .tu-panel .construction-metrics dd{font-size:18px}
+  .tu-page .tu-panel .construction-metrics dt{font-size:12px}
+  .tu-page .tu-panel .construction-project>p{font-size:14px}
+  .tu-page .tu-mobile-contact small{font-size:11px;color:#5c7290}
+  .tu-page .tu-mobile-contact strong{font-size:18px}
+  .exp-public-detail--terrain .jr-public-price{font-size:29px}
+  .exp-public-detail--terrain .exp-section>p,.exp-public-detail--terrain .exp-section>ol{font-size:14px}
+  .exp-public-detail--terrain .jr-detail-tabs button{font-size:13px}
+}
