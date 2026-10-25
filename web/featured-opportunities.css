@@ -85,3 +85,6 @@
 @media(max-width:700px){.featured-reactivation-section{padding-top:29px;padding-bottom:29px}.featured-reactivation-note{font-size:10px}}
 
 .featured-filter-bar--terrain{grid-template-columns:minmax(0,1.35fr) minmax(0,2fr) repeat(3,minmax(0,1fr)) 100px}@media(max-width:960px){.featured-filter-bar--terrain{grid-template-columns:repeat(4,minmax(0,1fr))}.featured-filter-bar--terrain>.featured-query{grid-column:1/4;grid-row:1}.featured-filter-bar--terrain>.button{grid-column:4;grid-row:1}.featured-filter-bar--terrain>.featured-filter-field:not(.featured-query){grid-row:2}}@media(max-width:700px){.featured-filter-bar--terrain{grid-template-columns:repeat(2,minmax(0,1fr))}.featured-filter-bar--terrain>.featured-query{grid-column:1/-1;grid-row:1}.featured-filter-bar--terrain>.featured-filter-field:not(.featured-query){grid-row:auto}.featured-filter-bar--terrain>.featured-filter-field:has([name=maxPrice]){grid-column:auto}.featured-filter-bar--terrain>.button{grid-column:1/-1;grid-row:auto}}
+/* Match the home thumbnail to the full static map, including its attribution. */
+.featured-terrain-section .featured-photo:has(.terrain-preview){height:auto;aspect-ratio:16/9}
+.featured-terrain-section .featured-photo:has(.terrain-preview)>a{position:absolute;inset:0;width:100%;height:100%}
