@@ -1,7 +1,7 @@
 import {obligations,obligationStatuses,factOptions,hasBalance} from './land-situation-model.js';
 import {readAmount,formatAmount} from './money-input.js';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const select=(label,name,value,options,required=false)=>`<label class="form-field">${label}<select name="ls_${name}" ${required?'required':''}><option value="">Seleccionar</option>${options.map(([v,t])=>`<option value="${v}" ${v===value?'selected':''}>${t}</option>`).join('')}</select></label>`;
+const select=(label,name,value,options,required=false)=>`<label class="form-field">${label}${required?'<span class="ux-required">Obligatorio</span>':''}<select aria-label="${e(label)}" name="ls_${name}" ${required?'required':''}><option value="">Seleccionar</option>${options.map(([v,t])=>`<option value="${v}" ${v===value?'selected':''}>${t}</option>`).join('')}</select></label>`;
 const field=(label,name,value,{type='text',max=500,money=false}={})=>`<label class="form-field">${label}<input type="${type}" name="ls_${name}" value="${e(money?formatAmount(value):value)}" ${money?'data-money inputmode="decimal" autocomplete="off"':''} maxlength="${max}" ${type==='date'?`max="${new Date().toISOString().slice(0,10)}"`:''}></label>`;
 const area=(label,name,value,max=500)=>`<label class="form-field full">${label}<textarea name="ls_${name}" maxlength="${max}">${e(value)}</textarea></label>`;
 export function landSituationFields(s={}){

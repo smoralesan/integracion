@@ -136,7 +136,7 @@ export class LandMap {
       });
       this.map.on('moveend',()=>{if(this.options.context==='search'){const center=this.map.getCenter();this.options.onViewChange?.({center:[center.lng,center.lat],zoom:this.map.getZoom(),bearing:this.map.getBearing(),pitch:this.map.getPitch()});}});
       this.map.on("click", (event) => {
-        if (this.options.drawing)
+        if (this.options.drawing || this.options.pinPicking)
           this.options.onPoint?.([
             Number(event.lngLat.lng.toFixed(7)),
             Number(event.lngLat.lat.toFixed(7)),
@@ -179,7 +179,7 @@ export class LandMap {
     }
     if (o.drawing) this.map.doubleClickZoom.disable();
     else this.map.doubleClickZoom.enable();
-    this.map.getCanvas().style.cursor = o.drawing ? "crosshair" : "";
+    this.map.getCanvas().style.cursor = o.drawing || o.pinPicking ? "crosshair" : "";
     this.updateDraw();
     this.updateMarkers();
     if (this.fitKey !== o.fitKey) {
@@ -193,6 +193,12 @@ export class LandMap {
     for (const marker of this.markers) marker.remove();
     this.markers = [];
     if(o.hideMarkers){this.popup?.remove();this.popup=null;this.selection=null;return;}
+    if(o.context==='parcel'&&o.geometry?.type==='Point'&&isCoordinate(o.geometry.coordinates)){
+      const marker=new window.mapboxgl.Marker({color:'#1265e9'}).setLngLat(o.geometry.coordinates).addTo(this.map);
+      marker.getElement().setAttribute('role','img');
+      marker.getElement().setAttribute('aria-label','Pin de ubicación aproximada del terreno. No define sus linderos.');
+      this.markers.push(marker);
+    }
     for (const item of o.items.filter((p) => isCoordinate(p.coordinates))) {
       const button = document.createElement("button");
       button.type = "button";
@@ -325,14 +331,14 @@ export class LandMap {
       return;
     }
     const points = o.geometry
-      ? (o.geometry.type === "Polygon" ? o.geometry.coordinates.flat() : o.geometry.coordinates.flat(2))
+      ? (o.geometry.type === "Point" ? [o.geometry.coordinates] : o.geometry.type === "Polygon" ? o.geometry.coordinates.flat() : o.geometry.coordinates.flat(2))
       : o.zone.length ? o.zone : o.items.map((p) => p.coordinates).filter(isCoordinate);
     const bounds = extent(points);
     if (!bounds) return;
     if (points.length === 1)
       this.map.easeTo({
         center: points[0],
-        zoom: o.context === "detail" ? 11.6 : 11,
+        zoom: o.context === "parcel" ? 16 : o.context === "detail" ? 11.6 : 11,
         duration: 450,
       });
     else

@@ -114,3 +114,13 @@ test('La vista del perímetro retira los marcadores y su popup para no tapar el 
  view.updateMarkers();assert.equal(markersRemoved,1);assert.equal(popupsRemoved,1);
  assert.equal(view.selection,null);assert.equal(view.popup,null);assert.deepEqual(view.markers,[]);
 });
+
+test('a parcel pin centers on one coordinate without fabricating bounds, a ring or area',()=>{
+ const view=new LandMap();let located,data;
+ view.options={context:'parcel',geometry:{type:'Point',coordinates:[-74.05982,4.65057]},zone:[],items:[]};
+ view.map={easeTo:options=>{located=options;},getSource:()=>({setData:value=>{data=value;}})};
+ view.fitView();view.updateDraw();
+ assert.deepEqual(located.center,[-74.05982,4.65057]);assert.equal(located.zoom,16);
+ assert.equal(data.features.length,1);assert.equal(data.features[0].geometry.type,'Point');
+ assert.deepEqual(data.features[0].geometry.coordinates,[-74.05982,4.65057]);
+});

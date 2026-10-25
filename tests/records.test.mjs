@@ -87,3 +87,28 @@ test('land submissions require explicit project scope, reject string bypasses an
   const response=await h.request('records',data);assert.equal(response.status,201);
   const stored=await response.json();assert.equal(stored.form.project_land_confirmed,true);assert.equal(stored.form.area,'280');
 });
+
+test('pin submissions keep an approximate private point without inventing a polygon or computed area',async()=>{
+  const h=harness(),data=record();delete data.parcel;
+  data.locationMode='pin';data.locationPin={coordinates:[-74.059821234,4.650571234],confirmed:true};data.form.area='5200';
+  const response=await h.request('records',data);assert.equal(response.status,201);
+  const stored=await response.json();assert.equal(stored.parcel,null);assert.equal(stored.form.area,'5200');
+  assert.deepEqual(stored.locationPin.coordinates,[-74.0598212,4.6505712]);assert.equal(stored.locationPin.precision,'approximate');
+  assert.equal(stored.locationPin.areaM2,undefined);assert.equal(stored.locationPin.geometry,undefined);
+  assert.equal((await h.request('records/'+data.id,null,{owner:'bob'})).status,404);
+  const {publicSummary}=await import('../web/workflow-model.js');const summary=publicSummary(stored);
+  assert.equal(summary.locationPin,undefined);assert.equal(summary.coordinates,undefined);assert.equal(summary.geometry,undefined);
+});
+test('pin validation rejects unconfirmed, malformed, absent and conflicting locations and needs a declared area',async()=>{
+  const h=harness();
+  for(const locationPin of [undefined,{coordinates:[-74,4]},{coordinates:[-74,4],confirmed:'true'},{coordinates:['-74',4],confirmed:true},{coordinates:[0,0],confirmed:true},{coordinates:[-74,4,8],confirmed:true}]){
+    const data=record();delete data.parcel;Object.assign(data,{locationMode:'pin',locationPin});data.form.area='5200';
+    assert.equal((await h.request('records',data)).status,400);
+  }
+  const missingArea=record();delete missingArea.parcel;Object.assign(missingArea,{locationMode:'pin',locationPin:{coordinates:[-74,4],confirmed:true}});
+  assert.equal((await h.request('records',missingArea)).status,400);
+  const conflicting=record();Object.assign(conflicting,{locationMode:'pin',locationPin:{coordinates:[-74,4],confirmed:true}});conflicting.form.area='5200';
+  assert.equal((await h.request('records',conflicting)).status,400);
+  const unknown=record();unknown.locationMode='anything';assert.equal((await h.request('records',unknown)).status,400);
+  const missing=record();delete missing.parcel;assert.equal((await h.request('records',missing)).status,400);
+});

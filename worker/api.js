@@ -1,3 +1,4 @@
+import {normalizeLocationPin} from '../web/terrain-location.js';
 import {landUses} from '../web/development-sectors.js';
 import {notificationApi} from './notifications.js';
 import {opportunityApi} from './opportunity-experience.js';
@@ -135,17 +136,24 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       if(!location)error(400,'Selecciona un departamento y un municipio válido de Colombia.');
       Object.assign(form,location);
       if(form.neighborhood)form.neighborhood=text(form.neighborhood,120);
-      let parcel=null;
+      let parcel=null,locationPin=null;
       if(data.kind==='terreno') {
         if(form.project_land_confirmed!==true)error(400,landScopeExclusion+' Confirma que presentas el terreno para desarrollar un proyecto.');
-        if(!data.parcel?.confirmed)error(400,'Confirma el perímetro antes de enviar el terreno.');
-        parcel={...describeGeometry(data.parcel.geometry),source:text(data.parcel.source,160),confirmed:true,confirmedAt:new Date().toISOString()};
+        if(data.locationMode!=null&&!['pin','polygon'].includes(data.locationMode))error(400,'Elige pin o polígono para ubicar el terreno.');
+        if(data.locationMode==='pin'){
+          if(data.parcel!=null)error(400,'Envía solo la opción de ubicación elegida.');
+          try{locationPin={...normalizeLocationPin(data.locationPin),confirmedAt:new Date().toISOString()};}catch(e){error(400,e.message);}
+          if(!(Number(form.area)>0&&Number.isFinite(Number(form.area))))error(400,'Indica el área declarada; el pin no permite calcularla.');
+        }else{
+          if(!data.parcel?.confirmed)error(400,'Confirma el perímetro antes de enviar el terreno.');
+          parcel={...describeGeometry(data.parcel.geometry),source:text(data.parcel.source,160),confirmed:true,confirmedAt:new Date().toISOString()};
+        }
       }
       if(!Array.isArray(data.documentIds)||data.documentIds.length>20)error(400,'Puedes vincular hasta 20 documentos.');
       if(data.kind==='terreno'&&data.form?.land_situation!=null){try{form.land_situation=normalizeLandSituation(data.form.land_situation,{documentIds:data.documentIds});}catch(e){error(400,e.message);}}
       const files=[];for(const id of [...new Set(data.documentIds)]){const m=await documentMeta(bucket,prefix,id,Date.now());files.push({id:m.id,name:m.name,size:m.size,origin:m.origin,createdAt:m.createdAt,expiresAt:m.expiresAt,analysis:{status:m.analysis.status,message:m.analysis.message}});}
       const key=prefix+'records/'+data.id+'.json',existing=await getJson(bucket,key);if(existing)return json(ownerRecord(existing));
-      const record={id:data.id,reference:(data.kind==='terreno'?'TER-':'PRO-')+data.id.slice(0,8).toUpperCase(),kind:data.kind,form,parcel,files,status:'received',createdAt:new Date().toISOString(),...initialWorkflow(request)};
+      const record={id:data.id,reference:(data.kind==='terreno'?'TER-':'PRO-')+data.id.slice(0,8).toUpperCase(),kind:data.kind,form,parcel,...(locationPin?{locationPin}:{}),files,status:'received',createdAt:new Date().toISOString(),...initialWorkflow(request)};
       await attachProfile(record,bucket,prefix,'Titular del proyecto');
       await bucket.put(key,JSON.stringify(record),{httpMetadata:{contentType:'application/json'}});
       return json(ownerRecord(record),201);
