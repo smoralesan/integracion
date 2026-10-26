@@ -1,3 +1,4 @@
+import {howItWorksPage,mountHowItWorks} from './how-it-works.js';
 import {proposalDemoPage,mountProposalDemo} from './proposal-demo.js';
 import {contractMinutesPage,mountContractMinutes} from './contract-minutes.js';
 import {catalogRouteState,savedSearchHash,searchLocationLabel} from './catalog-navigation.js';
@@ -1013,16 +1014,8 @@ function spacePage() {
       .join("")}</div><div role="tabpanel" id="space-panel" aria-labelledby="space-tab-${tab}" tabindex="0">${body}</div><details class="ux-local-tools"><summary>Administrar datos de este navegador</summary><p>Puedes borrar los favoritos, búsquedas, borradores e historial local. Los expedientes enviados, perfiles y solicitudes guardados en tu cuenta se conservan.</p><button type="button" class="text-button" data-action="clear-data">Borrar datos locales</button></details></section></div></section>`
   );
 }
-function howPage() {
-  return (
-    pageHeader(
-      "Una conexión con un siguiente paso",
-      "Integración Inmobiliaria conecta terrenos, proyectos y actores independientes en Colombia.",
-      "Cómo funciona",
-    ) +
-    `<section class="page-content"><div class="container content-narrow">${processHTML()}<h2>Elige por dónde quieres comenzar</h2><p>Puedes buscar tierra, registrar un terreno, presentar un proyecto con o sin predio o vincular tu especialidad a la red. Cada recorrido recoge información distinta y conserva el control sobre lo que compartes.</p><div class="dialog-actions">${btn("Busco tierra", "#/buscar")}${btn("Tengo un terreno", "#/publicar/terreno")}${btn("Tengo un proyecto", "#/publicar/proyecto")}</div><h2>Entiende tus alternativas antes de elegir</h2><p>Si eres propietario, puedes expresar preferencias de venta, aporte o propuestas combinadas. El aporte permite evaluar dinero posterior al punto de equilibrio, inmuebles del desarrollo o una combinación.</p><button class="button outline" data-action="tutorial" style="margin:20px 0">Cómo funciona aportar mi lote ${icon("arrow-right")}</button><h2>Una revisión con alcance claro</h2><p>La información declarada, los documentos recibidos y las evaluaciones de profesionales son cosas diferentes. Una coincidencia o una ficha no acredita titularidad, capacidad profesional ni viabilidad.</p><div class="info-box">${icon("handshake")}<span>La estructuración y los demás servicios especializados corresponden a los actores vinculados. Integración facilita la conexión y el seguimiento.</span></div>${faqs.map(([q, a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join("")}</div></section>`
-  );
-}
+function howPage() { return howItWorksPage({icon,faqs}); }
+
 function notFound() {
   return `<section class="page-content"><div class="container"><div class="empty-state">${icon("search")}<h1 style="font-size:30px">Esta página no está disponible</h1><p style="margin-top:15px">Puedes retomar el recorrido desde el inicio.</p>${btn("Volver al inicio", "#/")}</div></div></section>`;
 }
@@ -1075,6 +1068,7 @@ function render() {
   mountLandSearch($('#contenido'),({searchDepartment,searchMunicipality,intendedUse,landContent,draw})=>{Object.assign(state,{searchDepartment,searchMunicipality,intendedUse,landContent,type:'terreno',reactivationFilter:'',query:'',directoryScope:null,zone:[],sectors:[],drawPoints:[],placeBounds:null,mapPlace:null,view:draw?'both':'list',drawing:draw,mapFitRevision:state.mapFitRevision+1});const params=new URLSearchParams();params.set('contenido',terrainSearchQuery(landContent)||'todos');if(searchMunicipality)params.set('municipio',searchMunicipality);if(intendedUse)params.set('uso',intendedUse);if(draw)params.set('zona','1');const hash='#/buscar'+(params.size?'?'+params:'');if(location.pathname!=='/'){location.href='/'+hash;return;}navigateCatalog(hash);});
   mountPortalPage($('#contenido'));mountLegalAccess($('#contenido'));
   mountContractMinutes($('#contenido'));
+  mountHowItWorks($('#contenido'));
   mountProposalDemo($('#contenido'),properties);
   for(const form of $$('#contenido form'))if(!form.closest('.portal-page')&&form.matches('[data-form="submission"],[data-sales-request],[data-service-request],[data-profile-form]'))form.insertAdjacentHTML('beforeend',legalButtons());
   mountTerrainDetail($('[data-terrain-detail]'));

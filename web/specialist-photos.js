@@ -10,8 +10,8 @@ export const specialistPhotos = {
   "estructuradores": {
     "src": "./assets/specialists/estructuradores.jpg",
     "subject": "Planos y evaluación del proyecto",
-    "position": "center",
-    "mobilePosition": "center"
+    "position": "center 42%",
+    "mobilePosition": "68% center"
   },
   "desarrolladores": {
     "src": "./assets/specialists/desarrolladores.jpg",
@@ -82,8 +82,8 @@ export const specialistPhotos = {
   "topografos": {
     "src": "./assets/specialists/topografos.jpg",
     "subject": "Levantamiento topográfico",
-    "position": "center",
-    "mobilePosition": "center"
+    "position": "60% center",
+    "mobilePosition": "58% center"
   },
   "geotecnistas": {
     "src": "./assets/specialists/geotecnistas.jpg",
@@ -104,10 +104,10 @@ export const specialistPhotos = {
     "mobilePosition": "center"
   },
   "presupuestos-programacion": {
-    "src": "./assets/specialists/presupuestos-programacion.jpg",
+    "src": "./assets/specialists/estructuradores.jpg",
     "subject": "Planeación y costos",
     "position": "center",
-    "mobilePosition": "5% center"
+    "mobilePosition": "70% center"
   },
   "coordinadores-bim": {
     "src": "./assets/specialists/coordinadores-bim.jpg",
