@@ -36,3 +36,12 @@ test('Minutas have direct routes and reject unknown document slugs',()=>{
  assert.equal(redirect('/minutas-de-contratos/no-existe'),null);
  assert.equal(redirect('/minutas-de-contratos/aporte-terreno/extra'),null);
 });
+
+test('Los documentos legales admiten enlaces directos sin abrir rutas arbitrarias',()=>{
+ for(const slug of ['politica-de-privacidad','politica-de-cookies','terminos-y-condiciones']){
+  assert.equal(redirect('/'+slug),'https://portal.test/#/'+slug);
+  assert.equal(redirect('/'+slug+'/'),'https://portal.test/#/'+slug);
+  assert.equal(redirect('/'+slug+'?origen=formulario'),'https://portal.test/#/'+slug+'?origen=formulario');
+  assert.equal(redirect('/'+slug+'/otra'),null);
+ }
+});
