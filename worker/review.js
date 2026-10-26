@@ -104,7 +104,7 @@ export async function reviewApi(request,env,context){
       record.form.visibility=visibility;
       record.publicationConsent={authorized:false,at:now(),version:'summary-v1',includesNeighborhood:false};
       if(record.status==='published')record.status='approved';
-      event(record,'visibility',visibility==='off-market'?'El titular eligió Off-market. Se reserva el lote y se retira la autorización pública.':'El titular eligió Público. Requiere una nueva autorización antes de publicar.');
+      event(record,'visibility',visibility==='off-market'?'El titular eligió Off-market. El lote se mantiene privado para ofrecerlo de forma selectiva, sin publicarlo en Internet al público, y se retira la autorización pública.':'El titular eligió Público. Requiere una nueva autorización antes de publicar.');
     }else if(ownMatch[2]==='profile'){
       if(!await attachProfile(record,bucket,prefix,'Titular del proyecto'))error(400,'Guarda tu perfil y activa su uso en proyectos antes de vincularlo.');
       event(record,'profile','El titular vinculó su perfil al proyecto.');
