@@ -1,3 +1,4 @@
+import {allowsPublicListing,isOffMarket,landVisibility,normalizeLandVisibility} from '../web/land-visibility.js';
 import {attachProfile,participantsView} from './profiles.js';
 import {statusOf,permittedTransitions,publicSummary} from '../web/workflow-model.js';
 const teamKeyPattern=/^([0-9a-f]{64}):([0-9a-f-]{36})$/;
@@ -27,7 +28,7 @@ export async function reviewApi(request,env,context){
   async function visibleRecord(locator){
     if(!locator||!uuid.test(locator.id||'')||!/^users\/[0-9a-f]{64}\/records\/[0-9a-f-]{36}\.json$/.test(locator.recordKey||''))return null;
     const object=await bucket.get(locator.recordKey);if(!object)return null;const r=await object.json();
-    if(statusOf(r)!=='published'||!r.publicationConsent?.authorized||r.publicationId!==locator.id)return null;
+    if(!allowsPublicListing(r)||statusOf(r)!=='published'||!r.publicationConsent?.authorized||r.publicationId!==locator.id)return null;
     if(r.publicationConsent.version==='detail-v2'){const ownerPrefix=locator.recordKey.split('records/')[0];const files=await Promise.all((r.files||[]).map(async f=>{const meta=await bucket.get(ownerPrefix+'documents/'+f.id+'/meta.json');if(!meta)return null;const m=await meta.json();return Date.parse(m.expiresAt)>Date.now()?{...f,expiresAt:m.expiresAt}:null;}));r.files=files.filter(Boolean);}
     return {...publicSummary(r),publishedAt:r.publishedAt};
   }
@@ -52,7 +53,7 @@ export async function reviewApi(request,env,context){
       do{
         const page=await bucket.list({prefix:'users/',limit:100,...(cursor?{cursor}:{})});cursor=page.truncated?page.cursor:null;
         const rows=await Promise.all(page.objects.filter(o=>/^users\/[0-9a-f]{64}\/records\/[\w-]+\.json$/.test(o.key)).map(async o=>{
-          const object=await bucket.get(o.key);if(!object)return null;const r=await object.json();return {teamKey:o.key.split('/')[1]+':'+r.id,id:r.id,reference:r.reference,kind:r.kind,title:r.form.title,city:r.form.city,region:r.form.region,status:statusOf(r),assignee:r.assignee||'',createdAt:r.createdAt,updatedAt:r.updatedAt||r.createdAt};
+          const object=await bucket.get(o.key);if(!object)return null;const r=await object.json();return {teamKey:o.key.split('/')[1]+':'+r.id,id:r.id,reference:r.reference,kind:r.kind,...(r.kind==='terreno'?{visibility:landVisibility(r)}:{}),title:r.form.title,city:r.form.city,region:r.form.region,status:statusOf(r),assignee:r.assignee||'',createdAt:r.createdAt,updatedAt:r.updatedAt||r.createdAt};
         }));records.push(...rows.filter(Boolean));pages++;
       }while(cursor&&pages<3&&records.length<30);
       return json({records,cursor,role});
@@ -78,6 +79,7 @@ export async function reviewApi(request,env,context){
     if(target!==record.status&&!permittedTransitions(record,role).includes(target))error(403,'Tu rol o el estado actual no permiten este cambio.');
     if(target==='needs_information'&&!message)error(400,'Indica al propietario qué información necesita completar.');
     if(record.status==='published'&&target!==record.status&&!message)error(400,'Explica por qué retiras la publicación.');
+    if(target==='published'&&!allowsPublicListing(record))error(400,'Un terreno Off-market no puede publicarse en el catálogo.');
     if(target==='published'&&(!record.publicationConsent?.authorized||!record.publicationId))error(400,'El propietario debe autorizar el resumen antes de publicar.');
     if(target===record.status&&!message&&!note&&assignee===(record.assignee||''))error(400,'No hay cambios para guardar.');
     const previous=record.status;record.status=target;record.assignee=assignee;
@@ -91,14 +93,23 @@ export async function reviewApi(request,env,context){
     }
     await write(key,record,etag,body.revision);return json({...participantsView(record,'/api/team/records/'+encodeURIComponent(parsed[0])),teamKey:parsed[0],role});
   }
-  const ownMatch=path.match(/^\/api\/records\/([\w-]+)\/(reply|publication-consent|profile)$/);
+  const ownMatch=path.match(/^\/api\/records\/([\w-]+)\/(reply|publication-consent|profile|visibility)$/);
   if(ownMatch&&request.method==='POST'){
     if(!uuid.test(ownMatch[1]))error(404,'Expediente no encontrado.');
     const key=prefix+'records/'+ownMatch[1]+'.json',{record,etag}=await read(key),body=await data();record.status=statusOf(record);
-    if(ownMatch[2]==='profile'){
+    if(ownMatch[2]==='visibility'){
+      if(record.kind!=='terreno')error(400,'La visibilidad Off-market aplica a terrenos.');
+      let visibility;try{if(body.visibility==null)throw Error('Selecciona la visibilidad.');visibility=normalizeLandVisibility(body.visibility);}catch(e){error(400,e.message);}
+      const previous=landVisibility(record);if(visibility===previous)error(400,'La visibilidad seleccionada ya está guardada.');
+      record.form.visibility=visibility;
+      record.publicationConsent={authorized:false,at:now(),version:'summary-v1',includesNeighborhood:false};
+      if(record.status==='published')record.status='approved';
+      event(record,'visibility',visibility==='off-market'?'El titular eligió Off-market. Se reserva el lote y se retira la autorización pública.':'El titular eligió Público. Requiere una nueva autorización antes de publicar.');
+    }else if(ownMatch[2]==='profile'){
       if(!await attachProfile(record,bucket,prefix,'Titular del proyecto'))error(400,'Guarda tu perfil y activa su uso en proyectos antes de vincularlo.');
       event(record,'profile','El titular vinculó su perfil al proyecto.');
     }else if(ownMatch[2]==='publication-consent'){
+      if(body.authorized===true&&!allowsPublicListing(record))error(400,'El terreno es Off-market. Cambia a Público antes de autorizar su publicación.');
       if(typeof body.authorized!=='boolean')error(400,'Selecciona si autorizas la publicación del resumen.');
       record.publicationId||=crypto.randomUUID();
       record.publicationConsent={authorized:body.authorized,at:now(),version:'summary-v1',includesNeighborhood:body.authorized&&body.includeNeighborhood===true};

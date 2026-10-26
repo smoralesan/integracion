@@ -19,3 +19,11 @@ test('Session search history is bounded, revisable and isolated by catalog URL',
 test('Sign-in uses a relative allowed destination, preserving selected consultation',()=>{const hash='#/interes/publicacion/'+id+'?consulta=visita';assert.equal(decodeURIComponent(signInPath(hash).split('return_to=')[1]),'/'+hash);for(const bad of ['https://evil.test','//#/evil','#/x<script>'])assert.equal(decodeURIComponent(signInPath(bad).split('return_to=')[1]),'/#/mi-espacio');});
 test('Space objectives personalize navigation only, without granting roles or hiding all other tasks',()=>{for(const objective of ['offer','search','specialist']){const html=spaceIntentHTML(objective);assert.equal((html.match(/aria-pressed="true"/g)||[]).length,1);assert.ok(html.includes('Otras gestiones disponibles'));assert.ok(!html.includes('/equipo'));}assert.equal(normalizeSpaceObjective('admin'),'offer');assert.equal(normalizeSpaceObjective('__proto__'),'offer');});
 test('Premium UX requests a quote before any contracting or payment',()=>{const html=premiumValuationPage();assert.ok(html.includes('Cotización previa'));assert.ok(html.includes('Honorarios'));assert.ok(html.includes('Plazo'));assert.ok(html.includes('servicio=valor-terreno'));assert.ok(!html.includes('checkout.bold.co'));assert.ok(valuationDescription.includes('no contrata el servicio ni genera un cobro'));});
+
+test('Off-market se oculta incluso con estado y consentimiento públicos anteriores',async()=>{
+ const h=await publicFixture();h.record.form.visibility='off-market';await h.bucket.put(key,JSON.stringify(h.record));
+ assert.equal((await h.call('catalog/'+id)).status,404);
+ assert.equal((await(await h.call('catalog')).json()).records.length,0);
+ assert.equal((await h.call('catalog/'+id+'/photos/'+photo)).status,404);
+ assert.equal((await h.call('purchase-leads/source/publication/'+id,{headers:{'oai-authenticated-user-id':'buyer','oai-authenticated-user-email':'buyer@example.test'}})).status,404);
+});

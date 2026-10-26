@@ -1,3 +1,4 @@
+import {visibilityFieldsHTML,visibilityLabel} from './land-visibility.js';
 import {howItWorksPage,mountHowItWorks} from './how-it-works.js';
 import {proposalDemoPage,mountProposalDemo} from './proposal-demo.js';
 import {contractMinutesPage,mountContractMinutes} from './contract-minutes.js';
@@ -756,7 +757,7 @@ function formPage(kind) {
   if (state.formStep === 2) {
     body = project
       ? `<h2>¿Qué necesita para avanzar?</h2><p class="form-intro">Podrás buscar actores para evaluar la oportunidad o para participar en su ejecución.</p><div class="form-grid">${inputField("Principal necesidad", "need", { options: ["Asesoría legal", "Terreno", "Estructuración", "Desarrollo", "Construcción", "Financiación", "Inversión", "Comercialización", "Evaluación para reactivación"], required: true, full: true })}${inputField("Tipo de vinculación que buscas", "participation", { options: ["Evaluación especializada", "Participación en el desarrollo", "Servicio contratado", "Por definir"], required: true, full: true })}${f.land_status === "searching" ? `${inputField("Área mínima de terreno (m²)", "desired_min", { type: "number", min: 1, placeholder: "Desde" })}${inputField("Área máxima de terreno (m²)", "desired_max", { type: "number", min: 1, placeholder: "Hasta" })}${inputField("Municipios o zonas de interés", "desired_zone", { placeholder: "Ej. Zona Norte de Cartagena", full: true })}` : ""}<label class="form-field full">Información sobre la necesidad<textarea name="need_description" placeholder="Describe el alcance y las condiciones que quieres evaluar.">${escape(f.need_description || "")}</textarea></label><label class="check-row"><input type="checkbox" name="reactivation" ${f.reactivation ? "checked" : ""}>El proyecto está detenido y necesita evaluar una reactivación.</label></div><div class="info-box">${icon("users")}<span>Integración facilita la conexión. La estructuración y los servicios especializados corresponden a los actores vinculados.</span></div>`
-      : `<h2>¿Cómo quieres negociarlo?</h2><p class="form-intro">Estas son preferencias para recibir propuestas. Podrás ajustarlas antes de formalizar cualquier acuerdo.</p><p class="form-section-label">Selecciona una modalidad <span class="ux-required">Obligatorio</span></p><div class="choice-grid">${selectChoice("negotiation", "sale", "Venta", "Recibir dinero por tu terreno.", "coins")}${selectChoice("negotiation", "contribution", "Aporte a proyecto", "Recibir dinero posterior o inmuebles del desarrollo.", "building")}${selectChoice("negotiation", "open", "Evaluar alternativas", "Venta, aporte o propuestas combinadas.", "handshake")}</div>${f.negotiation === "contribution" ? contributionFields() : ""}${currencyFields()}${premiumValuationField(f.valuation_assistance)}`;
+      : `<h2>¿Cómo quieres negociarlo?</h2><p class="form-intro">Estas son preferencias para recibir propuestas. Podrás ajustarlas antes de formalizar cualquier acuerdo.</p><p class="form-section-label">Selecciona una modalidad <span class="ux-required">Obligatorio</span></p><div class="choice-grid">${selectChoice("negotiation", "sale", "Venta", "Recibir dinero por tu terreno.", "coins")}${selectChoice("negotiation", "contribution", "Aporte a proyecto", "Recibir dinero posterior o inmuebles del desarrollo.", "building")}${selectChoice("negotiation", "open", "Evaluar alternativas", "Venta, aporte o propuestas combinadas.", "handshake")}</div>${f.negotiation === "contribution" ? contributionFields() : ""}${currencyFields()}${premiumValuationField(f.valuation_assistance)}${visibilityFieldsHTML(f.visibility)}`;
   }
   if (!project && state.formStep === 3) body = landSituationFields(f.land_situation);
   if (state.formStep === totalSteps) {
@@ -879,6 +880,7 @@ function formSummary() {
         "COP $" + money(Number(f.exchange_rate)) + " por USD · Por acordar",
       ]);
   }
+  if(state.formKind==='terreno')rows.push(['Visibilidad',f.visibility?visibilityLabel({kind:'terreno',form:f}):'Por seleccionar']);
   if(state.formKind==='terreno'&&f.valuation_assistance===true)rows.push(["Asesoría premium de valor base","Solicitada · Alcance y honorarios pendientes de acordar"]);
   return `<dl class="summary-list">${rows.map(([label, value]) => `<div><dt>${label}</dt><dd>${escape(value || "Por definir")}</dd></div>`).join("")}</dl>${state.formKind==='terreno'?landSituationSummary(f.land_situation,state.files):''}`;
 }
@@ -1823,12 +1825,13 @@ document.addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(form);
   const type = form.dataset.form;
-  if (type === 'owner-reply'||type === 'publication-consent') {
+  if (type === 'owner-reply'||type === 'publication-consent'||type === 'land-visibility') {
     const record=state.remoteRecord,button=form.querySelector('[type="submit"]'),output=form.querySelector('[data-owner-result]');
     if(!record||button.disabled)return;button.disabled=true;output.textContent='Guardando…';
     try{
-      let payload={revision:record.revision||0},suffix=type==='owner-reply'?'reply':'publication-consent';
-      if(type==='publication-consent'){payload.authorized=!record.publicationConsent?.authorized;payload.includeNeighborhood=true;}
+      let payload={revision:record.revision||0},suffix=type==='land-visibility'?'visibility':type==='owner-reply'?'reply':'publication-consent';
+      if(type==='land-visibility'){payload.visibility=String(data.get('visibility')||'');}
+      else if(type==='publication-consent'){payload.authorized=!record.publicationConsent?.authorized;payload.includeNeighborhood=true;}
       else{
         payload.message=String(data.get('message')||'');payload.documentIds=[];
         const files=[...form.querySelector('[name="reply_files"]').files];
@@ -1838,7 +1841,7 @@ document.addEventListener("submit", async (event) => {
         const url=String(data.get('link_url')||'').trim();if(url){const doc=await addDocumentLink(String(data.get('link_name')||'Soporte adicional'),url);payload.documentIds.push(doc.id);}
       }
       const result=await api('/api/records/'+record.id+'/'+suffix,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
-      if(state.remoteRecord?.id===record.id){state.remoteRecord=result;render();toast(type==='owner-reply'?'Respuesta recibida. El expediente vuelve a revisión.':payload.authorized?'Autorización guardada. El equipo podrá publicar el resumen.':'Autorización retirada. El resumen ya no está disponible en el catálogo.');}
+      if(state.remoteRecord?.id===record.id){state.remoteRecord=result;render();toast(type==='land-visibility'?'Visibilidad actualizada.':type==='owner-reply'?'Respuesta recibida. El expediente vuelve a revisión.':payload.authorized?'Autorización guardada. El equipo podrá publicar el resumen.':'Autorización retirada. El resumen ya no está disponible en el catálogo.');}
     }catch(error){output.textContent=error.message;button.disabled=false;}
     return;
   }

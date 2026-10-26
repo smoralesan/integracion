@@ -1,3 +1,4 @@
+import {allowsPublicListing} from '../web/land-visibility.js';
 import {normalizePresentation,availabilityLabels,evidenceLabels,possibleSameLand} from '../web/opportunity-model.js';
 import {ownerRecord} from './review.js';
 import {statusOf} from '../web/workflow-model.js';
@@ -15,6 +16,7 @@ export async function opportunityApi(request,env,c){
    s.record.availability=data.availability;s.record.availabilityConfirmedAt=new Date().toISOString();
    return json(ownerRecord(await save(s,key,data,'El titular confirmó disponibilidad: '+availabilityLabels[data.availability]+'.')));
   }
+  if(!allowsPublicListing(s.record))error(400,'El terreno es Off-market. No se admite una ficha pública.');
   if(data.authorized!==true)error(400,'Autoriza expresamente el contenido de esta ficha pública.');
   let p;try{p=normalizePresentation(data.presentation);}catch(e){error(400,e.message);}
   const attached=new Set((s.record.files||[]).map(f=>f.id));
@@ -54,7 +56,7 @@ export async function opportunityApi(request,env,c){
  }
  if(!uuid.test(publicMatch[1]))error(404,'Publicación no encontrada.');const locator=(await read('catalog/'+publicMatch[1]+'.json'))?.record;
  if(!locator||!/^users\/[0-9a-f]{64}\/records\/[0-9a-f-]{36}\.json$/.test(locator.recordKey))error(404,'Publicación no encontrada.');
- const r=(await read(locator.recordKey))?.record;if(!r||statusOf(r)!=='published'||!r.publicationConsent?.authorized||r.publicationId!==publicMatch[1])error(404,'Publicación no disponible.');
+ const r=(await read(locator.recordKey))?.record;if(!r||!allowsPublicListing(r)||statusOf(r)!=='published'||!r.publicationConsent?.authorized||r.publicationId!==publicMatch[1])error(404,'Publicación no disponible.');
  if(publicMatch[2]==='report'&&request.method==='POST'){
   const data=await body();if(!uuid.test(data.id)||!['outdated','duplicate','representation','other'].includes(data.reason)||text(data.message,1000).length<10)error(400,'Elige un motivo y describe la inconsistencia.');
   const key='publication-reports/'+data.id+'.json',old=await read(key);if(old&&old.record.reporterPrefix!==prefix)error(409,'Referencia de reporte ya usada.');

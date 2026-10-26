@@ -1,3 +1,4 @@
+import {allowsPublicListing} from '../web/land-visibility.js';
 import {properties} from '../web/opportunity-examples.js';
 import {publicSummary,statusOf} from '../web/workflow-model.js';
 import {salesStates,salesTransitions,advancedSalesStates,terminalSale,normalizeBuyer,validateContact,normalizeVisit,normalizeProposal} from '../web/sales-model.js';
@@ -14,7 +15,7 @@ export async function salesApi(request,env,context){
   if(kind==='demo'){const p=properties.find(p=>p.id===id);if(!p)error(404,'Ejemplo no encontrado.');return {source:{kind,id,snapshot:{id:p.id,reference:p.id,title:p.title,city:p.city,region:p.region,kind:p.type}},targetRecordKey:null};}
   if(kind!=='publication'||!uuid.test(id))error(404,'Publicación no disponible.');
   const pointer=(await read('catalog/'+id+'.json'))?.record;if(!pointer||pointer.id!==id||!recordPattern.test(pointer.recordKey))error(404,'Publicación no disponible.');
-  const target=(await read(pointer.recordKey))?.record;if(!target||statusOf(target)!=='published'||!target.publicationConsent?.authorized||target.publicationId!==id)error(404,'La publicación ya no está disponible para nuevas solicitudes.');
+  const target=(await read(pointer.recordKey))?.record;if(!target||!allowsPublicListing(target)||statusOf(target)!=='published'||!target.publicationConsent?.authorized||target.publicationId!==id)error(404,'La publicación ya no está disponible para nuevas solicitudes.');
   if(target.availability==='withdrawn')error(409,'El titular retiró esta oportunidad. No se reciben nuevos intereses.');
   const summary=publicSummary(target),snapshot={};for(const field of ['id','reference','kind','title','city','region','area','negotiation','price_method','amount','amount_usd'])if(summary[field]!==undefined)snapshot[field]=summary[field];
   return {source:{kind,id,snapshot},targetRecordKey:pointer.recordKey};

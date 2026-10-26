@@ -10,7 +10,7 @@ function harness(){
     let payload=body;if(body&&!(body instanceof FormData)){headers.set('content-type','application/json');payload=JSON.stringify(body);}
     return handleApi(new Request('https://portal.test/api/'+path,{method,headers,...(payload?{body:payload}:{})}),env);
   };
-  const create=async(user='alice')=>{const response=await request('records',{id:crypto.randomUUID(),kind:'terreno',form:{title:'Lote ficticio',city:'Cartagena',region:'Bolívar',neighborhood:'Manzanillo del Mar',relationship:'owner',project_land_confirmed:true,description:'INFORMACIÓN RESERVADA',amount:'2000000000.50',area:'5200'},parcel:{geometry,confirmed:true},documentIds:[]},{user});assert.equal(response.status,201);return response.json();};
+  const create=async(user='alice',visibility)=>{const response=await request('records',{id:crypto.randomUUID(),kind:'terreno',form:{...(visibility===undefined?{}:{visibility}),title:'Lote ficticio',city:'Cartagena',region:'Bolívar',neighborhood:'Manzanillo del Mar',relationship:'owner',project_land_confirmed:true,description:'INFORMACIÓN RESERVADA',amount:'2000000000.50',area:'5200'},parcel:{geometry,confirmed:true},documentIds:[]},{user});assert.equal(response.status,201);return response.json();};
   const find=async id=>(await(await request('team/records',null,{user:'admin'})).json()).records.find(r=>r.id===id).teamKey;
   const update=async(key,body,user='admin')=>request('team/records/'+encodeURIComponent(key),body,{user,method:'PATCH'});
   return {bucket,request,create,find,update};
@@ -95,4 +95,32 @@ test('Neighborhood publication requires a new authorization that includes the di
  assert.equal(published.neighborhood,'Manzanillo del Mar');
  assert.equal(published.description,undefined);
  assert.equal(published.form,undefined);
+});
+
+test('Off-market se conserva privado y bloquea ambas autorizaciones y la publicación administrativa',async()=>{
+ const h=harness(),r=await h.create('alice','off-market'),key=await h.find(r.id);
+ assert.equal(r.form.visibility,'off-market');
+ const queue=await(await h.request('team/records',null,{user:'admin'})).json();assert.equal(queue.records[0].visibility,'off-market');
+ let current=await(await h.update(key,{revision:r.revision,status:'in_review'})).json();current=await(await h.update(key,{revision:current.revision,status:'approved'})).json();
+ assert.equal((await h.request('records/'+r.id+'/publication-consent',{revision:current.revision,authorized:true})).status,400);
+ assert.equal((await h.request('records/'+r.id+'/presentation',{revision:current.revision,authorized:true,presentation:{}})).status,400);
+ assert.equal((await h.update(key,{revision:current.revision,status:'published'})).status,403);
+ assert.equal((await(await h.request('catalog')).json()).records.length,0);
+ await assert.rejects(()=>h.create('alice','hidden-invalid'));
+});
+test('Cambiar un lote publicado a Off-market oculta el enlace; volver a Público no restaura el consentimiento',async()=>{
+ const h=harness(),r=await h.create('alice','public'),key=await h.find(r.id);
+ let current=await(await h.update(key,{revision:0,status:'in_review'})).json();current=await(await h.update(key,{revision:current.revision,status:'approved'})).json();
+ current=await(await h.request('records/'+r.id+'/publication-consent',{revision:current.revision,authorized:true})).json();current=await(await h.update(key,{revision:current.revision,status:'published'})).json();
+ assert.equal((await h.request('catalog/'+current.publicationId)).status,200);
+ assert.equal((await h.request('records/'+r.id+'/visibility',{revision:current.revision,visibility:'off-market'},{user:'bob'})).status,404);
+ assert.equal((await h.request('records/'+r.id+'/visibility',{revision:0,visibility:'off-market'})).status,409);
+ assert.equal((await h.request('records/'+r.id+'/visibility',{revision:current.revision,visibility:'other'})).status,400);
+ current=await(await h.request('records/'+r.id+'/visibility',{revision:current.revision,visibility:'off-market'})).json();
+ assert.equal(current.status,'approved');assert.equal(current.form.visibility,'off-market');assert.equal(current.publicationConsent.authorized,false);assert.equal(current.history.at(-1).type,'visibility');
+ assert.equal((await h.request('catalog/'+current.publicationId)).status,404);assert.equal((await(await h.request('catalog')).json()).records.length,0);
+ current=await(await h.request('records/'+r.id+'/visibility',{revision:current.revision,visibility:'public'})).json();assert.equal(current.publicationConsent.authorized,false);
+ assert.equal((await h.update(key,{revision:current.revision,status:'published'})).status,400);
+ current=await(await h.request('records/'+r.id+'/publication-consent',{revision:current.revision,authorized:true})).json();
+ assert.equal((await h.update(key,{revision:current.revision,status:'published'})).status,200);
 });
