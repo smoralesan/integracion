@@ -1,3 +1,4 @@
+import {valueStatusOptions,valueStatus,hasCashPreferences,negotiationValueLabel,normalizeNegotiationForm,referenceValueSummary} from './land-negotiation.js';
 import {visibilityFieldsHTML,visibilityLabel} from './land-visibility.js';
 import {howItWorksPage,mountHowItWorks} from './how-it-works.js';
 import {proposalDemoPage,mountProposalDemo} from './proposal-demo.js';
@@ -357,7 +358,7 @@ function syncParcel() {
   const f = state.form;
   const key = readOnly ? record?.id : f.client_id;
   parcelEditor.mount(host, {
-    key, readOnly, localPreview:emailEntry.isPreview(), documentCount:state.files.length,
+    key, readOnly, localPreview:emailEntry.isPreview(), documentCount:state.files.length, locationQuery:readOnly?'':[f.city,f.region].filter(Boolean).join(', '),
     geometry: readOnly ? record?.parcel?.geometry : f.parcel_geometry,
     mode:readOnly?(record?.locationPin?'pin':'polygon'):terrainLocationMode(f),
     pin:readOnly?record?.locationPin?.coordinates:f.location_pin,
@@ -405,7 +406,7 @@ function privateRecordsHTML() {
 function remoteRecordPage(id) {
   const r=state.remoteRecord;
   if(!r||r.id!==id)return pageHeader('Tu expediente privado',state.remoteRecordError||'Cargando la información…')+`<section class="page-content"><div class="container">${btn('Volver a Mi espacio','#/mi-espacio','outline')}</div></section>`;
-  return pageHeader(escape(r.form.title),escape(r.reference)+' · '+escape(statusLabel(r)),'Expediente privado',btn('Mi espacio','#/mi-espacio','outline'))+`<section class="page-content"><div class="container content-narrow"><div class="info-box">${icon('lock')}<span>Este expediente se guardó en tu cuenta. La publicación depende de tu autorización y de la gestión del equipo. Los avisos y las preferencias de correo se consultan en Mi espacio.</span></div><dl class="summary-list"><div><dt>Ubicación</dt><dd>${escape(r.form.region)} → ${escape(r.form.city)}</dd></div>${r.form.neighborhood?`<div><dt>Barrio</dt><dd>${escape(r.form.neighborhood)}</dd></div>`:""}<div><dt>Valor solicitado</dt><dd>${r.form.amount?escape((r.form.price_method==='usd'?'USD':'COP')+' $'+formatAmount(r.form.amount)):'Por definir'}</dd></div>${['dual','mixed'].includes(r.form.price_method)?`<div><dt>${r.form.price_method==='dual'?'Precio alternativo en USD':'Componente en USD'}</dt><dd>${r.form.amount_usd?'USD $'+escape(formatAmount(r.form.amount_usd)):'Por definir'}</dd></div>`:''}<div><dt>Área declarada</dt><dd>${r.form.area?escape(money(r.form.area))+' m²':'Por definir'}</dd></div></dl>${r.parcel||r.locationPin?'<div data-parcel-host data-read-only="true"></div>':''}${r.kind==='terreno'?`${brokerExclusivitySummary(r.form)}${r.form.valuation_assistance?'<div class="info-box"><span>Solicitud de asesoría premium para definir un valor base. Alcance y honorarios por acordar con el equipo.</span></div>':''}${landSituationSummary(r.form.land_situation,r.files)}`:''}<h2>Documentos y referencias</h2><p>Los documentos temporales dejan de estar disponibles al vencer 60 días desde la carga. Abrirlos no renueva el plazo.</p>${r.files.length?r.files.map(f=>`<div class="uploaded-file">${icon('file')}<div><strong>${escape(f.name)}</strong><small>${escape(f.analysis?.message||'Pendiente de revisión')} · Vence ${new Date(f.expiresAt).toLocaleDateString('es-CO')}</small></div><button class="text-button" data-action="download-document" data-id="${f.id}" ${Date.parse(f.expiresAt)<=Date.now()?'disabled':''}>${f.origin==='link'?'Ver enlace':'Descargar'}</button></div>`).join(''):'<p>No se adjuntaron soportes.</p>'}${r.kind==='proyecto'?participantsHTML(r.participants)+`<div class="profile-project-actions"><a class="text-link" href="#/mi-perfil">Editar mi perfil</a> · <button class="text-button" data-action="link-project-profile">Mostrar mi perfil en este proyecto</button><p class="participants-note">Se conserva el acceso privado actual del expediente.</p></div>`:''}<div class="dialog-actions"><a class="button outline" href="#/interesados-recibidos?expediente=${r.id}">Ver interesados en este expediente →</a></div>${ownerWorkflowHTML(r)}${ownerExperienceHTML(r)}</div></section>`;
+  return pageHeader(escape(r.form.title),escape(r.reference)+' · '+escape(statusLabel(r)),'Expediente privado',btn('Mi espacio','#/mi-espacio','outline'))+`<section class="page-content"><div class="container content-narrow"><div class="info-box">${icon('lock')}<span>Este expediente se guardó en tu cuenta. La publicación depende de tu autorización y de la gestión del equipo. Los avisos y las preferencias de correo se consultan en Mi espacio.</span></div><dl class="summary-list"><div><dt>Ubicación</dt><dd>${escape(r.form.region)} → ${escape(r.form.city)}</dd></div>${r.form.neighborhood?`<div><dt>Barrio</dt><dd>${escape(r.form.neighborhood)}</dd></div>`:""}<div><dt>${r.kind==='terreno'?negotiationValueLabel(r.form):'Valor solicitado'}</dt><dd>${referenceValueSummary(r.form)|| (r.form.amount?escape((r.form.price_method==='usd'?'USD':'COP')+' $'+formatAmount(r.form.amount)):'Por definir')}</dd></div>${valueStatus(r.form)==='known'&&['dual','mixed'].includes(r.form.price_method)?`<div><dt>${r.form.price_method==='dual'?'Precio alternativo en USD':'Componente en USD'}</dt><dd>${r.form.amount_usd?'USD $'+escape(formatAmount(r.form.amount_usd)):'Por definir'}</dd></div>`:''}<div><dt>Área declarada</dt><dd>${r.form.area?escape(money(r.form.area))+' m²':'Por definir'}</dd></div></dl>${r.parcel||r.locationPin?'<div data-parcel-host data-read-only="true"></div>':''}${r.kind==='terreno'?`${brokerExclusivitySummary(r.form)}${r.form.valuation_assistance?'<div class="info-box"><span>Solicitud de asesoría premium para definir un valor base. Alcance y honorarios por acordar con el equipo.</span></div>':''}${landSituationSummary(r.form.land_situation,r.files)}`:''}<h2>Documentos y referencias</h2><p>Los documentos temporales dejan de estar disponibles al vencer 60 días desde la carga. Abrirlos no renueva el plazo.</p>${r.files.length?r.files.map(f=>`<div class="uploaded-file">${icon('file')}<div><strong>${escape(f.name)}</strong><small>${escape(f.analysis?.message||'Pendiente de revisión')} · Vence ${new Date(f.expiresAt).toLocaleDateString('es-CO')}</small></div><button class="text-button" data-action="download-document" data-id="${f.id}" ${Date.parse(f.expiresAt)<=Date.now()?'disabled':''}>${f.origin==='link'?'Ver enlace':'Descargar'}</button></div>`).join(''):'<p>No se adjuntaron soportes.</p>'}${r.kind==='proyecto'?participantsHTML(r.participants)+`<div class="profile-project-actions"><a class="text-link" href="#/mi-perfil">Editar mi perfil</a> · <button class="text-button" data-action="link-project-profile">Mostrar mi perfil en este proyecto</button><p class="participants-note">Se conserva el acceso privado actual del expediente.</p></div>`:''}<div class="dialog-actions"><a class="button outline" href="#/interesados-recibidos?expediente=${r.id}">Ver interesados en este expediente →</a></div>${ownerWorkflowHTML(r)}${ownerExperienceHTML(r)}</div></section>`;
 }
 
 function mapHTML(context = "home", propertyId = "") {
@@ -662,52 +663,14 @@ function selectChoice(name, value, title, description, type = "building") {
   return `<label class="choice-card"><input type="radio" name="${name}" value="${value}" ${state.form[name] === value ? "checked" : ""} required>${icon(type)}<strong>${title}</strong><small>${description}</small></label>`;
 }
 function currencyFields() {
-  const method = state.form.price_method || "cop";
-  const hasUSD =
-    ["usd", "dual", "mixed"].includes(method) ||
-    (Array.isArray(state.form.receive_currencies) &&
-      state.form.receive_currencies.includes("USD"));
-  return `<div class="form-section-label">Precio y monedas</div><div class="form-grid">${inputField(
-    "¿Cómo quieres expresar el valor?",
-    "price_method",
-    {
-      options: [
-        ["cop", "Valor fijo en pesos (COP)"],
-        ["usd", "Valor fijo en dólares (USD)"],
-        ["dual", "Dos precios fijos alternativos"],
-        ["mixed", "Una parte en COP y otra en USD"],
-      ],
-      required: true,
-      full: true,
-    },
-  )}${inputField(method === "usd" ? "Valor solicitado en USD" : method === "dual" ? "Precio alternativo en COP" : method === "mixed" ? "Parte a recibir en COP" : "Valor solicitado en COP", "amount", { currency: true, placeholder: "Ej. 1.000.000,00", hint: "Puedes dejarlo pendiente. Usa coma para los decimales; los puntos se agregan automáticamente." })}${
-    ["dual", "mixed"].includes(method)
-      ? inputField(
-          method === "dual"
-            ? "Precio alternativo en USD"
-            : "Parte a recibir en USD",
-          "amount_usd",
-          { currency: true, placeholder: "Ej. 250.000,00" },
-        )
-      : inputField("¿Aceptas negociar el valor?", "negotiable", {
-          options: [
-            ["yes", "Sí, escucho propuestas"],
-            ["no", "Prefiero mantener el valor"],
-            ["advice", "Por definir"],
-          ],
-        })
-  }<div class="form-field full"><span>Monedas de recepción que te gustaría evaluar</span><div class="checkbox-group">${["COP", "USD"].map((c) => `<label><input type="checkbox" name="receive_currencies" value="${c}" ${(state.form.receive_currencies || ["COP"]).includes(c) ? "checked" : ""}>${c === "COP" ? "Pesos colombianos" : "Dólares estadounidenses"}</label>`).join("")}</div><small>Una preferencia de moneda no define el mecanismo legal de pago. La recepción en USD se evalúa según las partes y la operación.</small></div>${
-    hasUSD
-      ? `${inputField("Para la conversión, prefiero", "rate_method", {
-          options: [
-            ["trm", "TRM como referencia sugerida"],
-            ["fixed", "Una tasa fija propuesta"],
-            ["agree", "Acordar la tasa entre las partes"],
-          ],
-          required: true,
-        })}${inputField(state.form.rate_method === "fixed" ? "Tasa propuesta (COP por USD)" : "Tasa ilustrativa para explorar (COP por USD)", "exchange_rate", { type: "number", min: 1, placeholder: "Ejemplo: 4000", hint: "Este prototipo no consulta una tasa vigente." })}<div class="conversion-preview form-field full" id="conversion-preview">${conversionText()}</div>`
-      : ""
-  }</div>`;
+  const f=state.form,contribution=f.negotiation==='contribution',method=f.price_method||'cop';
+  const cash=hasCashPreferences(f),hasUSD=['usd','dual','mixed'].includes(method)||(cash&&f.receive_currencies?.includes('USD'));
+  const amountLabel=method==='usd'?(contribution?'Valor estimado del aporte en USD':'Valor solicitado en USD'):method==='dual'?'Valor alternativo en COP':method==='mixed'?'Componente del valor en COP':(contribution?'Valor estimado del aporte en COP':'Valor solicitado en COP');
+  return `<section class="lf-price"><h3>${negotiationValueLabel(f)}</h3><div class="form-grid">${inputField('¿Cómo quieres expresar el valor?','price_method',{options:[['cop','Valor fijo en pesos (COP)'],['usd','Valor fijo en dólares (USD)'],['dual','Dos valores fijos alternativos'],['mixed','Una parte en COP y otra en USD']],required:true,full:true})}${inputField(amountLabel,'amount',{currency:true,required:true,placeholder:'Ej. 1.000.000,00',hint:contribution?'Es una referencia para evaluar el aporte; la compensación se acuerda por separado.':'Usa coma para los decimales; los puntos se agregan automáticamente.'})}${['dual','mixed'].includes(method)?inputField(method==='dual'?'Valor alternativo en USD':'Componente del valor en USD','amount_usd',{currency:true,required:true,placeholder:'Ej. 250.000,00'}):cash?inputField('¿Aceptas negociar el valor?','negotiable',{options:[['yes','Sí, escucho propuestas'],['no','Prefiero mantener el valor'],['advice','Por definir']]}):''}</div><details class="lf-optional" ${hasUSD?'open':''}><summary>Monedas y conversión (opcional)</summary>${cash?`<div class="form-field full"><span>Monedas de recepción que te gustaría evaluar</span><div class="checkbox-group">${['COP','USD'].map(c=>`<label><input type="checkbox" name="receive_currencies" value="${c}" ${(f.receive_currencies||['COP']).includes(c)?'checked':''}>${c==='COP'?'Pesos colombianos':'Dólares estadounidenses'}</label>`).join('')}</div><small>La recepción en USD se evalúa según las partes y la operación.</small></div>`:''}${hasUSD?`<div class="form-grid">${inputField('Para la conversión, prefiero','rate_method',{options:[['trm','TRM como referencia sugerida'],['fixed','Una tasa fija propuesta'],['agree','Acordar la tasa entre las partes']],required:true})}${inputField(f.rate_method==='fixed'?'Tasa propuesta (COP por USD)':'Tasa ilustrativa para explorar (COP por USD)','exchange_rate',{type:'number',min:1,placeholder:'Ejemplo: 4000',hint:'Este prototipo no consulta una tasa vigente.'})}<div class="conversion-preview form-field full" id="conversion-preview">${conversionText()}</div></div>`:'<p>Para explorar una conversión, elige un valor en USD o esa moneda de recepción.</p>'}</details></section>`;
+}
+function negotiationValueFields() {
+ const f=state.form,status=valueStatus(f);
+ return `<section class="lf-value"><div class="form-grid">${inputField('¿Tienes un valor de referencia?','value_status',{options:valueStatusOptions,required:true,full:true})}</div>${status==='known'?currencyFields():status==='pending'?'<p class="lf-context">Puedes continuar sin definir el valor y completarlo después.</p>':''}${status==='advice'?premiumValuationField(f.valuation_assistance):`<details class="lf-optional" ${f.valuation_assistance?'open':''}><summary>Quiero asesoría para definir un valor base (opcional)</summary>${premiumValuationField(f.valuation_assistance)}</details>`}</section>`;
 }
 function conversionText() {
   const amount = Number(state.form.amount),
@@ -740,7 +703,7 @@ function formPage(kind) {
     f = state.form, totalSteps = project ? 3 : 4;
   let body = "";
   if (state.formStep === 1) {
-    body = `<h2>${project ? "Cuéntanos sobre tu proyecto" : "Comencemos por tu terreno"}</h2><p class="form-intro">${project ? "Puede tener terreno, estar negociándolo o seguir buscando." : "La información comienza privada. No necesitas tener todos los documentos para empezar."}</p>${project?'':'<p class="du-scope-line">Para desarrollos inmobiliarios. '+landScopeExclusion+'</p>'}<div class="form-grid">${inputField(project ? "Nombre del proyecto" : "Nombre para identificar el terreno", "title", { required: true, full: true, placeholder: project ? "Ej. Proyecto residencial" : "Ej. Terreno en Zona Norte" })}${locationFields()}${inputField(project ? "Tipo de desarrollo" : "Tipo de terreno", "land_type", { options: project ? ["Residencial", "Comercial", "Mixto", "Industrial", "Turístico", "Por definir"] : ["Urbano", "Rural", "Expansión urbana", "Por confirmar"], required: true })}${project ? inputField("Etapa actual", "stage", { options: ["Idea / evaluación", "Planeación", "Preventa", "Construcción", "Proyecto detenido"], required: true }) : inputField("Área declarada (m²)", "area", { type: "number", min: 1, required: true, placeholder: "Ej. 5200" })}${inputField("¿Cuál es tu relación con este registro?", "relationship", { options: ["Propietario", "Representante autorizado", "Promotor / desarrollador", ["Intermediario", "Intermediario / broker"], "Otra relación"], required: true, full: true })}${project?'':inputField('¿Qué incluye la oferta?', 'land_content', {options:[['land-only','Solo terreno'],['land-project','Terreno con proyecto']],required:true,full:true,hint:'Elige con proyecto si existe una propuesta de desarrollo asociada. Sus diseños, etapa y condiciones se revisarán con los soportes; no implica licencia ni viabilidad aprobada.'})}${project?'':inputField('Uso que propones evaluar','intended_use',{options:landUses,full:true,hint:'Indica una intención de desarrollo. No equivale a una certificación de uso permitido o aptitud.'})}${project?'':brokerExclusivityFields(f)}${
+    body = `<h2>${project ? "Cuéntanos sobre tu proyecto" : "Comencemos por tu terreno"}</h2><p class="form-intro">${project ? "Puede tener terreno, estar negociándolo o seguir buscando." : "La información comienza privada. No necesitas tener todos los documentos para empezar."}</p>${project?'':'<p class="du-scope-line">Para desarrollos inmobiliarios. '+landScopeExclusion+'</p>'}<div class="form-grid">${inputField(project ? "Nombre del proyecto" : "Nombre para identificar el terreno", "title", { required: true, full: true, placeholder: project ? "Ej. Proyecto residencial" : "Ej. Terreno en Zona Norte" })}${locationFields()}${project?'':`<section class="lf-location full" id="terrain-location"><h3>Ubica tu terreno en el mapa</h3><p>Usa un pin aproximado o delimita el perímetro. La ubicación se mantiene privada; confirma la opción elegida.</p><div data-parcel-host></div></section>`}${inputField(project ? "Tipo de desarrollo" : "Tipo de terreno", "land_type", { options: project ? ["Residencial", "Comercial", "Mixto", "Industrial", "Turístico", "Por definir"] : ["Urbano", "Rural", "Expansión urbana", "Por confirmar"], required: true })}${project ? inputField("Etapa actual", "stage", { options: ["Idea / evaluación", "Planeación", "Preventa", "Construcción", "Proyecto detenido"], required: true }) : inputField("Área declarada (m²)", "area", { type: "number", min: 1, required: true, placeholder: "Ej. 5200" })}${inputField("¿Cuál es tu relación con este registro?", "relationship", { options: ["Propietario", "Representante autorizado", "Promotor / desarrollador", ["Intermediario", "Intermediario / broker"], "Otra relación"], required: true, full: true })}${project?'':inputField('¿Qué incluye la oferta?', 'land_content', {options:[['land-only','Solo terreno'],['land-project','Terreno con proyecto']],required:true,full:true,hint:'Elige con proyecto si existe una propuesta de desarrollo asociada. Sus diseños, etapa y condiciones se revisarán con los soportes; no implica licencia ni viabilidad aprobada.'})}${project?'':inputField('Uso que propones evaluar','intended_use',{options:landUses,full:true,hint:'Indica una intención de desarrollo. No equivale a una certificación de uso permitido o aptitud.'})}${project?'':brokerExclusivityFields(f)}${
       project
         ? inputField("Situación del terreno", "land_status", {
             options: [
@@ -757,11 +720,11 @@ function formPage(kind) {
   if (state.formStep === 2) {
     body = project
       ? `<h2>¿Qué necesita para avanzar?</h2><p class="form-intro">Podrás buscar actores para evaluar la oportunidad o para participar en su ejecución.</p><div class="form-grid">${inputField("Principal necesidad", "need", { options: ["Asesoría legal", "Terreno", "Estructuración", "Desarrollo", "Construcción", "Financiación", "Inversión", "Comercialización", "Evaluación para reactivación"], required: true, full: true })}${inputField("Tipo de vinculación que buscas", "participation", { options: ["Evaluación especializada", "Participación en el desarrollo", "Servicio contratado", "Por definir"], required: true, full: true })}${f.land_status === "searching" ? `${inputField("Área mínima de terreno (m²)", "desired_min", { type: "number", min: 1, placeholder: "Desde" })}${inputField("Área máxima de terreno (m²)", "desired_max", { type: "number", min: 1, placeholder: "Hasta" })}${inputField("Municipios o zonas de interés", "desired_zone", { placeholder: "Ej. Zona Norte de Cartagena", full: true })}` : ""}<label class="form-field full">Información sobre la necesidad<textarea name="need_description" placeholder="Describe el alcance y las condiciones que quieres evaluar.">${escape(f.need_description || "")}</textarea></label><label class="check-row"><input type="checkbox" name="reactivation" ${f.reactivation ? "checked" : ""}>El proyecto está detenido y necesita evaluar una reactivación.</label></div><div class="info-box">${icon("users")}<span>Integración facilita la conexión. La estructuración y los servicios especializados corresponden a los actores vinculados.</span></div>`
-      : `<h2>¿Cómo quieres negociarlo?</h2><p class="form-intro">Estas son preferencias para recibir propuestas. Podrás ajustarlas antes de formalizar cualquier acuerdo.</p><p class="form-section-label">Selecciona una modalidad <span class="ux-required">Obligatorio</span></p><div class="choice-grid">${selectChoice("negotiation", "sale", "Venta", "Recibir dinero por tu terreno.", "coins")}${selectChoice("negotiation", "contribution", "Aporte a proyecto", "Recibir dinero posterior o inmuebles del desarrollo.", "building")}${selectChoice("negotiation", "open", "Evaluar alternativas", "Venta, aporte o propuestas combinadas.", "handshake")}</div>${f.negotiation === "contribution" ? contributionFields() : ""}${currencyFields()}${premiumValuationField(f.valuation_assistance)}${visibilityFieldsHTML(f.visibility)}`;
+      : `<h2>¿Cómo quieres negociarlo?</h2><p class="form-intro">Estas son preferencias para recibir propuestas. Podrás ajustarlas antes de formalizar cualquier acuerdo.</p><p class="form-section-label">Selecciona una modalidad <span class="ux-required">Obligatorio</span></p><div class="choice-grid">${selectChoice("negotiation", "sale", "Venta", "Recibir dinero por tu terreno.", "coins")}${selectChoice("negotiation", "contribution", "Aporte a proyecto", "Recibir dinero posterior o inmuebles del desarrollo.", "building")}${selectChoice("negotiation", "open", "Evaluar alternativas", "Venta, aporte o propuestas combinadas.", "handshake")}</div>${f.negotiation === "contribution" ? contributionFields() : ""}${negotiationValueFields()}${visibilityFieldsHTML(f.visibility)}`;
   }
   if (!project && state.formStep === 3) body = landSituationFields(f.land_situation);
   if (state.formStep === totalSteps) {
-    body = `${project?'':'<section class="du-perimeter-final" id="terrain-location"><span class="eyebrow">Ubicación del terreno</span><h2>Ubica tu terreno como prefieras</h2><p>Elige un pin aproximado o delimita el perímetro. Debes confirmar la opción elegida para continuar.</p><div data-parcel-host></div></section>'}<h2>Soportes y revisión final</h2><p class="form-intro">${emailEntry.isPreview()?'Recorre los soportes con un documento ficticio y revisa el resumen antes de finalizar la demostración.':'Los archivos seleccionados se guardan privados por 60 días. Los archivos geográficos se interpretan; PDF, imágenes y CAD quedan disponibles para revisión del equipo.'}</p>${emailEntry.isPreview()?demoSupportsHTML():`<div class="view-toggle" style="width:max-content;margin-bottom:17px"><button type="button" data-action="file-mode" data-mode="upload" class="${state.fileMode === "upload" ? "active" : ""}">${icon("upload")}Archivo</button><button type="button" data-action="file-mode" data-mode="link" class="${state.fileMode === "link" ? "active" : ""}">${icon("link")}Enlace de descarga</button></div>${state.fileMode === "upload" ? `<div class="upload-zone">${icon("upload")}<h3>Selecciona los soportes del expediente</h3><p>Hasta 10 MB por archivo · Temporales por 60 días.<br>Para archivos mayores, utiliza un enlace de descarga.</p><label><span class="sr-only">Seleccionar documentos del expediente</span><input type="file" id="file-input" multiple accept=".pdf,.kml,.kmz,.geojson,.zip,.jpg,.jpeg,.png,.dwg,.dxf"></label></div>` : `<div class="form-grid">${inputField("Nombre del documento", "file_link_name", { placeholder: "Ej. Levantamiento topográfico", full: true })}${inputField("Enlace HTTPS de acceso o descarga", "file_link_url", { type: "url", placeholder: "https://…", full: true, hint: "No se descarga automáticamente ni se modifican los permisos del proveedor." })}<button type="button" class="button outline" data-action="add-file-link">Agregar referencia ${icon("plus")}</button></div>`}<p class="file-message" id="file-message" role="status"></p><div id="file-list">${fileList()}</div><div class="privacy-note">${icon("info")}Los originales se guardan privados, con acceso para ti y el equipo autorizado. El envío no los publica.</div>`}${project?'':obligationSupports(f.land_situation,state.files,{preview:emailEntry.isPreview()})}<hr class="form-divider"><div class="rj-review-heading"><span class="eyebrow">Antes de terminar</span><h2>Revisa tu ${project ? "proyecto" : "terreno"}</h2><p>Comprueba los datos y usa los accesos de edición. ${emailEntry.isPreview()?"Finalizar guarda una demostración local, sin enviar.":"El envío crea un expediente privado; la publicación requiere revisión y autorización."}</p></div><div class="ux-summary-edit-links">${formSteps(state.formKind).slice(0,-1).map((name,i)=>`<button class="ux-edit-summary" type="button" data-action="form-step" data-step="${i+1}">Editar ${name.toLowerCase()}</button>`).join('')}</div><div data-submission-summary>${formSummary()}</div><hr class="form-divider"><label class="check-row"><input type="checkbox" name="demo_consent" required ${f.demo_consent ? "checked" : ""}>${emailEntry.isPreview()?'Entiendo que este registro de demostración se guarda solo en este navegador y no se envía al equipo.':'Autorizo a MMS CAPITAL SAS a tratar los datos de este expediente privado para su revisión y seguimiento, según la política de privacidad. Enviarlo no publica el terreno ni transfiere el activo.'}<span class="ux-required">Obligatorio</span></label><label class="check-row" style="margin-top:12px"><input type="checkbox" name="alerts" ${f.alerts ? "checked" : ""}>Me interesa recibir avisos relacionados con este registro cuando se habiliten. Este envío no activa correos.</label>`;
+    body = `<h2>Soportes y revisión final</h2><p class="form-intro">${emailEntry.isPreview()?'Recorre los soportes con un documento ficticio y revisa el resumen antes de finalizar la demostración.':'Los archivos seleccionados se guardan privados por 60 días. Los archivos geográficos se interpretan; PDF, imágenes y CAD quedan disponibles para revisión del equipo.'}</p>${emailEntry.isPreview()?demoSupportsHTML():`<div class="view-toggle" style="width:max-content;margin-bottom:17px"><button type="button" data-action="file-mode" data-mode="upload" class="${state.fileMode === "upload" ? "active" : ""}">${icon("upload")}Archivo</button><button type="button" data-action="file-mode" data-mode="link" class="${state.fileMode === "link" ? "active" : ""}">${icon("link")}Enlace de descarga</button></div>${state.fileMode === "upload" ? `<div class="upload-zone">${icon("upload")}<h3>Selecciona los soportes del expediente</h3><p>Hasta 10 MB por archivo · Temporales por 60 días.<br>Para archivos mayores, utiliza un enlace de descarga.</p><label><span class="sr-only">Seleccionar documentos del expediente</span><input type="file" id="file-input" multiple accept=".pdf,.kml,.kmz,.geojson,.zip,.jpg,.jpeg,.png,.dwg,.dxf"></label></div>` : `<div class="form-grid">${inputField("Nombre del documento", "file_link_name", { placeholder: "Ej. Levantamiento topográfico", full: true })}${inputField("Enlace HTTPS de acceso o descarga", "file_link_url", { type: "url", placeholder: "https://…", full: true, hint: "No se descarga automáticamente ni se modifican los permisos del proveedor." })}<button type="button" class="button outline" data-action="add-file-link">Agregar referencia ${icon("plus")}</button></div>`}<p class="file-message" id="file-message" role="status"></p><div id="file-list">${fileList()}</div><div class="privacy-note">${icon("info")}Los originales se guardan privados, con acceso para ti y el equipo autorizado. El envío no los publica.</div>`}${project?'':obligationSupports(f.land_situation,state.files,{preview:emailEntry.isPreview()})}<hr class="form-divider"><div class="rj-review-heading"><span class="eyebrow">Antes de terminar</span><h2>Revisa tu ${project ? "proyecto" : "terreno"}</h2><p>Comprueba los datos y usa los accesos de edición. ${emailEntry.isPreview()?"Finalizar guarda una demostración local, sin enviar.":"El envío crea un expediente privado; la publicación requiere revisión y autorización."}</p></div><div class="ux-summary-edit-links">${formSteps(state.formKind).slice(0,-1).map((name,i)=>`<button class="ux-edit-summary" type="button" data-action="form-step" data-step="${i+1}">Editar ${name.toLowerCase()}</button>`).join('')}</div><div data-submission-summary>${formSummary()}</div><hr class="form-divider"><label class="check-row"><input type="checkbox" name="demo_consent" required ${f.demo_consent ? "checked" : ""}>${emailEntry.isPreview()?'Entiendo que este registro de demostración se guarda solo en este navegador y no se envía al equipo.':'Autorizo a MMS CAPITAL SAS a tratar los datos de este expediente privado para su revisión y seguimiento, según la política de privacidad. Enviarlo no publica el terreno ni transfiere el activo.'}<span class="ux-required">Obligatorio</span></label><label class="check-row" style="margin-top:12px"><input type="checkbox" name="alerts" ${f.alerts ? "checked" : ""}>Me interesa recibir avisos relacionados con este registro cuando se habiliten. Este envío no activa correos.</label>`;
   }
   return (
     (emailEntry.isPreview()?emailEntry.banner():'') + compactHeading(
@@ -854,27 +817,27 @@ function formSummary() {
         ]);
     }
     rows.push([
-      "Valor declarado",
-      f.amount
+      negotiationValueLabel(f),
+      referenceValueSummary(f) || (f.amount
         ? (f.price_method === "usd" ? "USD" : "COP") +
           " $" +
           formatAmount(f.amount)
-        : "Por definir",
+        : "Por definir"),
     ]);
-    if (["dual", "mixed"].includes(f.price_method))
+    if (valueStatus(f)==='known' && ["dual", "mixed"].includes(f.price_method))
       rows.push([
         f.price_method === "dual"
           ? "Precio alternativo en USD"
           : "Parte adicional en USD",
         f.amount_usd ? "USD $" + formatAmount(f.amount_usd) : "Por definir",
       ]);
-    rows.push([
+    if(valueStatus(f)==='known'&&hasCashPreferences(f))rows.push([
       "Monedas preferidas",
       Array.isArray(f.receive_currencies)
         ? f.receive_currencies.join(" / ")
         : "Por definir",
     ]);
-    if (f.exchange_rate)
+    if (valueStatus(f)==='known' && f.exchange_rate)
       rows.push([
         "Tasa ilustrativa propuesta",
         "COP $" + money(Number(f.exchange_rate)) + " por USD · Por acordar",
@@ -1130,7 +1093,7 @@ function enterRoute() {
       receive_currencies: ["COP"],
       rate_method: "trm",
       compensation: "advice",
-      ...(kind === "terreno" ? { negotiation: "sale" } : {}),
+      ...(kind === "terreno" ? { negotiation: "sale", value_status: draft?valueStatus(draft.form):"" } : {}),
       ...draft?.form,
     };
     state.form = normalizeLocationDraft(state.form);
@@ -1492,7 +1455,7 @@ async function action(actionName, el, event) {
   }
   if (actionName === "file-perimeter") {
     captureForm();const file=state.files[Number(el.dataset.index)];
-    state.form.location_mode='polygon';state.formStep=4;saveDraft(true);render();parcelEditor.candidates=file.analysis.candidates;parcelEditor.candidateSource=file.name;parcelEditor.render();
+    state.form.location_mode='polygon';state.formStep=1;saveDraft(true);render();parcelEditor.candidates=file.analysis.candidates;parcelEditor.candidateSource=file.name;parcelEditor.render();
     $('[data-parcel-host]').scrollIntoView({behavior:'smooth',block:'start'});
   }
   if (actionName === "more-publications") refreshPublished(true);
@@ -1701,12 +1664,14 @@ document.addEventListener("change", async (event) => {
     if(["relationship","broker_exclusivity"].includes(el.name))syncBrokerExclusivity(el.form);
     if(el.name.startsWith("ls_"))syncLandSituation(el.form);
     captureForm();
+    if(['department_code','municipality_code'].includes(el.name)&&state.formKind==='terreno'){parcelEditor.query=[state.form.city,state.form.region].filter(Boolean).join(', ');const search=$('[data-parcel-search]');if(search)search.value=parcelEditor.query;}
     if(el.name==='demo_parcel_confirmed'&&emailEntry.isPreview())state.form.parcel_confirmed=el.checked;
     if(el.name.startsWith("ls_")&&$('[data-submission-summary]'))$('[data-submission-summary]').innerHTML=formSummary();
     if (
       [
         "negotiation",
         "compensation",
+        "value_status",
         "price_method",
         "rate_method",
         "receive_currencies",
@@ -1906,11 +1871,12 @@ document.addEventListener("submit", async (event) => {
     Object.assign(state.form,selectedLocation);
     if(state.formKind==='terreno'&&!['land-only','land-project'].includes(state.form.land_content)){state.formStep=1;render();showFormIssue('Indica si ofreces solo terreno o terreno con proyecto antes de continuar.');return;}
     if(state.formKind==='terreno'&&state.form.project_land_confirmed!==true){state.formStep=1;render();showFormIssue(landScopeExclusion+' Confirma el destino del terreno antes de continuar.');return;}
-    if(state.formKind==='terreno'&&state.formStep===4){
+    if(state.formKind==='terreno'&&[1,4].includes(state.formStep)){
       try{if(terrainLocationMode(state.form)==='pin')normalizeLocationPin({coordinates:state.form.location_pin,confirmed:state.form.location_pin_confirmed});else if(!state.form.parcel_geometry||!state.form.parcel_confirmed)throw Error('Añade y confirma el polígono, o cambia a un pin aproximado.');}
-      catch(error){showFormIssue(error.message);return;}
+      catch(error){if(state.formStep!==1){state.formStep=1;render();}showFormIssue(error.message);return;}
     }
-    if (state.formKind === "terreno" && state.formStep >= 2) {
+    if(state.formKind==='terreno'&&state.formStep>=2){try{normalizeNegotiationForm(state.form);}catch(error){state.formStep=2;render();showFormIssue(error.message);return;}}
+    if (state.formKind === "terreno" && state.formStep >= 2 && valueStatus(state.form)==='known') {
       const names = [
         "amount",
         ...(["dual", "mixed"].includes(state.form.price_method)
@@ -1963,7 +1929,7 @@ document.addEventListener("submit", async (event) => {
       if(state.files.some(f=>!f.id)){showFormIssue("Vuelve a seleccionar los archivos anteriores para subirlos, o retira sus referencias locales.");return;}
       state.submitting=true;const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent='Guardando expediente privado…';
       try {
-        const record=await saveRecord({id:state.form.client_id,kind:state.formKind,form:state.form,locationMode:terrainLocationMode(state.form),locationPin:terrainLocationMode(state.form)==='pin'?{coordinates:state.form.location_pin,confirmed:!!state.form.location_pin_confirmed}:null,parcel:terrainLocationMode(state.form)==='polygon'?{geometry:state.form.parcel_geometry,source:state.form.parcel_source,confirmed:!!state.form.parcel_confirmed}:null,documentIds:state.files.map(f=>f.id)});
+        const record=await saveRecord({id:state.form.client_id,kind:state.formKind,form:state.formKind==='terreno'?normalizeNegotiationForm(state.form):state.form,locationMode:terrainLocationMode(state.form),locationPin:terrainLocationMode(state.form)==='pin'?{coordinates:state.form.location_pin,confirmed:!!state.form.location_pin_confirmed}:null,parcel:terrainLocationMode(state.form)==='polygon'?{geometry:state.form.parcel_geometry,source:state.form.parcel_source,confirmed:!!state.form.parcel_confirmed}:null,documentIds:state.files.map(f=>f.id)});
         state.remoteRecord=record;saved.drafts=localDrafts(saved).filter(d=>d.form.client_id!==record.id);saved.draft=saved.drafts.at(-1)||null;persist();state.remoteLoaded=false;
         location.hash='#/mi-expediente/'+record.id;toast('Expediente guardado privado y pendiente de revisión.');
       }catch(e){showFormIssue(e.message);saveDraft(true);submit.disabled=false;submit.textContent='Enviar a revisión privada';}

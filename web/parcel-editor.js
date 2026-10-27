@@ -19,6 +19,7 @@ export class ParcelEditor {
   }
   mount(host,options) {
     if(this.options?.key!==options.key){this.destroy();this.options=options;this.place=null;this.query='';this.fit++;}
+    if(!this.query&&options.locationQuery)this.query=options.locationQuery;
     this.options=options;this.host=host;this.render();
   }
   render() {

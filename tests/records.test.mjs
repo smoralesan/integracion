@@ -112,3 +112,18 @@ test('pin validation rejects unconfirmed, malformed, absent and conflicting loca
   const unknown=record();unknown.locationMode='anything';assert.equal((await h.request('records',unknown)).status,400);
   const missing=record();delete missing.parcel;assert.equal((await h.request('records',missing)).status,400);
 });
+
+test('submitted value preferences exclude inactive draft prices on both API and local flows',async()=>{
+ const h=harness();
+ for(const status of ['pending','advice']){
+  const data=record();Object.assign(data.form,{value_status:status,amount_usd:'500',exchange_rate:'4000',valuation_assistance:false});
+  const response=await h.request('records',data);assert.equal(response.status,201);
+  const saved=await response.json();assert.equal(saved.form.value_status,status);
+  for(const field of ['amount','amount_usd','exchange_rate'])assert.ok(!(field in saved.form));
+  assert.equal(saved.form.valuation_assistance,false);
+ }
+ const bad=record();bad.form.value_status='invalid';assert.equal((await h.request('records',bad)).status,400);
+ const contribution=record();Object.assign(contribution.form,{value_status:'known',negotiation:'contribution',compensation:'units',receive_currencies:['USD'],exchange_rate:'4000'});
+ const response=await h.request('records',contribution);assert.equal(response.status,201);const saved=await response.json();
+ assert.equal(saved.form.amount,contribution.form.amount);assert.ok(!('receive_currencies' in saved.form));
+});

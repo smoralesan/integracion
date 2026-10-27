@@ -1,3 +1,4 @@
+import {normalizeNegotiationForm} from './land-negotiation.js';
 import {visibilityLabel,isOffMarket} from './land-visibility.js';
 import {locationSummary} from './terrain-location.js';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -9,7 +10,7 @@ export function putDraft(store,draft){store.drafts=localDrafts(store).filter(d=>
 export function completeLocalRegistration(store,draft,at=new Date().toISOString()){
  const clientId=draft.form.client_id;if(!uuid.test(clientId))throw Error('No se pudo identificar el borrador. Guarda y vuelve a abrir el registro.');
  const id=(draft.kind==='proyecto'?'PRO':'TER')+'-DEMO-'+clientId;
- const previous=store.submissions.find(x=>x.id===id),record={id,clientId,kind:draft.kind,form:structuredClone(draft.form),files:structuredClone(draft.files||[]),createdAt:previous?.createdAt||at,updatedAt:at,localRegistration:true};
+ const previous=store.submissions.find(x=>x.id===id),record={id,clientId,kind:draft.kind,form:draft.kind==='terreno'?normalizeNegotiationForm(draft.form):structuredClone(draft.form),files:structuredClone(draft.files||[]),createdAt:previous?.createdAt||at,updatedAt:at,localRegistration:true};
  store.submissions=[...store.submissions.filter(x=>x.id!==id),record];store.drafts=localDrafts(store).filter(d=>d.form.client_id!==clientId);store.draft=store.drafts.at(-1)||null;return record;
 }
 export function registrationProgressHTML(){return '<div class="rj-access-step"><span aria-hidden="true">✓</span><div><strong>Acceso por correo</strong><small>Paso completado · Demostración</small></div></div>';}
