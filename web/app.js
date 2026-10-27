@@ -1,3 +1,4 @@
+import {notaryDirectoryPage} from './notary-directory.js';
 import {valueStatusOptions,valueStatus,hasCashPreferences,negotiationValueLabel,normalizeNegotiationForm,referenceValueSummary} from './land-negotiation.js';
 import {visibilityFieldsHTML,visibilityLabel} from './land-visibility.js';
 import {howItWorksPage,mountHowItWorks} from './how-it-works.js';
@@ -995,6 +996,7 @@ function render() {
   else if (path === '/alternativas-home') html=homeOptionsIndex();
   else if (path.startsWith('/alternativas-home/')) html=homeAlternative(path.split('/')[2],{cards:properties.slice(0,3).map(propertyCard).join(''),map:path.endsWith('/mapa')?mapHTML('home'):''});
   else if(path==='/minutas-de-contratos'||path.startsWith('/minutas-de-contratos/'))html=contractMinutesPage(path.slice('/minutas-de-contratos/'.length));
+  else if(path==='/directorio-de-notarias')html=notaryDirectoryPage();
   else if(path==='/asesoria-valor-terreno')html=premiumValuationPage();
   else if(path==='/propuestas-demo'||path.startsWith('/propuestas-demo/')||path.startsWith('/preparar-propuesta/'))html=proposalDemoPage();
   else if (path === "/comparar") html=pageHeader("Comparar terrenos","Hasta cuatro alternativas, con datos declarados y monedas separadas.","Tu evaluación")+'<section class="page-content"><div class="container" data-exp-comparison></div></section>';
