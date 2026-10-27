@@ -1,3 +1,4 @@
+import {landToolsPage,mountLandTools,landToolRoutes} from './land-tools.js';
 import {notaryDirectoryPage} from './notary-directory.js';
 import {valueStatusOptions,valueStatus,hasCashPreferences,negotiationValueLabel,normalizeNegotiationForm,referenceValueSummary} from './land-negotiation.js';
 import {visibilityFieldsHTML,visibilityLabel} from './land-visibility.js';
@@ -996,6 +997,7 @@ function render() {
   else if (path === '/alternativas-home') html=homeOptionsIndex();
   else if (path.startsWith('/alternativas-home/')) html=homeAlternative(path.split('/')[2],{cards:properties.slice(0,3).map(propertyCard).join(''),map:path.endsWith('/mapa')?mapHTML('home'):''});
   else if(path==='/minutas-de-contratos'||path.startsWith('/minutas-de-contratos/'))html=contractMinutesPage(path.slice('/minutas-de-contratos/'.length));
+  else if(landToolRoutes.includes(path))html=landToolsPage(path);
   else if(path==='/directorio-de-notarias')html=notaryDirectoryPage();
   else if(path==='/asesoria-valor-terreno')html=premiumValuationPage();
   else if(path==='/propuestas-demo'||path.startsWith('/propuestas-demo/')||path.startsWith('/preparar-propuesta/'))html=proposalDemoPage();
@@ -1035,6 +1037,7 @@ function render() {
   mountLandSearch($('#contenido'),({searchDepartment,searchMunicipality,intendedUse,landContent,draw})=>{Object.assign(state,{searchDepartment,searchMunicipality,intendedUse,landContent,type:'terreno',reactivationFilter:'',query:'',directoryScope:null,zone:[],sectors:[],drawPoints:[],placeBounds:null,mapPlace:null,view:draw?'both':'list',drawing:draw,mapFitRevision:state.mapFitRevision+1});const params=new URLSearchParams();params.set('contenido',terrainSearchQuery(landContent)||'todos');if(searchMunicipality)params.set('municipio',searchMunicipality);if(intendedUse)params.set('uso',intendedUse);if(draw)params.set('zona','1');const hash='#/buscar'+(params.size?'?'+params:'');if(location.pathname!=='/'){location.href='/'+hash;return;}navigateCatalog(hash);});
   mountPortalPage($('#contenido'));mountLegalAccess($('#contenido'));
   mountContractMinutes($('#contenido'));
+  mountLandTools($('#contenido'));
   mountHowItWorks($('#contenido'));
   mountProposalDemo($('#contenido'),properties);
   mountTerrainDetail($('[data-terrain-detail]'));
