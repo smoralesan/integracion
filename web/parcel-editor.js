@@ -27,7 +27,7 @@ export class ParcelEditor {
     this.host.innerHTML=this.html();
     const root=this.host.querySelector('.parcel-map-root');
     this.map.mount(root,{context:'parcel',items:[],selectedId:null,style:this.style,geometry:this.options.mode==='pin'?(this.options.pin?{type:'Point',coordinates:this.options.pin}:null):this.drawing?null:this.options.geometry,pinPicking:this.options.mode==='pin'&&!this.options.readOnly,zone:[],drawPoints:this.drawPoints,drawing:this.drawing,fitKey:'parcel:'+this.options.key+':'+this.fit,place:this.place,
-      onReady:()=>{},onError:message=>{this.message=message;this.error=true;this.updateMessage();},
+      onReady:()=>{},onError:()=>{this.message=this.options.readOnly?'No pudimos cargar el mapa. Vuelve a abrir el expediente para intentarlo de nuevo.':'No pudimos cargar el mapa. Puedes usar un pin e ingresar sus coordenadas manualmente, o volver a intentarlo más tarde.';this.error=true;this.updateMessage();},
       onPoint:p=>{if(this.options.mode==='pin'){try{this.setPin(p);}catch(error){this.error=true;this.message=error.message;this.updateMessage();}return;}if(this.drawPoints.length>=500)return;this.drawPoints.push(p);this.render();}});
     const editor=this.host.querySelector('[data-parcel-editor]');
     editor.addEventListener('click',event=>{const button=event.target.closest('[data-parcel-action]');if(button)this.action(button.dataset.parcelAction,button);});
