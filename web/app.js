@@ -8,6 +8,7 @@ import {contractMinutesPage,mountContractMinutes} from './contract-minutes.js';
 import {catalogRouteState,savedSearchHash,searchLocationLabel} from './catalog-navigation.js';
 import {terrainSearchLabel,terrainSearchQuery,terrainSearchFromQuery} from './terrain-search.js';
 import {landSearchHTML,mountLandSearch,matchesLandSearch} from './land-search.js';
+import {catalogSearchHTML,mountCatalogSearch,readCatalogTerritory,drawingTerritory} from './catalog-search.js';
 import {landUses,sectorForSlug} from './development-sectors.js';
 import {localDrafts,chooseDraft,putDraft,draftHref,completeLocalRegistration,registrationProgressHTML,demoPerimeterHTML,demoSupportsHTML,localRegistrationsHTML,localConfirmationHTML} from './registration-journey.js';
 import {EmailEntry} from './email-entry.js';
@@ -611,7 +612,7 @@ function catalog(isSearch = false, reactivation = false) {
   const result=filtered();
   const title=reactivation?'Proyectos para reactivación':state.type==='terreno'&&state.landContent?terrainSearchLabel(state.landContent):state.directoryScope?directoryTitle(state.directoryScope):state.type==='proyecto'?'Proyectos inmobiliarios':state.type==='terreno'?'Todos los terrenos':'Tierras y proyectos';
   const description=reactivation?'Explora proyectos en pausa que buscan una nueva ruta de evaluación.':state.type==='terreno'&&state.landContent==='land-only'?'Predios sin proyecto constructivo asociado. Compara su ubicación, perímetro y condiciones de venta o aporte.':state.type==='terreno'&&state.landContent==='land-project'?'Predios que incluyen una propuesta de desarrollo. Revisa el terreno, el programa constructivo y el alcance de la negociación.':state.type==='proyecto'?'Iniciativas que buscan aliados para avanzar, con o sin terreno.':'Compara terrenos y proyectos. Elige una categoría para explorar cada formato por separado.';
-  return `<div class="du-catalog ${reactivation?'rf-catalog':''} ${state.view!=='list'?'du-catalog-map':''}">${compactHeading(title,description,isSearch?'Busco tierra':'Oportunidades',!isSearch?btn('Publicar oportunidad','#/publicar/terreno','outline'):'')}<section class="page-content"><div class="container">${catalogGroupsHTML(state)}${state.type!=='proyecto'?landSearchHTML(state):''}${filterBar(true)}<div class="jr-search-summary"><span>Publicaciones y ejemplos se identifican por separado. El mapa muestra ubicaciones ilustrativas.</span><button type="button" data-action="reset-filters">Limpiar filtros</button></div>${publicationsHTML()}<div class="du-results-bar"><p tabindex="-1" data-results-heading role="status"><strong>${result.length}</strong> ${result.length===1?'oportunidad de ejemplo':'oportunidades de ejemplo'}</p><div>${true?`<button class="du-save-search" data-action="save-search">${icon('bookmark')}Guardar búsqueda</button><div class="view-toggle"><button data-action="view" data-view="list" aria-pressed="${state.view==='list'}" class="${state.view==='list'?'active':''}">${icon('list')}Lista</button><button data-action="view" data-view="both" aria-pressed="${state.view!=='list'}" class="${state.view!=='list'?'active':''}">${icon('map')}Mapa</button></div>`:''}</div></div><div class="${state.view!=='list'?'search-layout':'list-only'}"><div class="property-grid">${result.length?result.map(propertyCard).join(''):empty()}</div>${state.view!=='list'?`<div class="search-map">${mapHTML('search')}</div>`:''}</div><p class="du-context-note">${icon('info')}Fichas y ubicaciones ilustrativas. Los terrenos se orientan a desarrollar proyectos; excluyen lotes individuales para una sola vivienda.</p></div></section></div>`;
+  return `<div class="du-catalog cs-catalog ${reactivation?'rf-catalog':''} ${state.view!=='list'?'du-catalog-map':''}">${compactHeading(title,description,isSearch?'Busco tierra':'Oportunidades',!isSearch?btn('Publicar oportunidad','#/publicar/terreno','outline'):'')}<section class="page-content"><div class="container">${catalogGroupsHTML(state)}${state.type==='terreno'?catalogSearchHTML({state,icon,priceLimits,filterChipsHTML}):filterBar(true)}${publicationsHTML()}<div class="du-results-bar"><p tabindex="-1" data-results-heading role="status"><strong>${result.length}</strong> ${result.length===1?'oportunidad de ejemplo':'oportunidades de ejemplo'}</p><div>${true?`<button class="du-save-search" data-action="save-search">${icon('bookmark')}Guardar búsqueda</button><div class="view-toggle"><button data-action="view" data-view="list" aria-pressed="${state.view==='list'}" class="${state.view==='list'?'active':''}">${icon('list')}Lista</button><button data-action="view" data-view="both" aria-pressed="${state.view!=='list'}" class="${state.view!=='list'?'active':''}">${icon('map')}Mapa</button></div>`:''}</div></div><div class="${state.view!=='list'?'search-layout':'list-only'}"><div class="property-grid">${result.length?result.map(propertyCard).join(''):empty()}</div>${state.view!=='list'?`<div class="search-map">${mapHTML('search')}</div>`:''}</div><p class="du-context-note">${icon('info')}Fichas y ubicaciones ilustrativas. Los terrenos se orientan a desarrollar proyectos; excluyen lotes individuales para una sola vivienda.</p></div></section></div>`;
 }
 
 function detail(id) {
@@ -1034,6 +1035,7 @@ function render() {
   $("#contenido").innerHTML = html;
   hydrateIcons();
   emailEntry.mount($('#contenido'),render);
+  mountCatalogSearch($('#contenido'));
   mountLandSearch($('#contenido'),({searchDepartment,searchMunicipality,intendedUse,landContent,draw})=>{Object.assign(state,{searchDepartment,searchMunicipality,intendedUse,landContent,type:'terreno',reactivationFilter:'',query:'',directoryScope:null,zone:[],sectors:[],drawPoints:[],placeBounds:null,mapPlace:null,view:draw?'both':'list',drawing:draw,mapFitRevision:state.mapFitRevision+1});const params=new URLSearchParams();params.set('contenido',terrainSearchQuery(landContent)||'todos');if(searchMunicipality)params.set('municipio',searchMunicipality);if(intendedUse)params.set('uso',intendedUse);if(draw)params.set('zona','1');const hash='#/buscar'+(params.size?'?'+params:'');if(location.pathname!=='/'){location.href='/'+hash;return;}navigateCatalog(hash);});
   mountPortalPage($('#contenido'));mountLegalAccess($('#contenido'));
   mountContractMinutes($('#contenido'));
@@ -1182,18 +1184,21 @@ function captureSearchFilters() {
   const query = String(data.get("query") || "").trim();
   const min = $('[name="minArea"]')?.value || "";
   const max = $('[name="maxArea"]')?.value || "";
+  const showSearchIssue=message=>{const panel=$('#extra-search-filters'),issue=$('[data-jr-filter-error]');if(panel)panel.hidden=false;document.querySelectorAll('[data-action="more-filters"]').forEach(button=>button.setAttribute('aria-expanded','true'));if(issue){issue.hidden=false;issue.textContent=message;issue.focus();}else toast(message);};
+  let territory=null;
+  if(filter.hasAttribute('data-catalog-search')){try{territory=readCatalogTerritory(state,Object.fromEntries(data));}catch(error){showSearchIssue(error.message);return false;}}
   if (
+    [...filter.elements].some(input=>['minArea','maxArea'].includes(input.name)&&input.validity.badInput)||
     [min, max].some(
       (value) =>
         value && (!Number.isFinite(Number(value)) || Number(value) < 0),
     ) ||
     (min && max && Number(min) > Number(max))
   ) {
-    const issue=document.querySelector('[data-jr-filter-error]');
-    if(issue){issue.hidden=false;issue.textContent='La máxima debe ser mayor o igual a la mínima; utiliza valores positivos.';issue.focus();}else toast('Revisa el rango de áreas.');
+    showSearchIssue('El área máxima debe ser mayor o igual a la mínima; utiliza valores positivos.');
     return false;
   }
-  if (query !== state.query) {
+  if (query !== state.query || territory?.locationChanged) {
     state.zone = [];
     state.sectors = [];
     state.drawPoints = [];
@@ -1204,6 +1209,7 @@ function captureSearchFilters() {
     state.mapSearchText = query;
   }
   Object.assign(state, {
+    ...territory?.filters,
     query,
     min,
     max,
@@ -1220,6 +1226,7 @@ function captureSearchFilters() {
     if(location.hash.startsWith("#/oportunidades?"))history.replaceState(null,"","#/oportunidades");
   }
   state.mapFitRevision++;
+  captureSearchContext(state,location.hash);
   return true;
 }
 function saveSearchDialog() {
@@ -1275,7 +1282,7 @@ function resetFilters() {
   });
   if (location.hash === "#/" || !location.hash || location.hash.startsWith("#/oportunidades?"))
     navigateCatalog("#/oportunidades");
-  else render();
+  else {render();captureSearchContext(state,location.hash);}
 }
 async function action(actionName, el, event) {
   if(actionName==='return-search'){event?.preventDefault();const context=readSearchContext();if(context){pendingExplicitReturn=context;if(location.hash===context.hash)enterRoute();else location.hash=context.hash;}else location.hash='#/buscar';return;}
@@ -1326,6 +1333,7 @@ async function action(actionName, el, event) {
     if(!captureSearchFilters())return;
     state.view = el.dataset.view;
     render();
+    captureSearchContext(state,location.hash);
     if(state.view!=='list'&&state.query&&!state.zone.length&&!state.placeBounds)searchPlace(state.query);
   }
   if (actionName === "map-pin") {
@@ -1367,12 +1375,12 @@ async function action(actionName, el, event) {
   if (actionName === "draw-zone") {
     placeRequest?.abort();
     placeRequest = null;
-    state.searchMunicipality="";state.searchDepartment="";
+    Object.assign(state,drawingTerritory(state));
     state.drawing = true;
     state.layers = false;
     state.drawPoints = [];
     state.placeResults = [];
-    redrawMap();
+    if($('.cs-catalog')){render();$('.search-map')?.scrollIntoView({block:'start',behavior:'smooth'});}else redrawMap();
   }
   if (actionName === "undo-point") {
     state.drawPoints.pop();
@@ -1423,7 +1431,7 @@ async function action(actionName, el, event) {
     redrawMap();
   }
   if (actionName === "save-search") saveSearchDialog();
-  if(actionName==='remove-filter'){if(removeFilter(state,el.dataset.filter)){render();$('.ux-active-filters button')?.focus();}return;}
+  if(actionName==='remove-filter'){if(removeFilter(state,el.dataset.filter)){render();captureSearchContext(state,location.hash);$('.ux-active-filters button')?.focus();}return;}
   if(actionName==='form-step'){const step=Number(el.dataset.step);if(Number.isInteger(step)&&step>=1&&step<state.formStep){captureForm();state.formStep=step;saveDraft(true);render();focusFormStep();}return;}
   if (actionName === "form-back") {
     captureForm();
@@ -1834,9 +1842,14 @@ document.addEventListener("submit", async (event) => {
   }
   if (type === "filters") {
     if (!captureSearchFilters()) return;
+    if(event.submitter?.hasAttribute('data-catalog-draw')){
+      placeRequest?.abort();placeRequest=null;
+      Object.assign(state,drawingTerritory(state),{view:'both',drawing:true,layers:false,drawPoints:[],mapFitRevision:state.mapFitRevision+1});
+      render();captureSearchContext(state,location.hash);$('.search-map')?.scrollIntoView({block:'start',behavior:'smooth'});return;
+    }
     if (location.hash === "#/" || !location.hash)
       navigateCatalog("#/oportunidades");
-    else {render();$('[data-results-heading]')?.focus({preventScroll:true});if(state.view!=='list'&&state.query)searchPlace(state.query);}
+    else {render();$('[data-results-heading]')?.focus({preventScroll:true});if(state.view!=='list'&&state.query&&!state.searchDepartment)searchPlace(state.query);}
   }
   if (type === "map-search")
     searchPlace(String(data.get("mapQuery") || "").trim());
