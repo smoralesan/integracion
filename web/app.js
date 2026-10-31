@@ -619,7 +619,7 @@ function catalog(isSearch = false, reactivation = false) {
 function detail(id) {
   const p = properties.find((x) => x.id === id);
   if (!p) return notFound();
-  if(p.type==='terreno')return terrainDetailHTML(p,{map:mapHTML('detail',p.id),related:properties.filter(x=>x.type==='terreno'&&x.id!==p.id).slice(0,3).map(propertyCard).join(''),favorite:saved.favorites.includes(p.id),icon,specialistBySlug})+'<div class="container">'+comparisonButton(p)+'</div>';
+  if(p.type==='terreno')return terrainDetailHTML(p,{map:mapHTML('detail',p.id),related:properties.filter(x=>x.type==='terreno'&&x.id!==p.id).slice(0,3).map(propertyCard).join(''),favorite:saved.favorites.includes(p.id),comparison:comparisonButton(p),icon,specialistBySlug});
   return (
     pageHeader(
       p.title,
@@ -1103,6 +1103,7 @@ function enterRoute() {
   }
   state.drawing=restoring?false:navigation?navigation.drawing:isCatalogHash(location.hash)?state.drawing:false;
   state.layers = false;
+  if(path==='/mi-espacio'&&new URLSearchParams(location.hash.split('?')[1]||'').get('seccion')==='favorites')state.spaceTab='favorites';
   headerNavigation.close();
   render();
   if (path === "/mi-espacio") refreshRemoteRecords();

@@ -38,7 +38,7 @@ test('Compact terrain navigation keeps a single initial panel and includes the p
 test('Consultation choices are allowlisted and never submit a request or invent a confirmed appointment',()=>{
  for(const key of ['informacion','visita','negociacion']){assert.equal(terrainConsultPreset(key).intent,'Solicitar información');assert.ok(terrainConsultPreset(key).message.length>10);}
  for(const key of ['__proto__','constructor','other',''])assert.equal(terrainConsultPreset(key),null);
- const html=terrainConsultHTML(properties[0]);assert.equal((html.match(/consulta=/g)||[]).length,3);assert.ok(!html.includes('<form'));
+ const html=terrainConsultHTML(properties[0]);assert.equal((html.match(/consulta=/g)||[]).length,5);assert.ok(!html.includes('<form'));
 });
 
 test('El terreno abre con un solo mapa y permite ver las fotos después',()=>{

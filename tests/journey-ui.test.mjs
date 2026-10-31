@@ -16,7 +16,7 @@ test('Terrain, active project and reactivation groups are disjoint and retain ot
  assert.equal(matchesOpportunityFilters({...record,kind:'proyecto',reactivation:true},{type:'proyecto',reactivationFilter:'only',query:'Medellín'}),false);
 });
 test('Public land keeps exact perimeter reserved and starts with map before optional images',()=>{
- const html=publicOpportunityHTML(record);assert.ok(html.includes('Perímetro reservado'));assert.ok(!html.includes('api.mapbox.com'));
+ const html=publicOpportunityHTML(record);assert.ok(html.includes('Perímetro no compartido'));assert.ok(!html.includes('api.mapbox.com'));
  assert.match(html,/data-jr-media-panel="fotos" hidden/);assert.ok(html.indexOf('data-jr-media-panel="mapa"')<html.indexOf('data-jr-media-panel="fotos"'));
  assert.match(html,/COP \$2\.000\.000\.000(?:,00)? \+ USD \$50\.000(?:,00)?/);assert.ok(!html.includes('<script>'));assert.ok(html.includes('&lt;script&gt;'));
  assert.ok(html.includes('Sin dato declarado'));assert.ok(html.includes('Grupo: Soporte aportado'));
