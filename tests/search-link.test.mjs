@@ -26,3 +26,14 @@ test('clearing location and directory criteria removes every obsolete geographic
 test('public records and examples share sector, polygon and map-bounds restrictions',async()=>{
  const {matchesCatalog}=await import('../web/catalog-match.js');const base={...catalogRouteState('#/buscar?contenido=todos'),zone:[[-75,4],[-73,4],[-73,6],[-75,6]],sectors:['interior'],placeBounds:[-74.5,4.5,-73.5,5.5]},inside={kind:'terreno',coordinates:[-74,5],sector:'interior',title:'Terreno'},outside={...inside,coordinates:[-76,5]};assert.ok(matchesCatalog(inside,base));assert.equal(matchesCatalog(outside,base),false);assert.equal(matchesCatalog({...inside,sector:'caribe'},base),false);assert.equal(matchesCatalog({...inside,coordinates:undefined,locationPin:{coordinates:[-74,5]}},base),false);assert.ok(matchesCatalog({...inside,type:'terreno',kind:undefined},base));assert.ok(matchesCatalog({...inside,coordinates:undefined},{...base,zone:[],sectors:[],placeBounds:null}));
 });
+test('clearing a drawing removes its activation flag before a fresh reload',()=>{
+ const hash=searchLinkHash('#/buscar?contenido=todos&zona=1&municipio=05001',{type:'terreno',drawing:false,zone:[],sectors:[],placeBounds:null});assert.equal(new URLSearchParams(hash.split('?')[1]).has('zona'),false);assert.equal(catalogRouteState(hash).drawing,false);assert.equal(catalogRouteState(searchLinkHash('#/buscar',{type:'terreno',drawing:true})).drawing,true);
+});
+test('project entry from the home always produces a self-contained project URL',async()=>{
+ const {projectCriteriaHash}=await import('../web/project-discovery.js');const state={type:'proyecto',reactivationFilter:'exclude',projectKind:'Oficinas',projectSpecialty:'Abogados'};
+ const hash=projectCriteriaHash(searchLinkHash('#/oportunidades',state),state),restored=catalogRouteState(hash);assert.equal(restored.type,'proyecto');assert.equal(restored.projectKind,'Oficinas');assert.equal(restored.projectSpecialty,'Abogados');assert.equal(restored.reactivationFilter,'exclude');
+});
+test('asynchronous publication completion updates only its region and preserves pending edits',async()=>{
+ const {updateCatalogPublications}=await import('../web/catalog-publications-update.js');const filter={department:'05',municipality:'05001',query:''},region={innerHTML:'Cargando…'},root={querySelector:selector=>selector==='[data-catalog-publications]'?region:null};
+ let resolve;const response=new Promise(r=>resolve=r);const pending=response.then(html=>updateCatalogPublications(root,html));filter.department='11';filter.municipality='';filter.query='Texto aún sin aplicar';resolve('<article>Publicación recibida</article>');assert.equal(await pending,true);assert.deepEqual(filter,{department:'11',municipality:'',query:'Texto aún sin aplicar'});assert.match(region.innerHTML,/Publicación recibida/);assert.equal(updateCatalogPublications({querySelector:()=>null},'old result'),false);
+});

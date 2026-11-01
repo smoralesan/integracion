@@ -8,6 +8,8 @@ export function readSearchLink(params){
 }
 export function searchLinkHash(hash,state){
  const [path,query='']=hash.split('?'),params=new URLSearchParams(query);
+ if(Object.hasOwn(state,'type')){params.set('tipo',state.type||'todos');if(state.type!=='terreno')params.delete('contenido');if(state.type==='proyecto'&&state.reactivationFilter==='only')params.set('estado','reactivacion');else params.delete('estado');}
+ if(state.drawing===true)params.set('zona','1');else params.delete('zona');
  for(const [key,param]of [['query','q'],['mode','modalidad'],['min','area_min'],['max','area_max'],['maxPrice','precio_max']]){if(state[key])params.set(param,String(state[key]));else params.delete(param);}
  for(const [key,param]of [['zone','poligono'],['sectors','sectores'],['placeBounds','limites']]){if(state[key]?.length)params.set(param,JSON.stringify(state[key]));else params.delete(param);}
  for(const param of ['municipio','departamento_codigo','uso','ciudad','departamento','lote'])params.delete(param);
