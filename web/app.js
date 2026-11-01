@@ -1,3 +1,4 @@
+import {matchesCatalog} from './catalog-match.js';
 import {searchLinkHash,savedSearchView} from './search-link.js';
 import {projectCriteria,projectCriteriaHash,projectCriteriaSummary,clearProjectCriteria,projectFiltersHTML,matchesProjectDiscovery} from './project-discovery.js';
 import {orderCatalog,normalizeCatalogOrder,catalogOrderHash,catalogOrderHTML,pricePerM2} from './catalog-order.js';
@@ -359,7 +360,7 @@ function publicationsHTML(){
   if(!state.catalogLoaded)return '<section class="published-catalog"><p role="status">Consultando resúmenes publicados…</p></section>';
   if(state.catalogError)return '<p class="jr-publications-access">No pudimos cargar las publicaciones. Puedes explorar los ejemplos o <button type="button" class="text-button" data-action="retry-publications">volver a intentarlo</button>.</p>';
   if(!state.catalogRecords.length&&!state.catalogCursor)return '';
-  const directoryRecords=state.catalogRecords.filter(r=>matchesDirectory(r,state.directoryScope)&&matchesLandSearch(r,state)&&matchesOpportunityFilters(r,state)&&matchesProjectDiscovery(r,state));
+  const directoryRecords=state.catalogRecords.filter(r=>matchesCatalog(r,state));
   return `<section class="published-catalog"><div class="section-heading"><div><h2>Resúmenes publicados</h2><p>${directoryRecords.length} ${directoryRecords.length===1?'coincidencia':'coincidencias'} entre ${state.catalogRecords.length} ${state.catalogRecords.length===1?'publicación cargada':'publicaciones cargadas'}${state.catalogCursor?'; hay más por cargar':''}. Información autorizada por su titular.</p></div></div><div class="published-grid">${[...directoryRecords.reduce((groups,r)=>{const key=r.assetReference||r.id;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);return groups;},new Map()).values()].map(group=>{const r=group[0];return `<article>${availabilityHTML(r)}${terrainCardTag(r)}${summaryHTML(r)}<a class="button outline" href="#/publicacion/${r.id}">Ver ficha</a>${comparisonButton(r)}${group.length>1?`<details><summary>${group.length} presentaciones vinculadas al mismo inmueble</summary>${group.slice(1).map(x=>`<p><a href="#/publicacion/${x.id}">${escape(x.reference)} · ${escape(x.title)}</a></p>`).join('')}<p>Revisa representación y exclusividad en cada ficha. Las autorizaciones se gestionan por separado.</p></details>`:''}</article>`;}).join('')}</div>${!directoryRecords.length?'<p>Aún no hay coincidencias entre los resúmenes cargados.</p>':''}${state.catalogCursor?'<button class="button outline" data-action="more-publications">Cargar más publicaciones</button>':''}</section>`;
 }
 function publicationPage(){
@@ -553,16 +554,8 @@ function normalize(s) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
-function filtered() {
-  return properties.filter(
-    (p) =>
-      matchesDirectory(p,state.directoryScope) && matchesLandSearch(p,state) && matchesProjectDiscovery(p,state) &&
-      matchesOpportunityFilters(p,{...state,query:state.zone.length||state.placeBounds?"":state.query}) &&
-      (!state.sectors.length || state.sectors.includes(p.sector)) &&
-      (!state.zone.length || pointInRing(p.coordinates, state.zone)) &&
-      (!state.placeBounds || insideBounds(p.coordinates, state.placeBounds)),
-  );
-}
+function filtered() {return properties.filter(p=>matchesCatalog(p,state));}
+
 function catalogWindow(items=filtered()){
  const key=catalogPaginationKey(state),page=catalogPage(orderCatalog(items,state.catalogOrder),state.catalogPageKey===key?state.catalogPage:1,catalogPageSize(state));
  state.catalogPage=page.page;state.catalogPageKey=key;

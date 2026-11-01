@@ -17,3 +17,12 @@ test('real project publications use the same stage, kind and specialty rules as 
 test('all supported project categories remain selectable without any examples',()=>{const html=projectFiltersHTML([],{});for(const value of ['Industrial','Logístico','Infraestructura','Sin especificar','Factibilidad'])assert.ok(html.includes('value="'+value+'"'));});
 
 test('directory land classification is retained in a shared saved-search link',()=>{const restored=catalogRouteState(savedSearchHash({type:'terreno',view:'list',directoryScope:{city:'',department:'',landType:'Rural'}}));assert.equal(restored.directoryScope.landType,'Rural');});
+test('municipality and department replace previous URL values rather than retaining them',()=>{
+ const hash=searchLinkHash('#/buscar?tipo=terreno&municipio=05001&departamento_codigo=05&uso=industrial',{type:'terreno',searchMunicipality:'11001',searchDepartment:'11',intendedUse:'residencial'}),restored=catalogRouteState(hash);assert.equal(restored.searchMunicipality,'11001');assert.equal(restored.searchDepartment,'11');assert.equal(restored.intendedUse,'residencial');
+});
+test('clearing location and directory criteria removes every obsolete geographic parameter',()=>{
+ const hash=searchLinkHash('#/buscar?tipo=terreno&municipio=05001&departamento_codigo=05&uso=industrial&ciudad=Medell%C3%ADn&departamento=Antioquia&lote=rural&poligono=[]&sectores=[]&limites=[]',{}),params=new URLSearchParams(hash.split('?')[1]);for(const key of ['municipio','departamento_codigo','uso','ciudad','departamento','lote','poligono','sectores','limites'])assert.equal(params.has(key),false);
+});
+test('public records and examples share sector, polygon and map-bounds restrictions',async()=>{
+ const {matchesCatalog}=await import('../web/catalog-match.js');const base={...catalogRouteState('#/buscar?contenido=todos'),zone:[[-75,4],[-73,4],[-73,6],[-75,6]],sectors:['interior'],placeBounds:[-74.5,4.5,-73.5,5.5]},inside={kind:'terreno',coordinates:[-74,5],sector:'interior',title:'Terreno'},outside={...inside,coordinates:[-76,5]};assert.ok(matchesCatalog(inside,base));assert.equal(matchesCatalog(outside,base),false);assert.equal(matchesCatalog({...inside,sector:'caribe'},base),false);assert.equal(matchesCatalog({...inside,coordinates:undefined,locationPin:{coordinates:[-74,5]}},base),false);assert.ok(matchesCatalog({...inside,type:'terreno',kind:undefined},base));assert.ok(matchesCatalog({...inside,coordinates:undefined},{...base,zone:[],sectors:[],placeBounds:null}));
+});

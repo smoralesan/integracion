@@ -10,6 +10,10 @@ export function searchLinkHash(hash,state){
  const [path,query='']=hash.split('?'),params=new URLSearchParams(query);
  for(const [key,param]of [['query','q'],['mode','modalidad'],['min','area_min'],['max','area_max'],['maxPrice','precio_max']]){if(state[key])params.set(param,String(state[key]));else params.delete(param);}
  for(const [key,param]of [['zone','poligono'],['sectors','sectores'],['placeBounds','limites']]){if(state[key]?.length)params.set(param,JSON.stringify(state[key]));else params.delete(param);}
+ for(const param of ['municipio','departamento_codigo','uso','ciudad','departamento','lote'])params.delete(param);
+ if(state.type==='terreno'&&state.searchMunicipality)params.set('municipio',state.searchMunicipality);
+ if(state.type==='terreno'&&state.searchDepartment)params.set('departamento_codigo',state.searchDepartment);
+ if(state.type==='terreno'&&state.intendedUse)params.set('uso',state.intendedUse);
  if(state.directoryScope)for(const [key,param]of [['city','ciudad'],['department','departamento'],['landType','lote']])if(state.directoryScope[key])params.set(param,key==='landType'?({'Urbano':'urbano','Rural':'rural','Expansión urbana':'expansion'}[state.directoryScope[key]]||state.directoryScope[key]):state.directoryScope[key]);
  return path+(params.size?'?'+params:'');
 }
