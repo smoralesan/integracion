@@ -1,3 +1,4 @@
+import {normalizeCatalogOrder} from './catalog-order.js';
 import {catalogPageNumber,catalogPaginationKey} from './catalog-pagination.js';
 const storageKey='ii-search-journey-v1',ttl=24*60*60*1000;
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8,6 +9,7 @@ export function normalizeSearchContext(value,now=Date.now()){
  if(!value||value.version!==1||!isCatalogHash(value.hash)||!Number.isFinite(value.at)||value.at>now+60000||now-value.at>ttl)return null;
  const f=value.filters||{},filters={};
  for(const key of ['query','min','max','maxPrice','mapSearchText','pendingLocationQuery','searchDepartment','searchMunicipality','intendedUse'])filters[key]=text(f[key]);
+ filters.catalogOrder=normalizeCatalogOrder(f.catalogOrder);
  filters.type=['terreno','proyecto'].includes(f.type)?f.type:'';
  filters.landContent=filters.type==='terreno'&&['land-only','land-project'].includes(f.landContent)?f.landContent:'';
  filters.reactivationFilter=['only','exclude'].includes(f.reactivationFilter)?f.reactivationFilter:'';

@@ -1,6 +1,7 @@
+import {normalizeCatalogOrder} from './catalog-order.js';
 export const CATALOG_PAGE_SIZE=6;
 export function catalogPageNumber(value){const number=Number(value);return Number.isInteger(number)&&number>=1?Math.min(number,1000):1;}
-export function catalogPaginationKey(s={}){return JSON.stringify([s.type||'',s.landContent||'',s.reactivationFilter||'',s.query||'',s.mode||'',s.min||'',s.max||'',s.maxPrice||'',s.searchDepartment||'',s.searchMunicipality||'',s.intendedUse||'',[s.directoryScope?.city||'',s.directoryScope?.department||'',s.directoryScope?.landType||''],s.zone||[],s.sectors||[],s.placeBounds||null]);}
+export function catalogPaginationKey(s={}){return JSON.stringify([s.type||'',s.landContent||'',s.reactivationFilter||'',s.query||'',s.mode||'',s.min||'',s.max||'',s.maxPrice||'',s.searchDepartment||'',s.searchMunicipality||'',s.intendedUse||'',[s.directoryScope?.city||'',s.directoryScope?.department||'',s.directoryScope?.landType||''],s.zone||[],s.sectors||[],s.placeBounds||null,normalizeCatalogOrder(s.catalogOrder)]);}
 export function catalogPage(items,requested=1,size=CATALOG_PAGE_SIZE){
  const pageSize=Number.isInteger(size)&&size>0?size:CATALOG_PAGE_SIZE,total=items.length,pages=Math.max(1,Math.ceil(total/pageSize)),page=Math.min(catalogPageNumber(requested),pages),start=(page-1)*pageSize;
  return {items:items.slice(start,start+pageSize),total,pages,page,size:pageSize,from:total?start+1:0,to:Math.min(start+pageSize,total)};

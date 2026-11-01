@@ -1,3 +1,4 @@
+import {orderCatalog,normalizeCatalogOrder,catalogOrderHash,catalogOrderHTML,pricePerM2} from './catalog-order.js';
 import {catalogPage,catalogPageHash,catalogPaginationKey,quickPaginationHTML,catalogPaginationHTML} from './catalog-pagination.js';
 import {buildSpaceInventory,resolveSpaceTab,inventoryPanelHTML,spaceShellHTML,spaceEmptyHTML,mountSpaceFilters} from './space-dashboard.js';
 import {mountSpaceRequests} from './space-requests.js';
@@ -257,6 +258,7 @@ const state = {
   placeBounds: null,
   selected: properties[0].id,
   searchSelected: "",
+  catalogOrder: "",
   catalogPage: 1,
   catalogPageKey: "",
   catalogPageURLChanged: false,
@@ -312,7 +314,7 @@ function pageHeader(title, description, eyebrow = "", action = "") {
 }
 function propertyCard(p) {
   const favorite = saved.favorites.includes(p.id);
-  return `<article class="property-card${p.type==='proyecto'?' property-card--project':''}"><div class="property-image"><a href="#/oportunidad/${p.id}" aria-label="Ver ${escape(p.title)}">${terrainPreviewHTML(p)||`<img src="${escape(p.image)}" alt="Imagen arquitectónica ilustrativa de un edificio individual" loading="lazy">`}</a><span class="pill${p.reactivation ? " warm" : ""}">${p.label}</span><button class="favorite ${favorite ? "saved" : ""}" data-action="favorite" data-id="${p.id}" aria-label="${favorite ? "Quitar de" : "Guardar en"} favoritos: ${escape(p.title)}" aria-pressed="${favorite}">${icon("heart")}</button></div><div class="property-body"><div class="property-reference">${p.id} · Ejemplo</div>${terrainCardTag(p)}<h3><a class="card-detail-link" href="#/oportunidad/${p.id}">${p.title}</a></h3><div class="property-location">${icon("pin")}<span>${escape(locationLabel(p))}</span></div><div class="property-facts"><span>${p.area ? money(p.area) + " m²" : "Busca " + p.need.toLowerCase()}</span><span>${p.mode}</span></div>${rescueMetricsHTML(p)}<div class="property-bottom"><div class="property-price">${p.price ? "COP $" + money(p.price) : p.type === "terreno" ? "Condiciones por acordar" : "Conecta con el proyecto"}<small>${p.price ? "Precio ilustrativo · Negociable" : p.type === "terreno" ? "Abierto a propuestas" : "Participación por evaluar"}</small></div><a class="icon-button" href="#/oportunidad/${p.id}" aria-label="Ver oportunidad ${p.id}">${icon("arrow-up-right")}</a></div>${comparisonButton(p)}</div></article>`;
+  return `<article class="property-card${p.type==='proyecto'?' property-card--project':''}"><div class="property-image"><a href="#/oportunidad/${p.id}" aria-label="Ver ${escape(p.title)}">${terrainPreviewHTML(p)||`<img src="${escape(p.image)}" alt="Imagen arquitectónica ilustrativa de un edificio individual" loading="lazy">`}</a><span class="pill${p.reactivation ? " warm" : ""}">${p.label}</span><button class="favorite ${favorite ? "saved" : ""}" data-action="favorite" data-id="${p.id}" aria-label="${favorite ? "Quitar de" : "Guardar en"} favoritos: ${escape(p.title)}" aria-pressed="${favorite}">${icon("heart")}</button></div><div class="property-body"><div class="property-reference">${p.id} · Ejemplo</div>${terrainCardTag(p)}<h3><a class="card-detail-link" href="#/oportunidad/${p.id}">${p.title}</a></h3><div class="property-location">${icon("pin")}<span>${escape(locationLabel(p))}</span></div><div class="property-facts"><span>${p.area ? money(p.area) + " m²" : "Busca " + p.need.toLowerCase()}</span><span>${p.mode}</span></div>${rescueMetricsHTML(p)}<div class="property-bottom"><div class="property-price">${p.price ? "COP $" + money(p.price) : p.type === "terreno" ? "Condiciones por acordar" : "Conecta con el proyecto"}<small>${p.price ? (state.catalogOrder.startsWith("m2-")&&isCatalogHash(location.hash)&&pricePerM2(p)!==null?"COP $"+money(Math.round(pricePerM2(p)))+"/m² · Ilustrativo":"Precio ilustrativo · Negociable") : p.type === "terreno" ? "Abierto a propuestas" : "Participación por evaluar"}</small></div><a class="icon-button" href="#/oportunidad/${p.id}" aria-label="Ver oportunidad ${p.id}">${icon("arrow-up-right")}</a></div>${comparisonButton(p)}</div></article>`;
 }
 const emailEntry = new EmailEntry();
 let draftSaveTimer;
@@ -559,7 +561,7 @@ function filtered() {
   );
 }
 function catalogWindow(items=filtered()){
- const key=catalogPaginationKey(state),page=catalogPage(items,state.catalogPageKey===key?state.catalogPage:1);
+ const key=catalogPaginationKey(state),page=catalogPage(orderCatalog(items,state.catalogOrder),state.catalogPageKey===key?state.catalogPage:1);
  state.catalogPage=page.page;state.catalogPageKey=key;
  if(state.searchSelected&&!page.items.some(item=>item.id===state.searchSelected))state.searchSelected='';
  return page;
@@ -623,10 +625,10 @@ function home(alternativeHero = false) {
 function catalog(isSearch = false, reactivation = false) {
   reactivation=reactivation||state.reactivationFilter==='only';
   const result=filtered(),paged=catalogWindow(result),noun=state.type==='terreno'?'terreno':state.type==='proyecto'?'proyecto':'oportunidad';
-  if(isCatalogHash(location.hash)){const hash=catalogPageHash(location.hash,paged.page);if(hash!==location.hash){history.replaceState(null,'',hash);state.catalogPageURLChanged=true;}}
+  if(isCatalogHash(location.hash)){const hash=catalogOrderHash(catalogPageHash(location.hash,paged.page),state.catalogOrder);if(hash!==location.hash){history.replaceState(null,'',hash);state.catalogPageURLChanged=true;}}
   const title=reactivation?'Proyectos para reactivación':state.type==='terreno'&&state.landContent?terrainSearchLabel(state.landContent):state.directoryScope?directoryTitle(state.directoryScope):state.type==='proyecto'?'Proyectos inmobiliarios':state.type==='terreno'?'Todos los terrenos':'Tierras y proyectos';
   const description=reactivation?'Explora proyectos en pausa que buscan una nueva ruta de evaluación.':state.type==='terreno'&&state.landContent==='land-only'?'Predios sin proyecto constructivo asociado. Compara su ubicación, perímetro y condiciones de venta o aporte.':state.type==='terreno'&&state.landContent==='land-project'?'Predios que incluyen una propuesta de desarrollo. Revisa el terreno, el programa constructivo y el alcance de la negociación.':state.type==='proyecto'?'Iniciativas que buscan aliados para avanzar, con o sin terreno.':state.type==='terreno'?'Explora lotes para desarrollar proyectos. Compara solo terreno y terreno con proyecto asociado.':'Compara terrenos y proyectos. Elige una categoría para explorar cada formato por separado.';
-  return `<div class="du-catalog cs-catalog ${reactivation?'rf-catalog':''} ${state.view!=='list'?'du-catalog-map':''}">${compactHeading(title,description,isSearch?'Busco tierra':'Oportunidades',!isSearch?btn('Publicar oportunidad','#/publicar/terreno','outline'):'')}<section class="page-content"><div class="container">${catalogGroupsHTML(state)}${state.type==='terreno'?catalogSearchHTML({state,icon,priceLimits,filterChipsHTML}):filterBar(true)}${publicationsHTML()}<div class="du-results-bar"><p tabindex="-1" data-results-heading role="status">${paged.pages>1?`Mostrando <strong>${paged.from}–${paged.to}</strong> de <strong>${paged.total}</strong>`:`<strong>${paged.total}</strong>`} ${noun}${paged.total===1?'':noun==='oportunidad'?'es':'s'} de ejemplo${state.view!=='list'&&paged.pages>1?'<span class="cp-map-note">El mapa muestra los resultados de esta página.</span>':''}</p><div class="cp-results-actions">${quickPaginationHTML(paged)}${true?`<button class="du-save-search" data-action="save-search">${icon('bookmark')}Guardar búsqueda</button><div class="view-toggle"><button data-action="view" data-view="list" aria-pressed="${state.view==='list'}" class="${state.view==='list'?'active':''}">${icon('list')}Lista</button><button data-action="view" data-view="both" aria-pressed="${state.view!=='list'}" class="${state.view!=='list'?'active':''}">${icon('map')}Mapa</button></div>`:''}</div></div><div class="${state.view!=='list'?'search-layout':'list-only'}"><div class="property-grid">${result.length?paged.items.map(propertyCard).join(''):empty()}</div>${state.view!=='list'?`<div class="search-map">${mapHTML('search')}</div>`:''}</div>${catalogPaginationHTML(paged)}<p class="du-context-note">${icon('info')}Fichas y ubicaciones ilustrativas. Los terrenos se orientan a desarrollar proyectos; excluyen lotes individuales para una sola vivienda.</p></div></section></div>`;
+  return `<div class="du-catalog cs-catalog ${reactivation?'rf-catalog':''} ${state.view!=='list'?'du-catalog-map':''}">${compactHeading(title,description,isSearch?'Busco tierra':'Oportunidades',!isSearch?btn('Publicar oportunidad','#/publicar/terreno','outline'):'')}<section class="page-content"><div class="container">${catalogGroupsHTML(state)}${state.type==='terreno'?catalogSearchHTML({state,icon,priceLimits,filterChipsHTML}):filterBar(true)}${publicationsHTML()}<div class="du-results-bar"><p tabindex="-1" data-results-heading role="status">${paged.pages>1?`Mostrando <strong>${paged.from}–${paged.to}</strong> de <strong>${paged.total}</strong>`:`<strong>${paged.total}</strong>`} ${noun}${paged.total===1?'':noun==='oportunidad'?'es':'s'} de ejemplo${state.view!=='list'&&paged.pages>1?'<span class="cp-map-note">El mapa muestra los resultados de esta página.</span>':''}</p><div class="cp-results-actions">${catalogOrderHTML(state.catalogOrder,{disabled:state.drawing})}${quickPaginationHTML(paged)}${true?`<button class="du-save-search" data-action="save-search">${icon('bookmark')}Guardar búsqueda</button><div class="view-toggle"><button data-action="view" data-view="list" aria-pressed="${state.view==='list'}" class="${state.view==='list'?'active':''}">${icon('list')}Lista</button><button data-action="view" data-view="both" aria-pressed="${state.view!=='list'}" class="${state.view!=='list'?'active':''}">${icon('map')}Mapa</button></div>`:''}</div></div><div class="${state.view!=='list'?'search-layout':'list-only'}"><div class="property-grid">${result.length?paged.items.map(propertyCard).join(''):empty()}</div>${state.view!=='list'?`<div class="search-map">${mapHTML('search')}</div>`:''}</div>${catalogPaginationHTML(paged)}<p class="du-context-note">${icon('info')}Fichas y ubicaciones ilustrativas. Los terrenos se orientan a desarrollar proyectos; excluyen lotes individuales para una sola vivienda.</p></div></section></div>`;
 }
 
 function detail(id) {
@@ -1534,6 +1536,7 @@ async function action(actionName, el, event) {
       searchTypeExplicit:true,
       searchDepartment:getDepartment(s.searchDepartment)?.code||"",searchMunicipality:getMunicipality(s.searchMunicipality)?.code||"",intendedUse:landUses.some(([v])=>v===s.intendedUse)?s.intendedUse:"",
       directoryScope: s.directoryScope || null,
+      catalogOrder: normalizeCatalogOrder(s.catalogOrder),
       query: s.query || "",
       mapSearchText: s.query || "",
       pendingLocationQuery: s.locationQuery || "",
@@ -1611,6 +1614,15 @@ document.addEventListener('keydown',event=>{
 });
 document.addEventListener("change", async (event) => {
   const el = event.target;
+  if(el.name==='catalogOrder'&&isCatalogHash(location.hash)){
+    if(state.drawing){toast('Termina o cancela el dibujo antes de ordenar.');return;}
+    const order=normalizeCatalogOrder(el.value);if(order===state.catalogOrder)return;
+    captureSearchContext(state,location.hash);
+    Object.assign(state,{catalogOrder:order,catalogPage:1,searchSelected:'',searchCamera:null,searchCameraRevision:-1,mapFitRevision:state.mapFitRevision+1});
+    state.catalogPageKey=catalogPaginationKey(state);
+    history.pushState(null,'',catalogOrderHash(catalogPageHash(location.hash,1),order));
+    render();captureSearchContext(state,location.hash);$('[name="catalogOrder"]')?.focus({preventScroll:true});return;
+  }
   if(el.form?.dataset.form==='ally'&&el.name==='ally_role'){
     const field=el.form.querySelector('[data-technical-specialty]'),select=field.querySelector('select'),technical=el.value==='Técnicos';
     field.hidden=!technical;select.disabled=!technical;select.required=technical;select.value='';
@@ -1831,6 +1843,7 @@ document.addEventListener("submit", async (event) => {
   if (type === "save-search") {
     const search = {
       name: String(data.get("name")).trim(),
+      catalogOrder: normalizeCatalogOrder(state.catalogOrder),
       searchDepartment:state.searchDepartment,searchMunicipality:state.searchMunicipality,intendedUse:state.intendedUse,
       directoryScope: state.directoryScope,
       query: state.query,
