@@ -15,7 +15,7 @@ test('El home separa terrenos y proyectos sin confundir terrenos con programas a
  }
  assert.equal((projects.match(/<article /g)||[]).length,4);
  assert.equal((reactivations.match(/<article /g)||[]).length,4);
- assert.ok(!projects.includes('rf-card-metrics'));assert.match(reactivations,/rf-card-metrics/);
+ assert.ok(!projects.includes('rf-card-metrics'));assert.match(reactivations,/featured-rescue-brief/);assert.ok(!reactivations.includes('rf-card-metrics'));
  assert.match(reactivations,/#\/proyectos-siniestrados/);
  assert.ok(!projects.includes('TER-DEMO-'));assert.ok(land.includes('TER-DEMO-002'));
  assert.equal((result.match(/data-form="featured-filters"/g)||[]).length,2);

@@ -19,3 +19,5 @@
  .cs-catalog .search-layout .rf-card-metrics dd{font-size:14px}
  .cs-catalog .search-map{width:100%;min-width:0;box-sizing:border-box;position:sticky;top:100px;height:calc(100svh - 125px);min-height:400px}
 }
+
+.cs-search input{width:100%;min-width:0;border:0;font:inherit;font-size:14px;background:transparent;color:#294d77}.featured-rescue-brief{font-size:12px;line-height:1.8;color:#527197}.featured-rescue-brief small{font-size:10px;color:#8497af}@media(max-width:760px){.cs-search input{font-size:16px}.cs-search form[data-form="project-filters"]>label{grid-column:auto}.cs-search form[data-form="project-filters"]>label:first-child{grid-column:1/-1}}

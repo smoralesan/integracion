@@ -30,7 +30,7 @@ test('Unknown, contradictory and cross-linked records are not silently classifie
 test('Each terrain format has its own URL, selected tab and restored search context',()=>{
  for(const [key,query] of [['land-only','solo-terreno'],['land-project','con-proyecto']]){
   assert.equal(terrainSearchFromQuery(query),key);assert.equal(terrainSearchQuery(key),query);
-  const html=catalogGroupsHTML({type:'terreno',landContent:key});assert.ok(html.includes('contenido='+query+'" aria-current="page"'));assert.equal((html.match(/aria-current/g)||[]).length,1);
+  const html=catalogGroupsHTML({type:'terreno',landContent:key});assert.ok(html.includes('contenido='+query+'" aria-current="page"'));assert.equal((html.match(/aria-current/g)||[]).length,2);
   const context=normalizeSearchContext({version:1,at:Date.now(),hash:'#/buscar?contenido='+query,filters:{type:'terreno',landContent:key,searchMunicipality:'11001'}});assert.equal(context.filters.landContent,key);assert.equal(context.filters.searchMunicipality,'11001');
  }
  const invalid=normalizeSearchContext({version:1,at:Date.now(),hash:'#/buscar',filters:{type:'proyecto',landContent:'land-project'}});assert.equal(invalid.filters.landContent,'');
