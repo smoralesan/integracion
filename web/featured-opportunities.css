@@ -69,11 +69,16 @@
 @media(max-width:700px){.featured-filter-bar--terrain{grid-template-columns:repeat(2,minmax(0,1fr))}.featured-filter-bar--terrain>.featured-query{grid-column:1/-1;grid-row:1}.featured-filter-bar--terrain>.featured-filter-field:not(.featured-query){grid-row:auto}.featured-filter-bar--terrain>.featured-filter-field:has([name=landType]){border-right:1px solid #e9eff6}.featured-filter-bar--terrain>.featured-filter-field:has([name=areaBand]){border-right:0}.featured-filter-bar--terrain>.featured-filter-field:has([name=maxPrice]){grid-column:1/-1;border-right:0}.featured-filter-bar--terrain>.button{grid-column:1/-1;grid-row:auto}.featured-filter-bar--projects{grid-template-columns:1fr}.featured-filter-bar--projects>.featured-query{grid-column:1;grid-row:1}.featured-filter-bar--projects>.button{grid-column:1;grid-row:2}.featured-project-grid{grid-template-columns:1fr}.featured-project-grid .featured-photo{height:200px}.featured-project-section{padding-top:29px;padding-bottom:28px}.featured-project-links{align-items:flex-start;flex-direction:column;gap:14px}.featured-project-links>a{font-size:11px}.terrain-preview-caption{font-size:7px;bottom:24px}}
 
 /* El edificio se muestra completo, desde el acceso hasta la cubierta. */
-.featured-project-grid .featured-photo{height:auto;aspect-ratio:3/2}
+.featured-project-grid .featured-photo{width:100%;height:auto;min-height:0;aspect-ratio:3/2}
+.featured-project-grid .featured-photo>a{position:absolute;inset:0;width:100%;height:100%}
 .featured-project-grid .featured-photo img{object-fit:contain;transform:none!important}
-.property-card--project .property-image{height:auto;aspect-ratio:3/2}
+.property-card--project .property-image{width:100%;height:auto;aspect-ratio:3/2}
+/* Override fixed catalog thumbnail heights without changing the rescue layout. */
+.du-catalog:not(.rf-catalog) .property-card--project .property-image{width:100%;height:auto;min-height:0;aspect-ratio:3/2}
+.property-card--project .property-image>a{position:absolute;inset:0;width:100%;height:100%}
 .property-card--project .property-image img{object-fit:contain;transform:none!important}
-.detail-cover.detail-cover--project{height:auto;aspect-ratio:3/2}
+.detail-cover.detail-cover--project{width:100%;height:auto;aspect-ratio:3/2}
+.detail-cover--project>img{position:absolute;inset:0;width:100%;height:100%}
 .detail-cover--project img{object-fit:contain}
 
 /* La reactivación tiene su propio bloque, separado de las iniciativas nuevas. */

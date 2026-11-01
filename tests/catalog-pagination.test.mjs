@@ -33,3 +33,11 @@ test('page URLs keep the category and municipality; accessible controls identify
  const hash='#/buscar?contenido=solo-terreno&municipio=05001',second=catalogPageHash(hash,2);assert.match(second,/contenido=solo-terreno/);assert.match(second,/municipio=05001/);assert.match(second,/pagina=2/);assert.equal(catalogPageHash(second,1),hash);
  const html=catalogPaginationHTML(catalogPage(lots,2));assert.equal((html.match(/aria-current="page"/g)||[]).length,1);assert.match(html,/aria-label="Página 2" aria-current="page"/);assert.match(quickPaginationHTML(catalogPage(lots,1)),/aria-label="Página anterior" disabled/);assert.match(quickPaginationHTML(catalogPage(lots,3)),/aria-label="Página siguiente" disabled/);
 });
+
+test('map browsing allows 24 results per page while list browsing retains six',async()=>{
+ const {catalogPageSize,catalogViewHash}=await import('../web/catalog-pagination.js');
+ assert.equal(catalogPageSize({view:'both'}),24);assert.equal(catalogPageSize({view:'list'}),6);
+ const examples=Array.from({length:53},(_,i)=>({id:i})),pages=[1,2,3].map(page=>catalogPage(examples,page,catalogPageSize({view:'both'})));
+ assert.deepEqual(pages.map(p=>p.items.length),[24,24,5]);assert.deepEqual(pages.flatMap(p=>p.items),examples);assert.equal(catalogPage(lots,1,catalogPageSize({view:'both'})).items.length,18);
+ const hash=catalogViewHash('#/buscar?contenido=todos&orden=m2-asc','both');assert.equal(catalogRouteState(hash).view,'both');assert.match(hash,/orden=m2-asc/);assert.equal(catalogViewHash(hash,'list'),'#/buscar?contenido=todos&orden=m2-asc');
+});

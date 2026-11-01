@@ -1,5 +1,8 @@
 import {normalizeCatalogOrder} from './catalog-order.js';
 export const CATALOG_PAGE_SIZE=6;
+export const CATALOG_MAP_PAGE_SIZE=24;
+export function catalogPageSize(state={}){return state.view==='both'?CATALOG_MAP_PAGE_SIZE:CATALOG_PAGE_SIZE;}
+export function catalogViewHash(hash,view){const [path,query='']=hash.split('?'),params=new URLSearchParams(query);if(view==='both')params.set('vista','mapa');else params.delete('vista');return path+(params.size?'?'+params:'');}
 export function catalogPageNumber(value){const number=Number(value);return Number.isInteger(number)&&number>=1?Math.min(number,1000):1;}
 export function catalogPaginationKey(s={}){return JSON.stringify([s.type||'',s.landContent||'',s.reactivationFilter||'',s.query||'',s.mode||'',s.min||'',s.max||'',s.maxPrice||'',s.searchDepartment||'',s.searchMunicipality||'',s.intendedUse||'',[s.directoryScope?.city||'',s.directoryScope?.department||'',s.directoryScope?.landType||''],s.zone||[],s.sectors||[],s.placeBounds||null,normalizeCatalogOrder(s.catalogOrder)]);}
 export function catalogPage(items,requested=1,size=CATALOG_PAGE_SIZE){
