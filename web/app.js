@@ -1,3 +1,5 @@
+import {buildSpaceInventory,resolveSpaceTab,inventoryPanelHTML,spaceShellHTML,spaceEmptyHTML,mountSpaceFilters} from './space-dashboard.js';
+import {mountSpaceRequests} from './space-requests.js';
 import {terrainBasicsHTML,syncPublicationBasics,publicationPreviewHTML,nextStepsHTML} from './publication-ux.js';
 import {landToolsPage,mountLandTools,landToolRoutes} from './land-tools.js';
 import {notaryDirectoryPage} from './notary-directory.js';
@@ -11,10 +13,10 @@ import {terrainSearchLabel,terrainSearchQuery,terrainSearchFromQuery} from './te
 import {landSearchHTML,mountLandSearch,matchesLandSearch} from './land-search.js';
 import {catalogSearchHTML,mountCatalogSearch,readCatalogTerritory,drawingTerritory} from './catalog-search.js';
 import {landUses,sectorForSlug} from './development-sectors.js';
-import {localDrafts,chooseDraft,putDraft,draftHref,completeLocalRegistration,registrationProgressHTML,demoPerimeterHTML,demoSupportsHTML,localRegistrationsHTML,localConfirmationHTML} from './registration-journey.js';
+import {localDrafts,chooseDraft,putDraft,draftHref,completeLocalRegistration,registrationProgressHTML,demoPerimeterHTML,demoSupportsHTML,localConfirmationHTML} from './registration-journey.js';
 import {EmailEntry} from './email-entry.js';
 import {captureSearchContext,readSearchContext,normalizeSearchContext,isCatalogHash,restoreSearchScroll} from './search-journey.js';
-import {accessGateHTML} from './access-gate.js';
+import {accessGateHTML,signInPath} from './access-gate.js';
 import {normalizeSpaceObjective} from './space-intent.js';
 import {premiumValuationPage} from './premium-valuation.js';
 import {catalogGroupsHTML,mountJourney,toggleSearchFilters} from './journey-ui.js';
@@ -264,7 +266,10 @@ const state = {
   remoteRecord: null,
   remoteRecordError: "",
   submitting: false,
-  spaceTab: "favorites",
+  spaceTab: "submissions",
+  spaceQuery: "",
+  spaceStatus: "",
+  spaceToolsOpen: false,
   formStep: 1,
   formKind: "terreno",
   form: {},
@@ -313,7 +318,7 @@ const reviewDesk = new ReviewDesk(()=>{if(location.hash.startsWith('#/equipo'))r
 async function loadSession(){
   try{state.session=await api('/api/session');}catch{state.session={authenticated:false,teamRole:null};}
   document.querySelectorAll('[data-team-link]').forEach(a=>a.hidden=!state.session.teamRole);
-  if(location.hash==='#/mi-espacio'||location.hash.startsWith('#/publicar/'))render();
+  if(currentRouteHash().split('?')[0]==='#/mi-espacio'){if(state.session.authenticated&&!state.remoteLoaded)refreshRemoteRecords();render();}else if(location.hash.startsWith('#/publicar/'))render();
 }
 let catalogGeneration=0,pendingResultsContext=null,pendingExplicitReturn=null,pendingCatalogNavigation=null,initialNavigation=true;
 function navigateCatalog(hash){
@@ -396,16 +401,13 @@ async function refreshRemoteRecords(append=false) {
     state.remoteRecords=append?[...state.remoteRecords,...result.records]:result.records;
     state.remoteCursor=result.cursor;state.remoteError='';state.remoteLoaded=true;
   } catch(e) {state.remoteLoaded=true;state.remoteError=e.message;}
-  if(location.hash==='#/mi-espacio') render();
+  if(currentRouteHash().split('?')[0]==='#/mi-espacio') render();
 }
 async function loadRemoteRecord(id) {
   state.remoteRecord=null;state.remoteRecordError='';
   try {const record=await api('/api/records/'+encodeURIComponent(id));if(location.hash==='#/mi-expediente/'+id)state.remoteRecord=record;}
   catch(e){state.remoteRecordError=e.message;}
   if(location.hash==='#/mi-expediente/'+id)render();
-}
-function privateRecordsHTML() {
-  return `<section class="private-records"><div class="section-heading"><div><h2>Expedientes privados</h2><p>Guardados en tu cuenta, con su estado y seguimiento.</p></div><button class="button outline" data-action="refresh-records">Actualizar</button></div>${state.remoteError?`<div class="info-box warm">${escape(state.remoteError)}</div>`:!state.remoteLoaded?'<p>Cargando tus expedientes…</p>':state.remoteRecords.length?state.remoteRecords.map(r=>`<div class="saved-row">${icon("file")}<div><h3>${escape(r.form.title)}</h3><p>${escape(r.reference)} · ${escape(r.form.city)} · ${escape(statusLabel(r))}</p>${r.kind==='proyecto'&&r.participants?.length?avatarStack(r.participants,{size:32}):''}</div>${link("Abrir expediente", "#/mi-expediente/"+r.id)}</div>`).join(''):'<p>Aún no has enviado expedientes. Tu borrador local aparece en Mis registros.</p>'}${state.remoteCursor?'<button class="button outline" data-action="more-records">Ver más expedientes</button>':''}</section>`;
 }
 function remoteRecordPage(id) {
   const r=state.remoteRecord;
@@ -909,68 +911,21 @@ function allyRegistrationPage(selected) {
 function needsPage(id='') {
   return compactHeading(id?'Detalle del proyecto':'Proyectos que buscan aliados',id?'Conoce cada necesidad, su alcance y la atención que requiere.':'Combina especialidades, zonas y etapas para encontrar dónde aportar tu experiencia.','Proyectos y necesidades',id?'':btn('Tengo un proyecto','#/publicar/proyecto','outline'))+`<section class="page-content nb-page"><div class="container" data-project-needs-host></div></section>`;
 }
+function localInterestHTML(){return `<details class="ws-secondary"><summary>Participaciones de demostración en este navegador (${saved.interests.length})</summary><p class="ws-small">Estas participaciones se guardaron localmente y no se enviaron a terceros.</p>${saved.interests.length?saved.interests.map(s=>`<article class="ws-local-interest"><h3>${escape(s.title||'Participación de ejemplo')}</h3><span class="ws-status">Demostración · Sin enviar</span>${s.kind==='need-proposal'?`<p>${escape(s.role||'')} · ${escape(s.availability||'')}</p><p>${escape(s.message||'')}</p><a class="text-link" href="#/necesidades/${encodeURIComponent(s.projectId)}">Ver proyecto y necesidad →</a>`:''}</article>`).join(''):'<p class="ws-small">Puedes preparar una participación desde una necesidad de ejemplo.</p><a class="text-link" href="#/necesidades">Explorar necesidades →</a>'}</details>`;}
 function spacePage() {
-  const tab = state.spaceTab;
-  let body = "";
-  if (tab === "favorites")
-    body = saved.favorites.length
-      ? `<div class="property-grid">${properties
-          .filter((p) => saved.favorites.includes(p.id))
-          .map(propertyCard)
-          .join("")}</div>`
-      : `<div class="empty-state">${icon("heart")}<h3>Oportunidades para volver a mirar</h3><p>Explora el catálogo y utiliza el corazón de una ficha para guardarla aquí.</p>${btn("Explorar oportunidades", "#/oportunidades")}</div>`;
-  if (tab === "searches")
-    body = saved.searches.length
-      ? saved.searches
-          .map(
-            (s, i) =>
-              `<div class="saved-row">${icon("map")}<div><h3>${escape(s.name)}</h3><p>${escape(searchLocationLabel(s))} · ${escape(s.type==='terreno'?terrainSearchLabel(s.landContent):s.type || "Terrenos y proyectos")} · ${s.zone?.length ? "Con zona dibujada" : s.sectors?.length ? "Con sectores" : "Sin zona"} · Guardado en este navegador</p></div><button class="text-button" data-action="open-search" data-index="${i}">Abrir ${icon("arrow-right")}</button></div>`,
-          )
-          .join("")
-      : `<div class="empty-state">${icon("map")}<h3>Tus criterios, a mano</h3><p>Guarda una búsqueda desde el mapa para retomarla aquí.</p>${btn("Buscar tierra", "#/buscar")}</div>`;
-  if (tab === "submissions")
-    body =
-      (saved.draft
-        ? `<div class="saved-row">${icon("file")}<div><h3>${escape(saved.draft.form.title || "Borrador sin nombre")}</h3><p>Borrador local · ${escape(saved.draft.kind)}</p></div>${link("Continuar", "#/publicar/" + saved.draft.kind)}</div>`
-        : "") +
-      (saved.submissions.length
-        ? saved.submissions
-            .map(
-              (s) =>
-                `<div class="saved-row">${icon(s.kind === "proyecto" ? "building" : "map")}<div><h3>${escape(s.form.title || s.form.ally_name || "Perfil de aliado")}</h3><p>${escape(s.id)} · ${escape(s.kind)} · Demostración local, sin enviar</p></div><button class="text-button" data-action="view-submission" data-id="${escape(s.id)}">Ver resumen ${icon("arrow-right")}</button></div>`,
-            )
-            .join("")
-        : !saved.draft
-          ? `<div class="empty-state">${icon("file")}<h3>Tu siguiente paso comienza aquí</h3><p>Retoma un borrador o registra tu primera oportunidad para enviarla a revisión privada.</p>${btn("Tengo un terreno", "#/publicar/terreno")}</div>`
-          : "");
-  if (tab === "interests")
-    body = saved.interests.length
-      ? saved.interests
-          .map(
-            (s) =>
-              `<div class="saved-row">${icon("handshake")}<div><h3>${escape(s.title)}</h3><p>${escape(s.id)} · Guardado en este navegador · Sin enviar</p>${s.kind==='need-proposal'?`<p>${escape(s.role)} · ${escape(s.availability)}</p><p>${escape(s.message)}</p><a class="text-link" href="#/necesidades/${escape(s.projectId)}">Ver proyecto y necesidad →</a>`:''}</div></div>`,
-          )
-          .join("")
-      : `<div class="empty-state">${icon("handshake")}<h3>Conexiones por comenzar</h3><p>Prepara una participación desde una necesidad de ejemplo. Quedará en este navegador, sin enviarse a terceros.</p>${btn("Explorar proyectos", "#/necesidades")}</div>`;
-  return (
-    pageHeader(
-      "Mi espacio",
-      "Tus expedientes privados, borradores y actividad en un lugar.",
-      "Tu actividad",
-      btn("Vender mi terreno", "#/publicar/terreno", "outline"),
-    ) +
-    `<section class="page-content"><div class="container"><div class="info-box">${icon("lock")}<span><strong>Tu actividad, en su lugar.</strong> Los expedientes enviados y el seguimiento se guardan en tu cuenta. Los favoritos, búsquedas y borradores se conservan en este navegador.</span></div>${localRegistrationsHTML(saved)}${spaceActionsHTML({draft:null,team:!!state.session?.teamRole,objective:saved.objective})}${state.session?.authenticated?privateRecordsHTML()+'<div data-activity-center></div>':emailEntry.preview?'<div class="rj-demo-account"><strong>Recorrido por correo · Demostración</strong><p>Retoma tus registros locales desde Mis terrenos y proyectos. No necesitas iniciar una sesión real para continuar la maqueta.</p></div>':state.session?accessGateHTML({hash:'#/mi-espacio',title:'Tu seguimiento, desde tu cuenta',description:'Inicia sesión para consultar expedientes, intereses y solicitudes. Tus favoritos y búsquedas locales siguen disponibles más abajo.'}):'<p role="status">Consultando tu cuenta…</p>'}<section class="ux-local-section"><h2>Guardado en este navegador</h2><p>Favoritos, búsquedas y borradores para retomar después. Los expedientes enviados y el seguimiento se consultan arriba.</p><div class="space-stats"><div class="space-stat"><strong>${saved.favorites.length}</strong><span>Favoritos</span></div><div class="space-stat"><strong>${saved.searches.length}</strong><span>Búsquedas guardadas</span></div><div class="space-stat"><strong>${saved.submissions.length}</strong><span>Registros de ejemplo</span></div></div><div class="space-tabs" role="tablist" aria-label="Actividad">${[
-      ["favorites", "Favoritos"],
-      ["searches", "Búsquedas"],
-      ["submissions", "Borrador e historial local"],
-      ["interests", "Participaciones de ejemplo"],
-    ]
-      .map(
-        ([id, label]) =>
-          `<button role="tab" id="space-tab-${id}" aria-controls="space-panel" tabindex="${tab===id?0:-1}" aria-selected="${tab === id}" data-action="space-tab" data-tab="${id}" class="${tab === id ? "active" : ""}">${label}</button>`,
-      )
-      .join("")}</div><div role="tabpanel" id="space-panel" aria-labelledby="space-tab-${tab}" tabindex="0">${body}</div><details class="ux-local-tools"><summary>Administrar datos de este navegador</summary><p>Puedes borrar los favoritos, búsquedas, borradores e historial local. Los expedientes enviados, perfiles y solicitudes guardados en tu cuenta se conservan.</p><button type="button" class="text-button" data-action="clear-data">Borrar datos locales</button></details></section></div></section>`
-  );
+  const tab=resolveSpaceTab(state.spaceTab),rows=buildSpaceInventory(saved,state.session?.authenticated?state.remoteRecords:[]);
+  let body='';
+  const accountNotice=state.session?.authenticated?(state.remoteError?`<p class="ws-error" role="alert">${escape(state.remoteError)} <button type="button" class="text-button" data-action="refresh-records">Reintentar</button></p>`:!state.remoteLoaded?'<p class="ws-account-note" role="status">Cargando los expedientes de tu cuenta…</p>':''):state.session?`<aside class="ws-account-note"><strong>¿Tienes expedientes enviados?</strong><span>Inicia sesión para consultar los registros de tu cuenta. Tus borradores locales siguen disponibles aquí.</span><a class="text-link" href="${escape(signInPath('#/mi-espacio'))}" target="_top">Consultar mi cuenta →</a></aside>`:'<p class="ws-account-note" role="status">Consultando tu cuenta…</p>';
+  if(['submissions','drafts'].includes(tab))body=inventoryPanelHTML({rows,state,drafts:tab==='drafts',accountNotice:tab==='submissions'?accountNotice:''});
+  if(tab==='favorites'){
+    const favoriteItems=properties.filter(p=>saved.favorites.includes(p.id));
+    body=`<div class="ws-panel-heading"><div><h2>Tu selección para volver a mirar</h2><p>Los guardados permanecen en este navegador. Puedes abrir una ficha o seleccionar terrenos para comparar.</p></div><a class="button outline" href="#/comparar">Abrir comparación →</a></div>${favoriteItems.length?'<div class="property-grid">'+favoriteItems.map(propertyCard).join('')+'</div>':spaceEmptyHTML('Todavía no has guardado oportunidades','Usa el corazón de una ficha para tenerla a mano en tu próxima visita.','Explorar terrenos','#/buscar')}`;
+  }
+  if(tab==='searches')body=`<div class="ws-panel-heading"><div><h2>Tus búsquedas guardadas</h2><p>Retoma criterios por municipio, zona y modalidad. Se conservan en este navegador.</p></div></div>${saved.searches.length?`<div class="ws-search-list">${saved.searches.map((s,i)=>`<article><div><h3>${escape(s.name)}</h3><p>${escape(searchLocationLabel(s))} · ${escape(s.type==='terreno'?terrainSearchLabel(s.landContent):s.type||'Terrenos y proyectos')}</p><small>${escape(s.mode||'Modalidad abierta')} · ${s.zone?.length?'Zona dibujada':s.sectors?.length?'Sectores seleccionados':'Sin zona delimitada'}</small></div><button type="button" class="button outline" data-action="open-search" data-index="${i}">Retomar búsqueda →</button></article>`).join('')}</div>`:spaceEmptyHTML('Guarda los criterios que te interesan','Busca por municipio o delimita una zona; después utiliza Guardar búsqueda.','Buscar terrenos','#/buscar')}`;
+  if(tab==='requests')body=`<div data-space-requests></div>${state.session?.authenticated?'<details class="ws-secondary"><summary>Avisos y preferencias de correo</summary><div data-activity-center></div></details>':''}`;
+  const legacy=saved.submissions.filter(s=>!['terreno','proyecto'].includes(s.kind));
+  const tools=`<details class="ws-secondary" ${state.spaceToolsOpen?'open':''}><summary>Perfil, objetivos y otras herramientas</summary>${spaceActionsHTML({draft:null,team:!!state.session?.teamRole,objective:saved.objective})}${legacy.length?`<h3>Otros registros locales de demostración</h3>${legacy.map(s=>`<div class="saved-row"><div><h3>${escape(s.form?.ally_name||s.form?.title||'Registro de ejemplo')}</h3><p>Demostración guardada en este navegador · Sin enviar</p></div><button type="button" class="text-button" data-action="view-submission" data-id="${escape(s.id)}">Ver resumen →</button></div>`).join('')}`:''}</details><details class="ws-secondary"><summary>Administrar datos de este navegador</summary><p class="ws-small">Puedes borrar los favoritos, búsquedas, borradores e historial local. Los expedientes y solicitudes guardados en tu cuenta se conservan.</p><button type="button" class="text-button" data-action="clear-data">Borrar datos locales</button></details>`;
+  return spaceShellHTML({tab,rows,saved,body,tools,comparisonCount:opportunityExperience.selected.length,authenticated:state.session?.authenticated===true});
 }
 function howPage() { return howItWorksPage({icon,faqs}); }
 
@@ -1048,6 +1003,8 @@ function render() {
   if(path.startsWith('/equipo/')&&reviewDesk.record)$('[data-review-desk]').insertAdjacentHTML('beforeend',teamExperienceHTML(reviewDesk.record));
   opportunityExperience.mount($('#contenido'),{owner:state.remoteRecord,team:reviewDesk.record});
   mountActivity($('#contenido'),{team:!!state.session?.teamRole});
+  mountSpaceFilters($('#contenido'),filter=>{Object.assign(state,{spaceQuery:filter.query,spaceStatus:filter.status});render();$('.ws-result-count')?.setAttribute('tabindex','-1');$('.ws-result-count')?.focus({preventScroll:true});});
+  const spaceRequestsHost=$('[data-space-requests]');if(spaceRequestsHost)mountSpaceRequests(spaceRequestsHost,{session:state.session,localHTML:localInterestHTML()});
   salesUI.mount($('[data-sales-host]'),{mode:path.startsWith('/interes/')?'form':'list',audience:path.startsWith('/equipo-comercial')?'team':path.startsWith('/interesados-recibidos')?'seller':'buyer',id:(path.startsWith('/mis-intereses/')||path.startsWith('/interesados-recibidos/')||path.startsWith('/equipo-comercial/'))?path.split('/')[2]:null,sourceKind:path.split('/')[2]==='publicacion'?'publication':'demo',sourceId:path.startsWith('/interes/')?path.split('/')[3]:null,recordId:new URLSearchParams(location.hash.split('?')[1]||'').get('expediente')||'',consultation:new URLSearchParams(location.hash.split('?')[1]||'').get('consulta')||''});
   serviceRequestsUI.mount($('[data-service-host]'),{mode:path.startsWith('/solicitar-servicio/')?'form':path==='/equipo-aliados'?'allies':'requests',slug:path.startsWith('/solicitar-servicio/')?path.split('/')[2]:null,team:path.startsWith('/equipo-'),id:(path.startsWith('/mis-solicitudes/')||path.startsWith('/equipo-solicitudes/'))?path.split('/')[2]:null,query:new URLSearchParams(location.hash.split('?')[1]||'').get('especialidad')||'',departmentCode:new URLSearchParams(location.hash.split('?')[1]||'').get('departamento')||'',service:new URLSearchParams(location.hash.split('?')[1]||'').get('servicio')||''});
   profileEditor.mount($('[data-profile-editor]'),path.startsWith('/registro/aliado/')?specialistDefaults(specialistBySlug(path.slice('/registro/aliado/'.length))):{});
@@ -1103,10 +1060,10 @@ function enterRoute() {
   }
   state.drawing=restoring?false:navigation?navigation.drawing:isCatalogHash(location.hash)?state.drawing:false;
   state.layers = false;
-  if(path==='/mi-espacio'&&new URLSearchParams(location.hash.split('?')[1]||'').get('seccion')==='favorites')state.spaceTab='favorites';
+  if(path==='/mi-espacio')state.spaceTab=resolveSpaceTab(new URLSearchParams(location.hash.split('?')[1]||'').get('seccion'),state.spaceTab);
   headerNavigation.close();
   render();
-  if (path === "/mi-espacio") refreshRemoteRecords();
+  if (path === "/mi-espacio"&&state.session?.authenticated&&!state.remoteLoaded) refreshRemoteRecords();
   if (path === '/equipo'||path.startsWith('/equipo/'))reviewDesk.load(path.startsWith('/equipo/')?decodeURIComponent(path.split('/')[2]):null);
   if (['/oportunidades','/buscar','/proyectos-siniestrados'].includes(path))refreshPublished();
   if (path.startsWith('/publicacion/'))loadPublication(path.split('/')[2]);
@@ -1278,7 +1235,7 @@ function resetFilters() {
 async function action(actionName, el, event) {
   if(actionName==='return-search'){event?.preventDefault();const context=readSearchContext();if(context){pendingExplicitReturn=context;if(location.hash===context.hash)enterRoute();else location.hash=context.hash;}else location.hash='#/buscar';return;}
   if(actionName==='retry-publications'){refreshPublished();return;}
-  if(actionName==='space-objective'){saved.objective=normalizeSpaceObjective(el.dataset.objective);persist();render();document.querySelector('[data-objective="'+saved.objective+'"]').focus({preventScroll:true});return;}
+  if(actionName==='space-objective'){state.spaceToolsOpen=true;saved.objective=normalizeSpaceObjective(el.dataset.objective);persist();render();document.querySelector('[data-objective="'+saved.objective+'"]').focus({preventScroll:true});return;}
 
   if(actionName==='link-project-profile'){
     if(!state.remoteRecord)return;el.disabled=true;
@@ -1539,10 +1496,13 @@ async function action(actionName, el, event) {
       );
     }
   }
+  if(actionName==='space-clear-filter'){state.spaceQuery='';state.spaceStatus='';render();$('[data-space-filter] input')?.focus();return;}
   if (actionName === "space-tab") {
-    state.spaceTab = el.dataset.tab;
+    state.spaceTab = resolveSpaceTab(el.dataset.tab);
+    history.replaceState(history.state,'','#/mi-espacio?seccion='+state.spaceTab);
     render();
     $('#space-tab-'+state.spaceTab)?.focus({preventScroll:true});
+    $('#space-tab-'+state.spaceTab)?.scrollIntoView({block:'nearest',inline:'nearest'});
   }
   if (actionName === "open-search") {
     const s = saved.searches[Number(el.dataset.index)];
