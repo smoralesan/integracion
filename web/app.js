@@ -1,3 +1,4 @@
+import {searchLinkHash,savedSearchView} from './search-link.js';
 import {projectCriteria,projectCriteriaHash,projectCriteriaSummary,clearProjectCriteria,projectFiltersHTML,matchesProjectDiscovery} from './project-discovery.js';
 import {orderCatalog,normalizeCatalogOrder,catalogOrderHash,catalogOrderHTML,pricePerM2} from './catalog-order.js';
 import {catalogPage,catalogPageSize,catalogViewHash,catalogPageHash,catalogPaginationKey,quickPaginationHTML,catalogPaginationHTML} from './catalog-pagination.js';
@@ -358,7 +359,7 @@ function publicationsHTML(){
   if(!state.catalogLoaded)return '<section class="published-catalog"><p role="status">Consultando resúmenes publicados…</p></section>';
   if(state.catalogError)return '<p class="jr-publications-access">No pudimos cargar las publicaciones. Puedes explorar los ejemplos o <button type="button" class="text-button" data-action="retry-publications">volver a intentarlo</button>.</p>';
   if(!state.catalogRecords.length&&!state.catalogCursor)return '';
-  const directoryRecords=state.catalogRecords.filter(r=>matchesDirectory(r,state.directoryScope)&&matchesLandSearch(r,state)&&matchesOpportunityFilters(r,state));
+  const directoryRecords=state.catalogRecords.filter(r=>matchesDirectory(r,state.directoryScope)&&matchesLandSearch(r,state)&&matchesOpportunityFilters(r,state)&&matchesProjectDiscovery(r,state));
   return `<section class="published-catalog"><div class="section-heading"><div><h2>Resúmenes publicados</h2><p>${directoryRecords.length} ${directoryRecords.length===1?'coincidencia':'coincidencias'} entre ${state.catalogRecords.length} ${state.catalogRecords.length===1?'publicación cargada':'publicaciones cargadas'}${state.catalogCursor?'; hay más por cargar':''}. Información autorizada por su titular.</p></div></div><div class="published-grid">${[...directoryRecords.reduce((groups,r)=>{const key=r.assetReference||r.id;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);return groups;},new Map()).values()].map(group=>{const r=group[0];return `<article>${availabilityHTML(r)}${terrainCardTag(r)}${summaryHTML(r)}<a class="button outline" href="#/publicacion/${r.id}">Ver ficha</a>${comparisonButton(r)}${group.length>1?`<details><summary>${group.length} presentaciones vinculadas al mismo inmueble</summary>${group.slice(1).map(x=>`<p><a href="#/publicacion/${x.id}">${escape(x.reference)} · ${escape(x.title)}</a></p>`).join('')}<p>Revisa representación y exclusividad en cada ficha. Las autorizaciones se gestionan por separado.</p></details>`:''}</article>`;}).join('')}</div>${!directoryRecords.length?'<p>Aún no hay coincidencias entre los resúmenes cargados.</p>':''}${state.catalogCursor?'<button class="button outline" data-action="more-publications">Cargar más publicaciones</button>':''}</section>`;
 }
 function publicationPage(){
@@ -627,7 +628,7 @@ function home(alternativeHero = false) {
 function catalog(isSearch = false, reactivation = false) {
   reactivation=reactivation||state.reactivationFilter==='only';
   const result=filtered(),paged=catalogWindow(result),noun=state.type==='terreno'?'terreno':state.type==='proyecto'?'proyecto':'oportunidad';
-  if(isCatalogHash(location.hash)){const baseHash=catalogViewHash(catalogOrderHash(catalogPageHash(location.hash,paged.page),state.catalogOrder),state.view);const hash=state.type==='proyecto'?projectCriteriaHash(baseHash,state):baseHash;if(hash!==location.hash){history.replaceState(null,'',hash);state.catalogPageURLChanged=true;}}
+  if(isCatalogHash(location.hash)){const baseHash=catalogViewHash(catalogOrderHash(catalogPageHash(location.hash,paged.page),state.catalogOrder),state.view);const sharedHash=searchLinkHash(baseHash,state);const hash=state.type==='proyecto'?projectCriteriaHash(sharedHash,state):sharedHash;if(hash!==location.hash){history.replaceState(null,'',hash);state.catalogPageURLChanged=true;}}
   const title=reactivation?'Proyectos para reactivación':state.type==='terreno'&&state.landContent?(state.landContent==='land-only'?'Buscar terrenos':terrainSearchLabel(state.landContent)):state.directoryScope?directoryTitle(state.directoryScope):state.type==='proyecto'?'Proyectos inmobiliarios':state.type==='terreno'?'Todos los terrenos':'Tierras y proyectos';
   const description=reactivation?'Explora proyectos en pausa que buscan una nueva ruta de evaluación.':state.type==='terreno'&&state.landContent==='land-only'?'Predios sin proyecto constructivo asociado. Compara su ubicación, perímetro y condiciones de venta o aporte.':state.type==='terreno'&&state.landContent==='land-project'?'Predios que incluyen una propuesta de desarrollo. Revisa el terreno, el programa constructivo y el alcance de la negociación.':state.type==='proyecto'?'Iniciativas que buscan aliados para avanzar, con o sin terreno.':state.type==='terreno'?'Explora lotes para desarrollar proyectos. Compara solo terreno y terreno con proyecto asociado.':'Compara terrenos y proyectos. Elige una categoría para explorar cada formato por separado.';
   return `<div class="du-catalog cs-catalog ${reactivation?'rf-catalog':''} ${state.view!=='list'?'du-catalog-map':''}">${compactHeading(title,description,isSearch?'Busco tierra':'Oportunidades',!isSearch?btn(state.type==='proyecto'?'Presentar proyecto':'Publicar oportunidad',state.type==='proyecto'?'#/publicar/proyecto':'#/publicar/terreno','outline'):'')}<section class="page-content"><div class="container">${catalogGroupsHTML(state)}${state.type==='terreno'?catalogSearchHTML({state,icon,priceLimits,filterChipsHTML}):state.type==='proyecto'?projectFiltersHTML(properties,state):filterBar(true)}${publicationsHTML()}<div class="du-results-bar"><p tabindex="-1" data-results-heading role="status">${paged.pages>1?`Mostrando <strong>${paged.from}–${paged.to}</strong> de <strong>${paged.total}</strong>`:`<strong>${paged.total}</strong>`} ${noun}${paged.total===1?'':noun==='oportunidad'?'es':'s'} de ejemplo${state.view!=='list'?'<span class="cp-map-note">Hasta 24 por página · El mapa muestra los resultados de esta página.</span>':''}</p><div class="cp-results-actions">${catalogOrderHTML(state.catalogOrder,{disabled:state.drawing,project:state.type==='proyecto'})}${quickPaginationHTML(paged)}${true?`<button class="du-save-search" data-action="save-search">${icon('bookmark')}Guardar búsqueda</button><div class="view-toggle"><button data-action="view" data-view="list" aria-pressed="${state.view==='list'}" class="${state.view==='list'?'active':''}">${icon('list')}Lista</button><button data-action="view" data-view="both" aria-pressed="${state.view!=='list'}" class="${state.view!=='list'?'active':''}">${icon('map')}Mapa</button></div>`:''}</div></div><div class="${state.view!=='list'?'search-layout':'list-only'}">${state.view!=='list'?`<div class="search-map">${mapHTML('search')}</div>`:''}<div class="property-grid">${result.length?paged.items.map(propertyCard).join(''):empty()}</div></div>${catalogPaginationHTML(paged)}<p class="du-context-note">${icon('info')}Fichas y ubicaciones ilustrativas. Los terrenos se orientan a desarrollar proyectos; excluyen lotes individuales para una sola vivienda.</p></div></section></div>`;
@@ -1201,6 +1202,7 @@ function saveSearchDialog() {
     return;
   }
   if (!captureSearchFilters()) return;
+  if(isCatalogHash(location.hash)){render();captureSearchContext(state,location.hash);}
   modal(
     `<div class="eyebrow">Retoma tu búsqueda</div><h2 id="dialog-title">Guarda lo que estás buscando.</h2><p>Podrás volver a tus criterios desde Mi espacio. Se guardan solo en este navegador.</p><form class="dialog-form" data-form="save-search"><label class="form-field">Nombre de la búsqueda<input name="name" required maxlength="90" placeholder="Ej. Tierra para vivienda" value="${escape(state.query ? "Búsqueda en " + state.query : "")}" autofocus></label><div class="tutorial-summary">Municipio: ${escape(searchLocationLabel(state))}<br>Tipo: ${escape(state.type==='terreno'?terrainSearchLabel(state.landContent):state.type || "Terrenos y proyectos")}<br>${state.type==='proyecto'?escape(projectCriteriaSummary(state)):"Modalidad: "+escape(state.mode || "Abierta a alternativas")}<br>Zona: ${state.zone.length ? "Polígono geográfico" : state.sectors.length ? "Sectores seleccionados" : state.mapPlace ? "Ubicación elegida en Mapbox; al abrir, vuelve a seleccionarla" : "Sin delimitar"}</div><button class="button primary" type="submit">Guardar búsqueda ${icon("bookmark")}</button></form>`,
   );
@@ -1558,10 +1560,10 @@ async function action(actionName, el, event) {
       zone:
         s.coordinateSystem === "EPSG:4326" && validRing(s.zone) ? s.zone : [],
       mapPlace: null,
-      placeBounds: null,
+      placeBounds: s.placeBounds || null,
       mapFitRevision: state.mapFitRevision + 1,
       sectors: s.sectors || [],
-      view: "both",
+      view: savedSearchView(s),
     });
     if (s.zone?.length && s.coordinateSystem !== "EPSG:4326")
       toast(
@@ -1853,6 +1855,7 @@ document.addEventListener("submit", async (event) => {
   if (type === "save-search") {
     const search = {
       name: String(data.get("name")).trim(),
+      view:state.view,placeBounds:state.placeBounds,
       projectStage:state.projectStage,projectKind:state.projectKind,projectSpecialty:state.projectSpecialty,
       catalogOrder: normalizeCatalogOrder(state.catalogOrder),
       searchDepartment:state.searchDepartment,searchMunicipality:state.searchMunicipality,intendedUse:state.intendedUse,

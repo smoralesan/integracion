@@ -1,3 +1,4 @@
+import {readSearchLink,searchLinkHash} from './search-link.js';
 import {projectCriteria,projectCriteriaHash} from './project-discovery.js';
 import {normalizeCatalogOrder} from './catalog-order.js';
 import {catalogPageNumber,catalogPaginationKey} from './catalog-pagination.js';
@@ -9,11 +10,12 @@ import {terrainSearchFromQuery,terrainSearchQuery} from './terrain-search.js';
 // retain their own criteria in app.js, rather than inheriting an unrelated search.
 export function catalogRouteState(hash){
  const [path,query='']=hash.slice(1).split('?'),params=new URLSearchParams(query);
- const directoryScope=path==='/oportunidades'?readDirectoryScope(hash):null;
+ const directoryScope=['/oportunidades','/buscar'].includes(path)?readDirectoryScope(hash):null;
  const type=path==='/proyectos-siniestrados'?'proyecto':directoryScope?'terreno':params.get('tipo')==='proyecto'?'proyecto':params.get('tipo')==='todos'?'':path==='/buscar'||params.get('tipo')==='terreno'?'terreno':'';
  const municipality=type==='terreno'?getMunicipality(params.get('municipio')):null;
  const department=type==='terreno'?(municipality?getDepartment(municipality.departmentCode):getDepartment(params.get('departamento_codigo'))):null;
  const route={...projectCriteria(type==='proyecto'?{projectStage:params.get('etapa'),projectKind:params.get('clase'),projectSpecialty:params.get('especialidad')}:{ }),catalogOrder:normalizeCatalogOrder(params.get('orden')),type,landContent:type==='terreno'?(terrainSearchFromQuery(params.get('contenido'))||(path==='/buscar'&&params.get('contenido')!=='todos'?'land-only':'')):'',reactivationFilter:type==='proyecto'?(path==='/proyectos-siniestrados'||params.get('estado')==='reactivacion'?'only':'exclude'):'',searchTypeExplicit:true,directoryScope,searchDepartment:department?.code||'',searchMunicipality:municipality?.code||'',intendedUse:type==='terreno'&&landUses.some(([key])=>key===params.get('uso'))?params.get('uso'):'',query:String(params.get('q')||'').trim().slice(0,160),mode:'',min:'',max:'',maxPrice:'',zone:[],sectors:[],drawPoints:[],drawing:type==='terreno'&&params.get('zona')==='1',view:params.get('vista')==='mapa'||type==='terreno'&&params.get('zona')==='1'?'both':'list',mapPlace:null,placeBounds:null,placeResults:[],mapSearchText:'',pendingLocationQuery:'',searchCamera:null,searchCameraRevision:-1};
+ Object.assign(route,readSearchLink(params));
  return {...route,catalogPage:catalogPageNumber(params.get('pagina')),catalogPageKey:catalogPaginationKey(route)};
 }
 export function savedSearchHash(state){
@@ -25,6 +27,6 @@ export function savedSearchHash(state){
  if(state.type==='terreno'&&landUses.some(([key])=>key===state.intendedUse))params.set('uso',state.intendedUse);
  if(normalizeCatalogOrder(state.catalogOrder))params.set('orden',state.catalogOrder);
  if(state.view==='both')params.set('vista','mapa');
- return state.type==='proyecto'?projectCriteriaHash('#/buscar?'+params,state):'#/buscar?'+params;
+ const hash=searchLinkHash('#/buscar?'+params,state);return state.type==='proyecto'?projectCriteriaHash(hash,state):hash;
 }
 export function searchLocationLabel(state){return getMunicipality(state.searchMunicipality)?.name||getDepartment(state.searchDepartment)?.name||state.query||directoryTitle(state.directoryScope)||'Sin municipio específico';}

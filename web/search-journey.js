@@ -2,7 +2,7 @@ import {normalizeCatalogOrder} from './catalog-order.js';
 import {catalogPageNumber,catalogPaginationKey} from './catalog-pagination.js';
 const storageKey='ii-search-journey-v1',ttl=24*60*60*1000;
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-export const isCatalogHash=hash=>typeof hash==='string'&&hash.length<=2048&&/^#\/(buscar|oportunidades|proyectos-siniestrados)(?:\?[^#]*)?$/.test(hash);
+export const isCatalogHash=hash=>typeof hash==='string'&&hash.length<=100000&&/^#\/(buscar|oportunidades|proyectos-siniestrados)(?:\?[^#]*)?$/.test(hash);
 const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite)&&Math.abs(p[0])<=180&&Math.abs(p[1])<=90;
 const text=v=>typeof v==='string'?v.slice(0,160):'';
 export function normalizeSearchContext(value,now=Date.now()){
