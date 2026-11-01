@@ -1,3 +1,4 @@
+import {catalogPageNumber,catalogPaginationKey} from './catalog-pagination.js';
 const storageKey='ii-search-journey-v1',ttl=24*60*60*1000;
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const isCatalogHash=hash=>typeof hash==='string'&&hash.length<=2048&&/^#\/(buscar|oportunidades|proyectos-siniestrados)(?:\?[^#]*)?$/.test(hash);
@@ -16,6 +17,7 @@ export function normalizeSearchContext(value,now=Date.now()){
  filters.sectors=Array.isArray(f.sectors)?f.sectors.filter(x=>typeof x==='string').slice(0,20).map(text):[];
  filters.placeBounds=Array.isArray(f.placeBounds)&&f.placeBounds.length===4&&f.placeBounds.every(Number.isFinite)&&f.placeBounds[0]<f.placeBounds[2]&&f.placeBounds[1]<f.placeBounds[3]&&Math.abs(f.placeBounds[0])<=180&&Math.abs(f.placeBounds[2])<=180&&Math.abs(f.placeBounds[1])<=90&&Math.abs(f.placeBounds[3])<=90?[...f.placeBounds]:null;
  filters.directoryScope=f.directoryScope&&typeof f.directoryScope==='object'?Object.fromEntries(['city','department','landType'].map(k=>[k,text(f.directoryScope[k])])):null;
+ const pageKey=catalogPaginationKey(filters);filters.catalogPage=f.catalogPageKey===pageKey?catalogPageNumber(f.catalogPage):1;filters.catalogPageKey=pageKey;
  const camera=value.camera&&point(value.camera.center)&&Number.isFinite(value.camera.zoom)&&value.camera.zoom>=0&&value.camera.zoom<=22?{center:[...value.camera.center],zoom:value.camera.zoom,bearing:Math.max(-180,Math.min(180,Number(value.camera.bearing)||0)),pitch:Math.max(0,Math.min(60,Number(value.camera.pitch)||0))}:null;
  return {version:1,hash:value.hash,at:value.at,filters,camera,scrollY:Math.max(0,Math.min(100000,Number(value.scrollY)||0)),anchor:/^#\/(?:oportunidad\/[\w-]+|publicacion\/[0-9a-f-]{36})$/i.test(value.anchor||'')?value.anchor:'',anchorOffset:Math.max(-1000,Math.min(1500,Number(value.anchorOffset)||0)),catalogLimit:Math.max(0,Math.min(300,Number(value.catalogLimit)||0))};
 }

@@ -1,3 +1,4 @@
+import {catalogPageNumber,catalogPaginationKey} from './catalog-pagination.js';
 import {readDirectoryScope,directoryTitle} from './footer-directory.js';
 import {getMunicipality,getDepartment} from './colombia-locations.js';
 import {landUses} from './development-sectors.js';
@@ -10,7 +11,8 @@ export function catalogRouteState(hash){
  const type=path==='/proyectos-siniestrados'?'proyecto':directoryScope?'terreno':params.get('tipo')==='proyecto'?'proyecto':params.get('tipo')==='todos'?'':path==='/buscar'||params.get('tipo')==='terreno'?'terreno':'';
  const municipality=type==='terreno'?getMunicipality(params.get('municipio')):null;
  const department=type==='terreno'?(municipality?getDepartment(municipality.departmentCode):getDepartment(params.get('departamento_codigo'))):null;
- return {type,landContent:type==='terreno'?(terrainSearchFromQuery(params.get('contenido'))||(path==='/buscar'&&params.get('contenido')!=='todos'?'land-only':'')):'',reactivationFilter:type==='proyecto'?(path==='/proyectos-siniestrados'||params.get('estado')==='reactivacion'?'only':'exclude'):'',searchTypeExplicit:true,directoryScope,searchDepartment:department?.code||'',searchMunicipality:municipality?.code||'',intendedUse:type==='terreno'&&landUses.some(([key])=>key===params.get('uso'))?params.get('uso'):'',query:'',mode:'',min:'',max:'',maxPrice:'',zone:[],sectors:[],drawPoints:[],drawing:type==='terreno'&&params.get('zona')==='1',view:type==='terreno'&&params.get('zona')==='1'?'both':'list',mapPlace:null,placeBounds:null,placeResults:[],mapSearchText:'',pendingLocationQuery:'',searchCamera:null,searchCameraRevision:-1};
+ const route={type,landContent:type==='terreno'?(terrainSearchFromQuery(params.get('contenido'))||(path==='/buscar'&&params.get('contenido')!=='todos'?'land-only':'')):'',reactivationFilter:type==='proyecto'?(path==='/proyectos-siniestrados'||params.get('estado')==='reactivacion'?'only':'exclude'):'',searchTypeExplicit:true,directoryScope,searchDepartment:department?.code||'',searchMunicipality:municipality?.code||'',intendedUse:type==='terreno'&&landUses.some(([key])=>key===params.get('uso'))?params.get('uso'):'',query:'',mode:'',min:'',max:'',maxPrice:'',zone:[],sectors:[],drawPoints:[],drawing:type==='terreno'&&params.get('zona')==='1',view:type==='terreno'&&params.get('zona')==='1'?'both':'list',mapPlace:null,placeBounds:null,placeResults:[],mapSearchText:'',pendingLocationQuery:'',searchCamera:null,searchCameraRevision:-1};
+ return {...route,catalogPage:catalogPageNumber(params.get('pagina')),catalogPageKey:catalogPaginationKey(route)};
 }
 export function savedSearchHash(state){
  const params=new URLSearchParams({tipo:state.type||'todos'});

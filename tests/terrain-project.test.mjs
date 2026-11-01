@@ -6,7 +6,7 @@ import {matchesOpportunityFilters} from '../web/opportunity-filters.js';
 import {specialistBySlug} from '../web/specialist-landings.js';
 const lots=properties.filter(p=>p.type==='terreno');
 test('Terrain examples explicitly distinguish bare land, associated development and standalone projects',()=>{
- assert.equal(lots.length,4);assert.equal(lots.filter(p=>p.landContent==='land-only').length,2);assert.equal(lots.filter(hasConstructionProject).length,2);
+ assert.equal(lots.length,18);assert.equal(lots.filter(p=>p.landContent==='land-only').length,16);assert.equal(lots.filter(hasConstructionProject).length,2);
  assert.equal(terrainContentLabel({type:'terreno'}),'');
  for(const p of properties.filter(p=>p.type==='proyecto')){assert.equal(terrainContentLabel(p),'');assert.equal(hasConstructionProject(p),false);}
 });
@@ -19,6 +19,6 @@ test('Missing or unrelated project metadata cannot create a construction section
 });
 test('Keyword searches distinguish both terrain formats without reclassifying either as a standalone project',()=>{
  const match=q=>properties.filter(p=>matchesOpportunityFilters(p,{type:'terreno',query:q})).map(p=>p.id);
- assert.deepEqual(match('solo terreno'),['TER-DEMO-001','TER-DEMO-004']);assert.deepEqual(match('terreno con proyecto'),['TER-DEMO-002','TER-DEMO-003']);
+ assert.deepEqual(match('solo terreno'),['TER-DEMO-001','TER-DEMO-004',...Array.from({length:14},(_,i)=>'TER-DEMO-'+String(i+5).padStart(3,'0'))]);assert.deepEqual(match('terreno con proyecto'),['TER-DEMO-002','TER-DEMO-003']);
  assert.equal(matchesOpportunityFilters(lots.find(hasConstructionProject),{type:'proyecto'}),false);
 });

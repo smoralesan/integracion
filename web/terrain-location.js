@@ -14,6 +14,6 @@ export function locationSummary(f) {
 // Public location text: the optional neighborhood stays on the same compact line.
 export function locationLabel(location={}) {
  const clean=(value,max=160)=>typeof value==='string'?value.trim().slice(0,max):'';
- const municipality=[clean(location.city),clean(location.region)].filter(Boolean).join(', ');
+ const municipality=[...new Set([clean(location.city),clean(location.region)].filter(Boolean))].join(', ');
  return [clean(location.neighborhood,120),municipality].filter(Boolean).join(' · ');
 }

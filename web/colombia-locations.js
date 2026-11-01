@@ -9,7 +9,7 @@ const municipalityIndex = new Map(municipalities.map(m=>[m.code,m]));
 export const getDepartment = code => departmentIndex.get(code);
 export const getMunicipality = code => municipalityIndex.get(code);
 export const municipalitiesFor = code => municipalities.filter(m=>m.departmentCode===code).sort((a,b)=>a.name.localeCompare(b.name,'es'));
-const cityAliases = {cartagena:'cartagenadeindias',bogota:'bogotadc',cucuta:'sanjosedecucuta'};
+const cityAliases = {cali:'santiagodecali',cartagena:'cartagenadeindias',bogota:'bogotadc',cucuta:'sanjosedecucuta'};
 const departmentAliases = {bogota:'bogotadc',sanandresprovidenciaysantacatalina:'archipielagodesanandresprovidenciaysantacatalina'};
 export const municipalityKey = value => cityAliases[locationKey(value)] || locationKey(value);
 export const departmentKey = value => departmentAliases[locationKey(value)] || locationKey(value);

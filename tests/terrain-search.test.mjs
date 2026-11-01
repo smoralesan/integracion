@@ -11,10 +11,10 @@ import {handleApi} from '../worker/api.js';
 import {MemoryBucket} from './support/memory-bucket.mjs';
 test('Bare land and land with a project have disjoint results and preserve location, area and price criteria',()=>{
  const match=filters=>properties.filter(p=>matchesOpportunityFilters(p,{type:'terreno',...filters})).map(p=>p.id);
- assert.deepEqual(match({landContent:'land-only'}),['TER-DEMO-001','TER-DEMO-004']);
+ assert.deepEqual(match({landContent:'land-only'}),['TER-DEMO-001','TER-DEMO-004',...Array.from({length:14},(_,i)=>'TER-DEMO-'+String(i+5).padStart(3,'0'))]);
  assert.deepEqual(match({landContent:'land-project'}),['TER-DEMO-002','TER-DEMO-003']);
  assert.deepEqual(match({landContent:'land-project',query:'Bogotá',min:'3000',max:'4000'}),['TER-DEMO-003']);
- assert.deepEqual(match({landContent:'land-only',query:'Bogotá'}),[]);
+ assert.deepEqual(match({landContent:'land-only',query:'Bogotá'}),['TER-DEMO-005']);
  assert.ok(properties.filter(p=>p.type==='proyecto').every(p=>!matchesOpportunityFilters(p,{landContent:'land-project'})));
 });
 test('Unknown, contradictory and cross-linked records are not silently classified',()=>{

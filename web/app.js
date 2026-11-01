@@ -1,3 +1,4 @@
+import {catalogPage,catalogPageHash,catalogPaginationKey,quickPaginationHTML,catalogPaginationHTML} from './catalog-pagination.js';
 import {buildSpaceInventory,resolveSpaceTab,inventoryPanelHTML,spaceShellHTML,spaceEmptyHTML,mountSpaceFilters} from './space-dashboard.js';
 import {mountSpaceRequests} from './space-requests.js';
 import {terrainBasicsHTML,syncPublicationBasics,publicationPreviewHTML,nextStepsHTML} from './publication-ux.js';
@@ -256,6 +257,9 @@ const state = {
   placeBounds: null,
   selected: properties[0].id,
   searchSelected: "",
+  catalogPage: 1,
+  catalogPageKey: "",
+  catalogPageURLChanged: false,
   session:null,
   catalogRecords:[], catalogLoaded:false, catalogError:"", catalogCursor:null,
   publicRecord:null, publicError:"",
@@ -459,7 +463,7 @@ function syncMap() {
       ? properties.filter((p) => p.id === stage.dataset.propertyId)
       : ["home","hero"].includes(context)
         ? properties
-        : filtered();
+        : context==='search'?catalogWindow().items:filtered();
   const selected =
     context === "detail" ? stage.dataset.propertyId : context === "search" ? state.searchSelected : state.selected;
   const rootReady = landMap.root?.dataset.mapReady === "true";
@@ -554,6 +558,12 @@ function filtered() {
       (!state.placeBounds || insideBounds(p.coordinates, state.placeBounds)),
   );
 }
+function catalogWindow(items=filtered()){
+ const key=catalogPaginationKey(state),page=catalogPage(items,state.catalogPageKey===key?state.catalogPage:1);
+ state.catalogPage=page.page;state.catalogPageKey=key;
+ if(state.searchSelected&&!page.items.some(item=>item.id===state.searchSelected))state.searchSelected='';
+ return page;
+}
 function empty(text = "No encontramos coincidencias con estos filtros.") {
   return `<div class="empty-state">${icon("search")}<h3>La búsqueda puede seguir</h3><p>${text} Puedes ampliar los criterios o guardar lo que buscas.</p><button class="button outline" data-action="reset-filters">Ampliar búsqueda</button> <button class="button primary" data-action="save-search">Guardar búsqueda</button></div>`;
 }
@@ -612,10 +622,11 @@ function home(alternativeHero = false) {
 }
 function catalog(isSearch = false, reactivation = false) {
   reactivation=reactivation||state.reactivationFilter==='only';
-  const result=filtered();
+  const result=filtered(),paged=catalogWindow(result),noun=state.type==='terreno'?'terreno':state.type==='proyecto'?'proyecto':'oportunidad';
+  if(isCatalogHash(location.hash)){const hash=catalogPageHash(location.hash,paged.page);if(hash!==location.hash){history.replaceState(null,'',hash);state.catalogPageURLChanged=true;}}
   const title=reactivation?'Proyectos para reactivación':state.type==='terreno'&&state.landContent?terrainSearchLabel(state.landContent):state.directoryScope?directoryTitle(state.directoryScope):state.type==='proyecto'?'Proyectos inmobiliarios':state.type==='terreno'?'Todos los terrenos':'Tierras y proyectos';
-  const description=reactivation?'Explora proyectos en pausa que buscan una nueva ruta de evaluación.':state.type==='terreno'&&state.landContent==='land-only'?'Predios sin proyecto constructivo asociado. Compara su ubicación, perímetro y condiciones de venta o aporte.':state.type==='terreno'&&state.landContent==='land-project'?'Predios que incluyen una propuesta de desarrollo. Revisa el terreno, el programa constructivo y el alcance de la negociación.':state.type==='proyecto'?'Iniciativas que buscan aliados para avanzar, con o sin terreno.':'Compara terrenos y proyectos. Elige una categoría para explorar cada formato por separado.';
-  return `<div class="du-catalog cs-catalog ${reactivation?'rf-catalog':''} ${state.view!=='list'?'du-catalog-map':''}">${compactHeading(title,description,isSearch?'Busco tierra':'Oportunidades',!isSearch?btn('Publicar oportunidad','#/publicar/terreno','outline'):'')}<section class="page-content"><div class="container">${catalogGroupsHTML(state)}${state.type==='terreno'?catalogSearchHTML({state,icon,priceLimits,filterChipsHTML}):filterBar(true)}${publicationsHTML()}<div class="du-results-bar"><p tabindex="-1" data-results-heading role="status"><strong>${result.length}</strong> ${result.length===1?'oportunidad de ejemplo':'oportunidades de ejemplo'}</p><div>${true?`<button class="du-save-search" data-action="save-search">${icon('bookmark')}Guardar búsqueda</button><div class="view-toggle"><button data-action="view" data-view="list" aria-pressed="${state.view==='list'}" class="${state.view==='list'?'active':''}">${icon('list')}Lista</button><button data-action="view" data-view="both" aria-pressed="${state.view!=='list'}" class="${state.view!=='list'?'active':''}">${icon('map')}Mapa</button></div>`:''}</div></div><div class="${state.view!=='list'?'search-layout':'list-only'}"><div class="property-grid">${result.length?result.map(propertyCard).join(''):empty()}</div>${state.view!=='list'?`<div class="search-map">${mapHTML('search')}</div>`:''}</div><p class="du-context-note">${icon('info')}Fichas y ubicaciones ilustrativas. Los terrenos se orientan a desarrollar proyectos; excluyen lotes individuales para una sola vivienda.</p></div></section></div>`;
+  const description=reactivation?'Explora proyectos en pausa que buscan una nueva ruta de evaluación.':state.type==='terreno'&&state.landContent==='land-only'?'Predios sin proyecto constructivo asociado. Compara su ubicación, perímetro y condiciones de venta o aporte.':state.type==='terreno'&&state.landContent==='land-project'?'Predios que incluyen una propuesta de desarrollo. Revisa el terreno, el programa constructivo y el alcance de la negociación.':state.type==='proyecto'?'Iniciativas que buscan aliados para avanzar, con o sin terreno.':state.type==='terreno'?'Explora lotes para desarrollar proyectos. Compara solo terreno y terreno con proyecto asociado.':'Compara terrenos y proyectos. Elige una categoría para explorar cada formato por separado.';
+  return `<div class="du-catalog cs-catalog ${reactivation?'rf-catalog':''} ${state.view!=='list'?'du-catalog-map':''}">${compactHeading(title,description,isSearch?'Busco tierra':'Oportunidades',!isSearch?btn('Publicar oportunidad','#/publicar/terreno','outline'):'')}<section class="page-content"><div class="container">${catalogGroupsHTML(state)}${state.type==='terreno'?catalogSearchHTML({state,icon,priceLimits,filterChipsHTML}):filterBar(true)}${publicationsHTML()}<div class="du-results-bar"><p tabindex="-1" data-results-heading role="status">${paged.pages>1?`Mostrando <strong>${paged.from}–${paged.to}</strong> de <strong>${paged.total}</strong>`:`<strong>${paged.total}</strong>`} ${noun}${paged.total===1?'':noun==='oportunidad'?'es':'s'} de ejemplo${state.view!=='list'&&paged.pages>1?'<span class="cp-map-note">El mapa muestra los resultados de esta página.</span>':''}</p><div class="cp-results-actions">${quickPaginationHTML(paged)}${true?`<button class="du-save-search" data-action="save-search">${icon('bookmark')}Guardar búsqueda</button><div class="view-toggle"><button data-action="view" data-view="list" aria-pressed="${state.view==='list'}" class="${state.view==='list'?'active':''}">${icon('list')}Lista</button><button data-action="view" data-view="both" aria-pressed="${state.view!=='list'}" class="${state.view!=='list'?'active':''}">${icon('map')}Mapa</button></div>`:''}</div></div><div class="${state.view!=='list'?'search-layout':'list-only'}"><div class="property-grid">${result.length?paged.items.map(propertyCard).join(''):empty()}</div>${state.view!=='list'?`<div class="search-map">${mapHTML('search')}</div>`:''}</div>${catalogPaginationHTML(paged)}<p class="du-context-note">${icon('info')}Fichas y ubicaciones ilustrativas. Los terrenos se orientan a desarrollar proyectos; excluyen lotes individuales para una sola vivienda.</p></div></section></div>`;
 }
 
 function detail(id) {
@@ -1017,6 +1028,7 @@ function render() {
       ? "Vende tu terreno"
       : $("#contenido h1")?.textContent || "Explorar") +
     " · Integración Inmobiliaria";
+  if(isCatalogHash(location.hash)&&state.catalogPageURLChanged){state.catalogPageURLChanged=false;captureSearchContext(state,location.hash);}
 }
 function enterRoute() {
   placeRequest?.abort();
@@ -1233,6 +1245,17 @@ function resetFilters() {
   else {render();captureSearchContext(state,location.hash);}
 }
 async function action(actionName, el, event) {
+  if(actionName==='catalog-page'){
+    if(state.drawing){toast('Termina o cancela el dibujo antes de cambiar de página.');return;}
+    const current=catalogWindow(),target=Number(el.dataset.page);
+    if(!Number.isInteger(target)||target<1||target>current.pages||target===current.page)return;
+    captureSearchContext(state,location.hash);
+    Object.assign(state,{catalogPage:target,catalogPageKey:catalogPaginationKey(state),searchSelected:'',searchCamera:null,searchCameraRevision:-1,mapFitRevision:state.mapFitRevision+1});
+    history.pushState(null,'',catalogPageHash(location.hash,target));render();
+    const heading=$('[data-results-heading]');heading?.focus({preventScroll:true});heading?.scrollIntoView({block:'start',behavior:'instant'});
+    captureSearchContext(state,location.hash);return;
+  }
+
   if(actionName==='return-search'){event?.preventDefault();const context=readSearchContext();if(context){pendingExplicitReturn=context;if(location.hash===context.hash)enterRoute();else location.hash=context.hash;}else location.hash='#/buscar';return;}
   if(actionName==='retry-publications'){refreshPublished();return;}
   if(actionName==='space-objective'){state.spaceToolsOpen=true;saved.objective=normalizeSpaceObjective(el.dataset.objective);persist();render();document.querySelector('[data-objective="'+saved.objective+'"]').focus({preventScroll:true});return;}

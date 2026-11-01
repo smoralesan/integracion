@@ -1,3 +1,4 @@
+import {additionalTerrainExamples} from './additional-terrain-examples.js';
 import {demoRescueWorkGallery} from './rescue-gallery.js';
 import {additionalProjectExamples} from './additional-project-examples.js';
 import {demoRescueFinance} from './reactivation-finance.js';
@@ -186,4 +187,5 @@ export const properties = [
     need: "Evaluación especializada",
   },
   ...additionalProjectExamples,
+  ...additionalTerrainExamples,
 ];
