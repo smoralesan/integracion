@@ -15,7 +15,7 @@ export function matchesOpportunityFilters(record,filters){
  if(filters.landContent&&terrainSearchKind(record)!==filters.landContent)return false;
  if(filters.reactivationFilter==='only'&&!record.reactivation)return false;
  if(filters.reactivationFilter==='exclude'&&record.reactivation)return false;
- if(filters.query&&!normalize([record.city,record.region,record.title,record.label,terrainContentLabel(record),record.developmentProject?.use].join(' ')).includes(normalize(filters.query)))return false;
+ if(filters.query&&!normalize([record.city,record.region,record.neighborhood,record.title,record.label,record.description,record.need,terrainContentLabel(record),record.developmentProject?.use].join(' ')).includes(normalize(filters.query)))return false;
  const area=Number(record.area);
  if(filters.min&&(!area||area<Number(filters.min)))return false;
  if(filters.max&&(!area||area>Number(filters.max)))return false;

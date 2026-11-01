@@ -63,7 +63,7 @@ export const properties = [
     need: "Desarrollador",
   },
   {
-    id: "PRO-DEMO-001",
+    id: "PRO-DEMO-001",project_stage:'Reactivación',project_kind:'Mixto',
     type: "proyecto",
     label: "Proyecto para reactivación",
     title: "Un proyecto que busca volver a avanzar",
@@ -114,7 +114,7 @@ export const properties = [
     need: "Desarrollador",
   },
   {
-    id: "PRO-DEMO-002",
+    id: "PRO-DEMO-002",project_stage:'Concepto',project_kind:'Residencial',
     type: "proyecto",
     label: "Proyecto sin terreno",
     land_status: "searching",
@@ -132,7 +132,7 @@ export const properties = [
     need: "Terreno y aliados",
   },
   {
-    id: "PRO-DEMO-003",
+    id: "PRO-DEMO-003",project_stage:'Factibilidad',project_kind:'Oficinas',
     type: "proyecto",
     label: "Proyecto en factibilidad",
     land_status: "available",
@@ -150,7 +150,7 @@ export const properties = [
     need: "Estructurador, abogados y constructor",
   },
   {
-    id: "PRO-DEMO-004",
+    id: "PRO-DEMO-004",project_stage:'Diseño',project_kind:'Hotelero',
     type: "proyecto",
     label: "Proyecto turístico en diseño",
     land_status: "available",

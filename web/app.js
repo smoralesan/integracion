@@ -1,4 +1,4 @@
-import {projectFiltersHTML,matchesProjectDiscovery} from './project-discovery.js';
+import {projectCriteria,projectCriteriaHash,projectCriteriaSummary,clearProjectCriteria,projectFiltersHTML,matchesProjectDiscovery} from './project-discovery.js';
 import {orderCatalog,normalizeCatalogOrder,catalogOrderHash,catalogOrderHTML,pricePerM2} from './catalog-order.js';
 import {catalogPage,catalogPageSize,catalogViewHash,catalogPageHash,catalogPaginationKey,quickPaginationHTML,catalogPaginationHTML} from './catalog-pagination.js';
 import {buildSpaceInventory,resolveSpaceTab,inventoryPanelHTML,spaceShellHTML,spaceEmptyHTML,mountSpaceFilters} from './space-dashboard.js';
@@ -18,7 +18,7 @@ import {catalogSearchHTML,mountCatalogSearch,readCatalogTerritory,drawingTerrito
 import {landUses,sectorForSlug} from './development-sectors.js';
 import {localDrafts,chooseDraft,putDraft,draftHref,completeLocalRegistration,registrationProgressHTML,demoPerimeterHTML,demoSupportsHTML,localConfirmationHTML} from './registration-journey.js';
 import {EmailEntry} from './email-entry.js';
-import {captureSearchContext,readSearchContext,normalizeSearchContext,isCatalogHash,restoreSearchScroll} from './search-journey.js';
+import {returnSearchHTML,captureSearchContext,readSearchContext,normalizeSearchContext,isCatalogHash,restoreSearchScroll} from './search-journey.js';
 import {accessGateHTML,signInPath} from './access-gate.js';
 import {normalizeSpaceObjective} from './space-intent.js';
 import {premiumValuationPage} from './premium-valuation.js';
@@ -627,7 +627,7 @@ function home(alternativeHero = false) {
 function catalog(isSearch = false, reactivation = false) {
   reactivation=reactivation||state.reactivationFilter==='only';
   const result=filtered(),paged=catalogWindow(result),noun=state.type==='terreno'?'terreno':state.type==='proyecto'?'proyecto':'oportunidad';
-  if(isCatalogHash(location.hash)){const hash=catalogViewHash(catalogOrderHash(catalogPageHash(location.hash,paged.page),state.catalogOrder),state.view);if(hash!==location.hash){history.replaceState(null,'',hash);state.catalogPageURLChanged=true;}}
+  if(isCatalogHash(location.hash)){const baseHash=catalogViewHash(catalogOrderHash(catalogPageHash(location.hash,paged.page),state.catalogOrder),state.view);const hash=state.type==='proyecto'?projectCriteriaHash(baseHash,state):baseHash;if(hash!==location.hash){history.replaceState(null,'',hash);state.catalogPageURLChanged=true;}}
   const title=reactivation?'Proyectos para reactivación':state.type==='terreno'&&state.landContent?(state.landContent==='land-only'?'Buscar terrenos':terrainSearchLabel(state.landContent)):state.directoryScope?directoryTitle(state.directoryScope):state.type==='proyecto'?'Proyectos inmobiliarios':state.type==='terreno'?'Todos los terrenos':'Tierras y proyectos';
   const description=reactivation?'Explora proyectos en pausa que buscan una nueva ruta de evaluación.':state.type==='terreno'&&state.landContent==='land-only'?'Predios sin proyecto constructivo asociado. Compara su ubicación, perímetro y condiciones de venta o aporte.':state.type==='terreno'&&state.landContent==='land-project'?'Predios que incluyen una propuesta de desarrollo. Revisa el terreno, el programa constructivo y el alcance de la negociación.':state.type==='proyecto'?'Iniciativas que buscan aliados para avanzar, con o sin terreno.':state.type==='terreno'?'Explora lotes para desarrollar proyectos. Compara solo terreno y terreno con proyecto asociado.':'Compara terrenos y proyectos. Elige una categoría para explorar cada formato por separado.';
   return `<div class="du-catalog cs-catalog ${reactivation?'rf-catalog':''} ${state.view!=='list'?'du-catalog-map':''}">${compactHeading(title,description,isSearch?'Busco tierra':'Oportunidades',!isSearch?btn(state.type==='proyecto'?'Presentar proyecto':'Publicar oportunidad',state.type==='proyecto'?'#/publicar/proyecto':'#/publicar/terreno','outline'):'')}<section class="page-content"><div class="container">${catalogGroupsHTML(state)}${state.type==='terreno'?catalogSearchHTML({state,icon,priceLimits,filterChipsHTML}):state.type==='proyecto'?projectFiltersHTML(properties,state):filterBar(true)}${publicationsHTML()}<div class="du-results-bar"><p tabindex="-1" data-results-heading role="status">${paged.pages>1?`Mostrando <strong>${paged.from}–${paged.to}</strong> de <strong>${paged.total}</strong>`:`<strong>${paged.total}</strong>`} ${noun}${paged.total===1?'':noun==='oportunidad'?'es':'s'} de ejemplo${state.view!=='list'?'<span class="cp-map-note">Hasta 24 por página · El mapa muestra los resultados de esta página.</span>':''}</p><div class="cp-results-actions">${catalogOrderHTML(state.catalogOrder,{disabled:state.drawing,project:state.type==='proyecto'})}${quickPaginationHTML(paged)}${true?`<button class="du-save-search" data-action="save-search">${icon('bookmark')}Guardar búsqueda</button><div class="view-toggle"><button data-action="view" data-view="list" aria-pressed="${state.view==='list'}" class="${state.view==='list'?'active':''}">${icon('list')}Lista</button><button data-action="view" data-view="both" aria-pressed="${state.view!=='list'}" class="${state.view!=='list'?'active':''}">${icon('map')}Mapa</button></div>`:''}</div></div><div class="${state.view!=='list'?'search-layout':'list-only'}">${state.view!=='list'?`<div class="search-map">${mapHTML('search')}</div>`:''}<div class="property-grid">${result.length?paged.items.map(propertyCard).join(''):empty()}</div></div>${catalogPaginationHTML(paged)}<p class="du-context-note">${icon('info')}Fichas y ubicaciones ilustrativas. Los terrenos se orientan a desarrollar proyectos; excluyen lotes individuales para una sola vivienda.</p></div></section></div>`;
@@ -638,7 +638,7 @@ function detail(id) {
   if (!p) return notFound();
   if(p.type==='terreno')return terrainDetailHTML(p,{map:mapHTML('detail',p.id),related:properties.filter(x=>x.type==='terreno'&&x.id!==p.id).slice(0,3).map(propertyCard).join(''),favorite:saved.favorites.includes(p.id),comparison:comparisonButton(p),icon,specialistBySlug});
   return (
-    pageHeader(
+    `<div class="container dx-return-row">${returnSearchHTML()}</div>`+pageHeader(
       p.title,
       `${p.city}, ${p.region} · ${p.id}`,
       p.label,
@@ -936,7 +936,7 @@ function spacePage() {
     const favoriteItems=properties.filter(p=>saved.favorites.includes(p.id));
     body=`<div class="ws-panel-heading"><div><h2>Tu selección para volver a mirar</h2><p>Los guardados permanecen en este navegador. Puedes abrir una ficha o seleccionar terrenos para comparar.</p></div><a class="button outline" href="#/comparar">Abrir comparación →</a></div>${favoriteItems.length?'<div class="property-grid">'+favoriteItems.map(propertyCard).join('')+'</div>':spaceEmptyHTML('Todavía no has guardado oportunidades','Usa el corazón de una ficha para tenerla a mano en tu próxima visita.','Explorar terrenos','#/buscar')}`;
   }
-  if(tab==='searches')body=`<div class="ws-panel-heading"><div><h2>Tus búsquedas guardadas</h2><p>Retoma criterios por municipio, zona y modalidad. Se conservan en este navegador.</p></div></div>${saved.searches.length?`<div class="ws-search-list">${saved.searches.map((s,i)=>`<article><div><h3>${escape(s.name)}</h3><p>${escape(searchLocationLabel(s))} · ${escape(s.type==='terreno'?terrainSearchLabel(s.landContent):s.type||'Terrenos y proyectos')}</p><small>${escape(s.mode||'Modalidad abierta')} · ${s.zone?.length?'Zona dibujada':s.sectors?.length?'Sectores seleccionados':'Sin zona delimitada'}</small></div><button type="button" class="button outline" data-action="open-search" data-index="${i}">Retomar búsqueda →</button></article>`).join('')}</div>`:spaceEmptyHTML('Guarda los criterios que te interesan','Busca por municipio o delimita una zona; después utiliza Guardar búsqueda.','Buscar terrenos','#/buscar')}`;
+  if(tab==='searches')body=`<div class="ws-panel-heading"><div><h2>Tus búsquedas guardadas</h2><p>Retoma criterios por municipio, zona y modalidad. Se conservan en este navegador.</p></div></div>${saved.searches.length?`<div class="ws-search-list">${saved.searches.map((s,i)=>`<article><div><h3>${escape(s.name)}</h3><p>${escape(searchLocationLabel(s))} · ${escape(s.type==='terreno'?terrainSearchLabel(s.landContent):s.type||'Terrenos y proyectos')}</p><small>${escape(s.type==='proyecto'?projectCriteriaSummary(s):s.mode||'Modalidad abierta')} · ${s.zone?.length?'Zona dibujada':s.sectors?.length?'Sectores seleccionados':'Sin zona delimitada'}</small></div><button type="button" class="button outline" data-action="open-search" data-index="${i}">Retomar búsqueda →</button></article>`).join('')}</div>`:spaceEmptyHTML('Guarda los criterios que te interesan','Busca por municipio o delimita una zona; después utiliza Guardar búsqueda.','Buscar terrenos','#/buscar')}`;
   if(tab==='requests')body=`<div data-space-requests></div>${state.session?.authenticated?'<details class="ws-secondary"><summary>Avisos y preferencias de correo</summary><div data-activity-center></div></details>':''}`;
   const legacy=saved.submissions.filter(s=>!['terreno','proyecto'].includes(s.kind));
   const tools=`<details class="ws-secondary" ${state.spaceToolsOpen?'open':''}><summary>Perfil, objetivos y otras herramientas</summary>${spaceActionsHTML({draft:null,team:!!state.session?.teamRole,objective:saved.objective})}${legacy.length?`<h3>Otros registros locales de demostración</h3>${legacy.map(s=>`<div class="saved-row"><div><h3>${escape(s.form?.ally_name||s.form?.title||'Registro de ejemplo')}</h3><p>Demostración guardada en este navegador · Sin enviar</p></div><button type="button" class="text-button" data-action="view-submission" data-id="${escape(s.id)}">Ver resumen →</button></div>`).join('')}`:''}</details><details class="ws-secondary"><summary>Administrar datos de este navegador</summary><p class="ws-small">Puedes borrar los favoritos, búsquedas, borradores e historial local. Los expedientes y solicitudes guardados en tu cuenta se conservan.</p><button type="button" class="text-button" data-action="clear-data">Borrar datos locales</button></details>`;
@@ -1142,6 +1142,8 @@ function requestInterest(title, ref) {
   );
 }
 function captureSearchFilters() {
+  const projectForm=$('[data-form="project-filters"]');
+  if(projectForm){const next=projectCriteria(Object.fromEntries(new FormData(projectForm))),changed=Object.entries(next).some(([key,value])=>state[key]!==value);if(changed){Object.assign(state,next,{catalogPage:1,searchSelected:'',searchCamera:null,searchCameraRevision:-1,mapFitRevision:state.mapFitRevision+1});if(state.query!==state.mapSearchText)Object.assign(state,{zone:[],sectors:[],placeBounds:null,mapPlace:null,mapSearchText:state.query});}history.replaceState(history.state,'',projectCriteriaHash(location.hash,state));captureSearchContext(state,location.hash);return true;}
   const filter = $('[data-form="filters"]');
   if (!filter) return true;
   const data = new FormData(filter);
@@ -1200,7 +1202,7 @@ function saveSearchDialog() {
   }
   if (!captureSearchFilters()) return;
   modal(
-    `<div class="eyebrow">Retoma tu búsqueda</div><h2 id="dialog-title">Guarda lo que estás buscando.</h2><p>Podrás volver a tus criterios desde Mi espacio. Se guardan solo en este navegador.</p><form class="dialog-form" data-form="save-search"><label class="form-field">Nombre de la búsqueda<input name="name" required maxlength="90" placeholder="Ej. Tierra para vivienda" value="${escape(state.query ? "Búsqueda en " + state.query : "")}" autofocus></label><div class="tutorial-summary">Municipio: ${escape(searchLocationLabel(state))}<br>Tipo: ${escape(state.type==='terreno'?terrainSearchLabel(state.landContent):state.type || "Terrenos y proyectos")}<br>Modalidad: ${escape(state.mode || "Abierta a alternativas")}<br>Zona: ${state.zone.length ? "Polígono geográfico" : state.sectors.length ? "Sectores seleccionados" : state.mapPlace ? "Ubicación elegida en Mapbox; al abrir, vuelve a seleccionarla" : "Sin delimitar"}</div><button class="button primary" type="submit">Guardar búsqueda ${icon("bookmark")}</button></form>`,
+    `<div class="eyebrow">Retoma tu búsqueda</div><h2 id="dialog-title">Guarda lo que estás buscando.</h2><p>Podrás volver a tus criterios desde Mi espacio. Se guardan solo en este navegador.</p><form class="dialog-form" data-form="save-search"><label class="form-field">Nombre de la búsqueda<input name="name" required maxlength="90" placeholder="Ej. Tierra para vivienda" value="${escape(state.query ? "Búsqueda en " + state.query : "")}" autofocus></label><div class="tutorial-summary">Municipio: ${escape(searchLocationLabel(state))}<br>Tipo: ${escape(state.type==='terreno'?terrainSearchLabel(state.landContent):state.type || "Terrenos y proyectos")}<br>${state.type==='proyecto'?escape(projectCriteriaSummary(state)):"Modalidad: "+escape(state.mode || "Abierta a alternativas")}<br>Zona: ${state.zone.length ? "Polígono geográfico" : state.sectors.length ? "Sectores seleccionados" : state.mapPlace ? "Ubicación elegida en Mapbox; al abrir, vuelve a seleccionarla" : "Sin delimitar"}</div><button class="button primary" type="submit">Guardar búsqueda ${icon("bookmark")}</button></form>`,
   );
 }
 function redrawMap() {
@@ -1249,7 +1251,7 @@ function resetFilters() {
   else {render();captureSearchContext(state,location.hash);}
 }
 async function action(actionName, el, event) {
-  if(actionName==='clear-project-filters'){Object.assign(state,{projectStage:'',projectKind:'',projectSpecialty:'',query:'',mode:'',min:'',max:'',maxPrice:''});render();captureSearchContext(state,location.hash);return;}
+  if(actionName==='clear-project-filters'){Object.assign(state,clearProjectCriteria(),{mapFitRevision:state.mapFitRevision+1});render();captureSearchContext(state,location.hash);return;}
   if(actionName==='catalog-page'){
     if(state.drawing){toast('Termina o cancela el dibujo antes de cambiar de página.');return;}
     const current=catalogWindow(),target=Number(el.dataset.page);
@@ -1844,7 +1846,7 @@ document.addEventListener("submit", async (event) => {
     else {render();$('[data-results-heading]')?.focus({preventScroll:true});if(state.view!=='list'&&state.query&&!state.searchDepartment)searchPlace(state.query);}
   }
   if(type==='project-filters'){
-    Object.assign(state,{query:String(data.get('query')||'').trim(),projectStage:String(data.get('projectStage')||''),projectKind:String(data.get('projectKind')||''),projectSpecialty:String(data.get('projectSpecialty')||''),mode:'',min:'',max:'',maxPrice:'',catalogOrder:'',catalogPage:1,searchSelected:'',mapFitRevision:state.mapFitRevision+1});render();captureSearchContext(state,location.hash);return;
+    captureSearchFilters();Object.assign(state,{mode:'',min:'',max:'',maxPrice:'',catalogOrder:''});render();captureSearchContext(state,location.hash);return;
   }
   if (type === "map-search")
     searchPlace(String(data.get("mapQuery") || "").trim());
