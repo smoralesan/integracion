@@ -1,7 +1,7 @@
 import {canonicalDeclaredArea} from './declared-area.js';
 import {allowsPublicListing} from './land-visibility.js';
 import {publicExperience} from './opportunity-model.js';
-export const STATUS_LABELS={received:'Recibido',in_review:'En revisión',needs_information:'Información pendiente',approved:'Aprobado',published:'Publicado'};
+export const STATUS_LABELS={received:'Recibido',in_review:'En revisión',needs_information:'Requiere ajustes',approved:'Aprobado',published:'Publicado'};
 export const statusOf=record=>record.status==='pending_review'?'received':record.status||'received';
 export const TRANSITIONS={received:['in_review'],in_review:['needs_information','approved'],needs_information:['in_review'],approved:['in_review','published'],published:['approved']};
 export const statusLabel=record=>STATUS_LABELS[typeof record==='string'?record:statusOf(record)]||'Recibido';
