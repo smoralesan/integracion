@@ -13,3 +13,9 @@ test('selecting an address places an unconfirmed pin and notifies the draft',asy
 test('address selection in polygon mode only centers the map and retains the boundary',async()=>{
  const editor=new ParcelEditor(),geometry={type:'Polygon',coordinates:[[[-74,4],[-73.9,4],[-73.9,4.1],[-74,4]]]};editor.options={mode:'polygon',geometry};const feature={geometry:{coordinates:[-74.06,4.65]}};editor.places=[feature];await editor.action('place',{dataset:{index:'0'}});assert.equal(editor.options.geometry,geometry);assert.equal(editor.place,feature);assert.equal(editor.options.pin,undefined);
 });
+test('address lookup reads the visible field and inserts suggestions without rebuilding the map',async t=>{
+ const editor=new ParcelEditor();let queried='',inserted='';const field={value:'Carrera 7, Bogotá'},search={insertAdjacentHTML:(_,html)=>inserted=html},area={querySelector:selector=>selector==='.parcel-search'?search:null};
+ editor.options={mode:'pin'};editor.query='texto anterior';editor.host={querySelector:selector=>selector==='[data-parcel-search]'?field:selector==='[data-parcel-editor]'?area:null};editor.render=()=>{throw Error('must not rebuild map while searching');};
+ t.mock.method(globalThis,'fetch',async url=>{queried=new URL(url).searchParams.get('q');return {ok:true,json:async()=>({features:[{properties:{full_address:'Carrera 7, Bogotá'},geometry:{coordinates:[-74.06,4.65]}}]})};});
+ await editor.action('search');assert.equal(queried,field.value);assert.match(inserted,/Carrera 7, Bogotá/);assert.equal(editor.places.length,1);assert.equal(editor.error,false);
+});
