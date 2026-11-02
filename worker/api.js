@@ -1,3 +1,4 @@
+import {validateAttachmentLimits,attachmentExtension} from '../web/attachment-limits.js';
 import {validateNegotiationSubmission,normalizeProjectForm,validateProjectAreaRange} from '../web/submission-validation.js';
 import {canonicalDeclaredArea} from '../web/declared-area.js';
 import {normalizeNegotiationForm,validateContributionPercentage} from '../web/land-negotiation.js';
@@ -161,7 +162,8 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       }
       if(!Array.isArray(data.documentIds)||data.documentIds.length>20)error(400,'Puedes vincular hasta 20 documentos.');
       if(data.kind==='terreno'&&data.form?.land_situation!=null){try{form.land_situation=normalizeLandSituation(data.form.land_situation,{documentIds:data.documentIds});}catch(e){error(400,e.message);}}
-      const files=[];for(const id of [...new Set(data.documentIds)]){const m=await documentMeta(bucket,prefix,id,Date.now());files.push({id:m.id,name:m.name,size:m.size,origin:m.origin,createdAt:m.createdAt,expiresAt:m.expiresAt,analysis:{status:m.analysis.status,message:m.analysis.message}});}
+      const files=[];for(const id of [...new Set(data.documentIds)]){const m=await documentMeta(bucket,prefix,id,Date.now());files.push({id:m.id,name:m.name,size:m.size,origin:m.origin,extension:attachmentExtension(m),createdAt:m.createdAt,expiresAt:m.expiresAt,analysis:{status:m.analysis.status,message:m.analysis.message}});}
+      try{validateAttachmentLimits(files);}catch(e){error(400,e.message);}
       const key=prefix+'records/'+data.id+'.json',existing=await getJson(bucket,key);if(existing)return json(ownerRecord(existing));
       const record={id:data.id,reference:(data.kind==='terreno'?'TER-':'PRO-')+data.id.slice(0,8).toUpperCase(),kind:data.kind,form,parcel,...(locationPin?{locationPin}:{}),files,status:'received',createdAt:new Date().toISOString(),...initialWorkflow(request)};
       await attachProfile(record,bucket,prefix,'Titular del proyecto');

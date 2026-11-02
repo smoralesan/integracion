@@ -144,3 +144,12 @@ test('las nuevas publicaciones exigen visibilidad y valor conocido completo; el 
  const data=record();data.form.area='1e5';const response=await h.request('records',data);assert.equal(response.status,201);assert.equal((await response.json()).form.area,'100000');
  const project=record();project.kind='proyecto';Object.assign(project.form,{land_status:'owned',need:'Terreno',desired_min:'10000',desired_max:'5000'});const projectResponse=await h.request('records',project);assert.equal(projectResponse.status,201);const stored=await projectResponse.json();assert.equal(stored.form.desired_min,undefined);assert.equal(stored.form.need,'Lote');
 });
+
+test('el servidor aplica los límites por registro de 10 imágenes y 5 PDF, incluidos los enlaces PDF',async()=>{
+ const h=harness(),pdfIds=[],photoIds=[];
+ for(let i=0;i<6;i++){const response=await h.request('documents',upload('soporte-'+i+'.pdf','%PDF-1.7\nPrueba'));assert.equal(response.status,201);pdfIds.push((await response.json()).id);}
+ for(let i=0;i<11;i++){const response=await h.request('documents',upload('foto-'+i+'.jpg',new Uint8Array([255,216,255,0])));assert.equal(response.status,201);photoIds.push((await response.json()).id);}
+ assert.equal((await h.request('records',record([...pdfIds.slice(0,5),...photoIds.slice(0,10)]))).status,201);
+ assert.equal((await h.request('records',record(pdfIds))).status,400);assert.equal((await h.request('records',record(photoIds))).status,400);
+ const link=await(await h.request('documents',{name:'Informe externo',url:'https://example.com/referencia.pdf'})).json();assert.equal((await h.request('records',record([...pdfIds.slice(0,5),link.id]))).status,400);
+});

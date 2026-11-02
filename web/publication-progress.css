@@ -1,2 +1,29 @@
 .publication-progress{display:none}
 @media(min-width:961px){.pu-publication .form-sidebar{position:sticky;top:112px;align-self:start;max-height:calc(100svh - 132px);overflow:auto;scrollbar-width:thin}.publication-progress{display:block;padding:19px 17px;margin:0 0 20px;background:#fff;border:1px solid #dce6f2;border-radius:10px}.pp-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:#617c9b}.pp-heading strong{font-size:22px;color:#145dd6}.publication-progress progress{display:block;width:100%;height:7px;border:0;border-radius:8px;overflow:hidden;accent-color:#1265e9;margin:13px 0}.publication-progress progress::-webkit-progress-bar{background:#e8eff8;border-radius:8px}.publication-progress progress::-webkit-progress-value{background:#1265e9;border-radius:8px}.pp-step{font-size:11px;color:#7890ac;line-height:1.6;margin:0}.pp-step strong{display:block;font-size:13px;color:#24496d}.pp-caption{font-size:10px;line-height:1.6;color:#8598ad;margin:8px 0 15px}.publication-progress details{border-top:1px solid #e8edf4;padding-top:11px;margin-top:11px}.publication-progress summary{font-size:12px;line-height:1.6;color:#86642a;cursor:pointer}.pp-later summary{color:#627e9c}.publication-progress ul{list-style:none;padding:0;margin:9px 0}.publication-progress li{font-size:11px;line-height:1.7;color:#69829d;margin:5px 0}.publication-progress li button{width:100%;text-align:left;padding:8px 0;min-height:40px;background:none;border:0;color:#547295;font:inherit;cursor:pointer}.publication-progress li button:hover{color:#1265e9}.publication-progress li button:focus-visible{outline:2px solid #1265e9;outline-offset:2px}.publication-progress details p,.pp-save{font-size:10px;line-height:1.7;color:#8597ac}.pp-error{border-left:3px solid #c76542;padding-left:9px;font-size:11px;line-height:1.7;color:#a45135}.pp-save{margin:14px 0 0;border-top:1px solid #e8edf4;padding-top:12px}.pu-publication:has(.publication-progress) .jr-form-progress{display:none}}
+
+/* Compact, self-contained sidebar: avoid inheriting FAQ accordion spacing. */
+@media(min-width:961px){
+.pu-publication .publication-progress{padding:18px 16px;margin-bottom:16px;border-radius:14px;background:#fff;box-shadow:0 4px 18px #173e6b06}
+.publication-progress .pp-heading{font-size:13px;font-weight:600;color:#536b87;gap:8px}
+.publication-progress .pp-heading strong{font-size:28px;line-height:1.1;letter-spacing:-1px}
+.publication-progress progress{margin:12px 0 14px;height:6px}
+.publication-progress .pp-step{font-size:12px;line-height:1.4;margin:0}
+.publication-progress .pp-step strong{font-size:15px;line-height:1.4;margin-top:4px;color:#193b61}
+.publication-progress .pp-caption{font-size:11px;line-height:1.45;margin:7px 0 16px;color:#637990}
+.publication-progress details{border:0;border-top:1px solid #e8edf4;margin:0;padding:0}
+.publication-progress details>summary{min-height:44px;padding:11px 0;font-size:12px;line-height:1.4;gap:8px;color:#805d22}
+.publication-progress details>summary>span:first-child{flex:1;min-width:0}
+.publication-progress details>summary:after{content:'⌄';font-size:17px;line-height:1;flex-shrink:0;transition:transform .18s;color:#71849b}
+.publication-progress details[open]>summary:after{content:'⌄';transform:rotate(180deg)}
+.publication-progress .pp-later>summary{color:#526c88}
+.publication-progress .pp-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:6px;background:#eef3f8;color:#536b87;font-size:11px}
+.publication-progress details ul{padding:0;margin:0 0 10px;display:grid;gap:2px}
+.publication-progress details li{font-size:12px;line-height:1.45;margin:0;overflow-wrap:anywhere}
+.publication-progress details li button{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;padding:7px 8px;border-radius:6px;color:#3c5b7c;font-size:12px;line-height:1.45}
+.publication-progress details li button:hover{background:#edf4ff;color:#145dd6}
+.publication-progress .pp-later li{padding:5px 0}
+.publication-progress details p{padding:0;margin:0 0 12px;font-size:11px;line-height:1.5}
+.publication-progress .pp-save{font-size:11px;line-height:1.5;padding-top:12px;margin-top:0;color:#637990}
+.publication-progress .pp-save:empty{display:none}
+}
+@media(prefers-reduced-motion:reduce){.publication-progress details>summary:after{transition:none}}

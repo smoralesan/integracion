@@ -1,3 +1,4 @@
+import {validateAttachmentLimits} from './attachment-limits.js';
 import {resolveLocation} from './colombia-locations.js';
 import {terrainLocationMode,normalizeLocationPin,validateTerrainDetails} from './terrain-location.js';
 import {normalizeNegotiationForm} from './land-negotiation.js';
@@ -20,6 +21,7 @@ export function publicationReviewIssues(form,files=[],{preview=true}={}){
  else if(!form.parcel_geometry||!form.parcel_confirmed)add(1,'location','Completa y confirma el polígono de referencia');
  try{validateNegotiationSubmission(form);normalizeNegotiationForm(form);}catch(error){add(2,!['public','off-market'].includes(form.visibility)?'visibility':error.message.includes('porcentaje')?'cash_percent':error.message.includes('valor de referencia')?'amount':'value_status',error.message);}
  try{normalizeLandSituation(form.land_situation,{documentIds:files.map(file=>file.id)});}catch(error){add(3,'land_situation',error.message);}
+ try{validateAttachmentLimits(files);}catch(error){add(4,'files',error.message);}
  if(expiredSubmissionFiles(files).length)add(4,'files','Quita o reemplaza los adjuntos vencidos');
  if(!preview&&files.some(file=>file.localPhoto||!file.id))add(4,'files','Vuelve a seleccionar los archivos de prueba para cargarlos con el acceso real');
  return [...new Map(issues.map(issue=>[issue.step+':'+issue.field,issue])).values()];
