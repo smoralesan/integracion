@@ -25,3 +25,14 @@ test('el resumen final hace visible la dirección privada sin incluirla en el re
  assert.match(html,visibility==='off-market'?/Off-market · Presentación selectiva/:/Público · Vista previa/);
  }
 });
+
+test('la portada y el orden sobreviven a recargar sin mover documentos ni alterar otras fotos',async()=>{
+ const {reorderTerrainPhotos,terrainPhotoTilesHTML}=await import('../web/terrain-photo-preview.js');
+ const a={id:'a',name:'A.jpg',origin:'demo',localPhoto:true},b={id:'b',name:'B.jpg',origin:'demo',localPhoto:true},c={id:'c',name:'C.jpg',origin:'demo',localPhoto:true},doc={id:'doc',name:'Plano.pdf',origin:'demo'};
+ const original=[doc,a,b,c];const ordered=reorderTerrainPhotos(original,'c','cover');assert.deepEqual(ordered,[doc,c,a,b]);assert.deepEqual(original,[doc,a,b,c]);
+ assert.deepEqual(reorderTerrainPhotos(ordered,'c','next'),[doc,a,c,b]);assert.deepEqual(reorderTerrainPhotos(ordered,'a','previous'),[doc,a,c,b]);
+ assert.equal(reorderTerrainPhotos(ordered,'c','previous'),ordered);assert.equal(reorderTerrainPhotos(ordered,'missing','cover'),ordered);
+ const id=crypto.randomUUID(),store={};putDraft(store,{kind:'terreno',step:4,form:{client_id:id},files:ordered});const recovered=chooseDraft(JSON.parse(JSON.stringify(store)),'terreno',id);assert.deepEqual(recovered.files,ordered);
+ const removed=recovered.files.filter(file=>file.id!=='c');assert.equal(removed.filter(isLocalPhoto)[0].id,'a');
+ const html=terrainPhotoTilesHTML(ordered.filter(isLocalPhoto));assert.match(html,/Portada de prueba/);assert.match(html,/data-enlarge-photo="c"/);assert.match(html,/Mover A.jpg antes/);
+});

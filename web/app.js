@@ -44,7 +44,7 @@ import {mountLawyerCarousel} from './lawyer-carousel.js';
 import {terrainCardTag,terrainOverviewHTML,constructionProjectHTML,hasConstructionProject} from './terrain-project.js';
 import {ProjectNeedsBoard,needProposalHTML,normalizeNeedProposal} from './project-needs-ui.js';
 import {needProjects} from './project-needs-data.js';
-import {formSteps,stepperHTML,filterChipsHTML,removeFilter,spaceActionsHTML,draftStatus,showFormIssue,focusFormStep,mountSubmissionUX} from './ux-flow.js';
+import {formSteps,stepperHTML,filterChipsHTML,removeFilter,spaceActionsHTML,draftStatus,showFormIssue,focusFormStep,mountSubmissionUX,mountSubmissionConnectivity} from './ux-flow.js';
 import {SalesUI} from './sales-ui.js';
 import {images,properties} from './opportunity-examples.js';
 import {ServiceRequestsUI} from './service-requests-ui.js';
@@ -1007,7 +1007,7 @@ function render() {
   needsBoard.mount($('[data-project-needs-host]'),{id:path.split("/")[2]||"",query:location.hash.split("?")[1]||""});
   mountRescueGalleries($('#contenido'),[...properties,...needProjects],item=>modal(rescueGalleryZoomHTML(item)));
   const demoFileList=$('.rj-demo-supports #file-list');if(demoFileList)demoFileList.innerHTML=fileList();
-  const landSituationForm=$('[data-form="submission"]');if(landSituationForm){syncLandSituation(landSituationForm);syncBrokerExclusivity(landSituationForm);syncPublicationBasics(landSituationForm);mountSubmissionUX(landSituationForm);}
+  const landSituationForm=$('[data-form="submission"]');mountSubmissionConnectivity(landSituationForm,{preview:emailEntry.isPreview()});if(landSituationForm){syncLandSituation(landSituationForm);syncBrokerExclusivity(landSituationForm);syncPublicationBasics(landSituationForm);mountSubmissionUX(landSituationForm);}
   reviewDesk.mount($('[data-review-desk]'));
   if(path.startsWith('/equipo/')&&reviewDesk.record)$('[data-review-desk]').insertAdjacentHTML('beforeend',teamExperienceHTML(reviewDesk.record));
   opportunityExperience.mount($('#contenido'),{owner:state.remoteRecord,team:reviewDesk.record});
@@ -1594,6 +1594,7 @@ async function action(actionName, el, event) {
 }
 document.addEventListener("click", (event) => {
   const next=event.target.closest('a[href]');
+  if(next&&$('[data-form="submission"]')&&next.getAttribute('href')?.startsWith('#/')&&next.getAttribute('href')!==location.hash&&!saveDraft(true)){event.preventDefault();showFormIssue('No se pudo guardar el avance. Reintenta guardar antes de salir del formulario.');return;}
   if(next&&isCatalogHash(location.hash)&&next.getAttribute('href')!==location.hash)captureSearchContext(state,location.hash,next.getAttribute('href'));
 
   const directoryShortcut=event.target.closest(".footer-directory a");
