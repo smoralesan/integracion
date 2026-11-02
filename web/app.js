@@ -66,7 +66,7 @@ import {homeOptionsIndex,homeAlternative,heroAlternative} from './home-options.j
 import {ReviewDesk, ownerWorkflowHTML, statusBadge, summaryHTML} from './review-ui.js';
 import {statusLabel} from './workflow-model.js';
 import { ParcelEditor } from "./parcel-editor.js";
-import {normalizeLocationPin,terrainLocationMode,locationSummary,locationLabel} from "./terrain-location.js";
+import {normalizeLocationPin,terrainLocationMode,locationSummary,locationLabel,captureLocationConfirmation} from "./terrain-location.js";
 import { api, uploadDocument, addDocumentLink, saveRecord } from "./records-api.js";
 import {
   readAmount,
@@ -859,6 +859,7 @@ function fileList() {
 function captureForm() {
   const form = $('[data-form="submission"]');
   if (!form) return;
+  captureLocationConfirmation(state.form,form);
   const controls = $$("[name]", form);
   const names = new Set(controls.map((c) => c.name));
   for (const name of names) {

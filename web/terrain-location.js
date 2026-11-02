@@ -17,3 +17,12 @@ export function locationLabel(location={}) {
  const municipality=[...new Set([clean(location.city),clean(location.region)].filter(Boolean))].join(', ');
  return [clean(location.neighborhood,120),municipality].filter(Boolean).join(' · ');
 }
+
+// Read the visible confirmation at save/continue time, even if an editor event was missed.
+export function captureLocationConfirmation(form, controls) {
+ for(const [selector,key] of [['[data-pin-confirm]','location_pin_confirmed'],['[data-parcel-confirm]','parcel_confirmed']]) {
+  const control=controls.querySelector(selector);
+  if(control)form[key]=control.checked===true;
+ }
+ return form;
+}
