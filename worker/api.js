@@ -1,6 +1,6 @@
 import {normalizeNegotiationForm} from '../web/land-negotiation.js';
 import {normalizeLandVisibility} from '../web/land-visibility.js';
-import {normalizeLocationPin} from '../web/terrain-location.js';
+import {normalizeLocationPin,validateTerrainDetails} from '../web/terrain-location.js';
 import {landUses} from '../web/development-sectors.js';
 import {notificationApi} from './notifications.js';
 import {opportunityApi} from './opportunity-experience.js';
@@ -143,12 +143,12 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       if(form.cadastral_address)form.cadastral_address=text(form.cadastral_address,300);
       let parcel=null,locationPin=null;
       if(data.kind==='terreno') {
+        try{validateTerrainDetails(form);}catch(e){error(400,e.message);}
         if(form.project_land_confirmed!==true)error(400,landScopeExclusion+' Confirma que presentas el terreno para desarrollar un proyecto.');
         if(data.locationMode!=null&&!['pin','polygon'].includes(data.locationMode))error(400,'Elige pin o polígono para ubicar el terreno.');
         if(data.locationMode==='pin'){
           if(data.parcel!=null)error(400,'Envía solo la opción de ubicación elegida.');
           try{locationPin={...normalizeLocationPin(data.locationPin),confirmedAt:new Date().toISOString()};}catch(e){error(400,e.message);}
-          if(!(Number(form.area)>0&&Number.isFinite(Number(form.area))))error(400,'Indica el área declarada; el pin no permite calcularla.');
         }else{
           if(!data.parcel?.confirmed)error(400,'Confirma el perímetro antes de enviar el terreno.');
           parcel={...describeGeometry(data.parcel.geometry),source:text(data.parcel.source,160),confirmed:true,confirmedAt:new Date().toISOString()};

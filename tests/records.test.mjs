@@ -18,7 +18,7 @@ function harness(){
   }};
 }
 const upload=(name,bytes)=>{const f=new FormData();f.set('file',new File([bytes],name));return f;};
-const record=(documentIds=[])=>({id:crypto.randomUUID(),kind:'terreno',form:{title:'Terreno ficticio de prueba',city:'Cartagena',region:'Bolívar',relationship:'owner',project_land_confirmed:true,amount:'2000000000.50'},parcel:{geometry,confirmed:true,source:'Prueba'},documentIds});
+const record=(documentIds=[])=>({id:crypto.randomUUID(),kind:'terreno',form:{title:'Terreno ficticio de prueba',city:'Cartagena',region:'Bolívar',relationship:'owner',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",amount:'2000000000.50'},parcel:{geometry,confirmed:true,source:'Prueba'},documentIds});
 test('requires trusted identity and same origin mutations',async()=>{
   const h=harness();assert.equal((await h.request('session',null,{owner:null})).status,401);
   assert.equal((await h.request('documents',{name:'Plan',url:'https://example.com/a'},{origin:'https://other.test'})).status,403);
@@ -105,7 +105,7 @@ test('pin validation rejects unconfirmed, malformed, absent and conflicting loca
     const data=record();delete data.parcel;Object.assign(data,{locationMode:'pin',locationPin});data.form.area='5200';
     assert.equal((await h.request('records',data)).status,400);
   }
-  const missingArea=record();delete missingArea.parcel;Object.assign(missingArea,{locationMode:'pin',locationPin:{coordinates:[-74,4],confirmed:true}});
+  const missingArea=record();delete missingArea.form.area;delete missingArea.parcel;Object.assign(missingArea,{locationMode:'pin',locationPin:{coordinates:[-74,4],confirmed:true}});
   assert.equal((await h.request('records',missingArea)).status,400);
   const conflicting=record();Object.assign(conflicting,{locationMode:'pin',locationPin:{coordinates:[-74,4],confirmed:true}});conflicting.form.area='5200';
   assert.equal((await h.request('records',conflicting)).status,400);
@@ -126,4 +126,14 @@ test('submitted value preferences exclude inactive draft prices on both API and 
  const contribution=record();Object.assign(contribution.form,{value_status:'known',negotiation:'contribution',compensation:'units',receive_currencies:['USD'],exchange_rate:'4000'});
  const response=await h.request('records',contribution);assert.equal(response.status,201);const saved=await response.json();
  assert.equal(saved.form.amount,contribution.form.amount);assert.ok(!('receive_currencies' in saved.form));
+});
+
+test('el servidor exige dirección y área del formulario para pin y polígono sin sustituirla por la geometría',async()=>{
+ const h=harness();
+ for(const mode of ['pin','polygon']){
+  const data=record();if(mode==='pin'){delete data.parcel;data.locationMode='pin';data.locationPin={coordinates:[-74,4],confirmed:true};}
+  data.form.cadastral_address=' ';assert.equal((await h.request('records',data)).status,400);
+  data.form.cadastral_address='Dirección ficticia';data.form.area='';assert.equal((await h.request('records',data)).status,400);
+  data.form.area='1234.5';const response=await h.request('records',data);assert.equal(response.status,201);assert.equal((await response.json()).form.area,'1234.5');
+ }
 });

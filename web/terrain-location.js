@@ -26,3 +26,9 @@ export function captureLocationConfirmation(form, controls) {
  }
  return form;
 }
+
+export function validateTerrainDetails(form){
+ if(!String(form.cadastral_address||'').trim())throw Error('Indica la dirección catastral del terreno para continuar.');
+ const area=Number(form.area);
+ if(!Number.isFinite(area)||area<1)throw Error('Indica un área declarada válida de al menos 1 m². El polígono es solo de referencia.');
+}

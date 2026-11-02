@@ -67,7 +67,7 @@ import {homeOptionsIndex,homeAlternative,heroAlternative} from './home-options.j
 import {ReviewDesk, ownerWorkflowHTML, statusBadge, summaryHTML} from './review-ui.js';
 import {statusLabel} from './workflow-model.js';
 import { ParcelEditor } from "./parcel-editor.js";
-import {normalizeLocationPin,terrainLocationMode,locationSummary,locationLabel,captureLocationConfirmation} from "./terrain-location.js";
+import {normalizeLocationPin,terrainLocationMode,locationSummary,locationLabel,captureLocationConfirmation,validateTerrainDetails} from "./terrain-location.js";
 import { api, uploadDocument, addDocumentLink, saveRecord } from "./records-api.js";
 import {
   readAmount,
@@ -1884,7 +1884,7 @@ document.addEventListener("submit", async (event) => {
     Object.assign(state.form,selectedLocation);
     if(state.formKind==='terreno'&&!['land-only','land-project'].includes(state.form.land_content)){state.formStep=1;render();showFormIssue('Indica si ofreces solo terreno o terreno con proyecto antes de continuar.');return;}
     if(state.formKind==='terreno'&&state.form.project_land_confirmed!==true){state.formStep=1;render();showFormIssue(landScopeExclusion+' Confirma el destino del terreno antes de continuar.');return;}
-    if(state.formKind==='terreno'&&[1,4].includes(state.formStep)&&!String(state.form.cadastral_address||'').trim()){if(state.formStep!==1){state.formStep=1;render();}showFormIssue('Indica la dirección catastral del terreno para continuar.');return;}
+    if(state.formKind==='terreno'&&[1,4].includes(state.formStep)){try{validateTerrainDetails(state.form);}catch(error){if(state.formStep!==1){state.formStep=1;render();}showFormIssue(error.message);return;}}
     if(state.formKind==='terreno'&&[1,4].includes(state.formStep)){
       try{if(terrainLocationMode(state.form)==='pin')normalizeLocationPin({coordinates:state.form.location_pin,confirmed:state.form.location_pin_confirmed});else if(!state.form.parcel_geometry||!state.form.parcel_confirmed)throw Error('Añade y confirma el polígono, o cambia a un pin aproximado.');}
       catch(error){if(state.formStep!==1){state.formStep=1;render();}showFormIssue(error.message);return;}
@@ -1935,7 +1935,7 @@ document.addEventListener("submit", async (event) => {
     }
     if (state.formStep < (state.formKind==='terreno'?4:3)) {
       state.formStep++;
-      saveDraft(true);
+      if(!saveDraft(true)){state.formStep--;showFormIssue('No se pudo guardar el avance. Reintenta antes de continuar.');return;}
       render();
       focusFormStep();
     } else {

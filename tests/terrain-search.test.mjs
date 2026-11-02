@@ -39,7 +39,7 @@ test('Each terrain format has its own URL, selected tab and restored search cont
 test('New terrain declarations survive the private API and the authorized public summary without inventing project details',async()=>{
  const env={BUCKET:new MemoryBucket()};
  for(const value of ['land-only','land-project','invalid',true]){
-  const body={id:crypto.randomUUID(),kind:'terreno',form:{title:'Predio de prueba',relationship:'Propietario',department_code:'13',municipality_code:'13001',project_land_confirmed:true,land_content:value},documentIds:[],parcel:{confirmed:true,source:'Prueba',geometry:{type:'Polygon',coordinates:[[[-75.5,10.4],[-75.49,10.4],[-75.49,10.41],[-75.5,10.41],[-75.5,10.4]]]}}};
+  const body={id:crypto.randomUUID(),kind:'terreno',form:{title:'Predio de prueba',relationship:'Propietario',department_code:'13',municipality_code:'13001',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",land_content:value},documentIds:[],parcel:{confirmed:true,source:'Prueba',geometry:{type:'Polygon',coordinates:[[[-75.5,10.4],[-75.49,10.4],[-75.49,10.41],[-75.5,10.41],[-75.5,10.4]]]}}};
   const response=await handleApi(new Request('https://portal.test/api/records',{method:'POST',headers:{origin:'https://portal.test','content-type':'application/json','oai-authenticated-user-id':'terrain-search-test'},body:JSON.stringify(body)}),env);
   assert.equal(response.status,['land-only','land-project'].includes(value)?201:400);
   if(response.status===201){const record=await response.json();assert.equal(record.form.land_content,value);const summary=publicSummary(record);assert.equal(summary.land_content,value);assert.equal(summary.developmentProject,undefined);}

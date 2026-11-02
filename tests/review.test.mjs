@@ -10,7 +10,7 @@ function harness(){
     let payload=body;if(body&&!(body instanceof FormData)){headers.set('content-type','application/json');payload=JSON.stringify(body);}
     return handleApi(new Request('https://portal.test/api/'+path,{method,headers,...(payload?{body:payload}:{})}),env);
   };
-  const create=async(user='alice',visibility)=>{const response=await request('records',{id:crypto.randomUUID(),kind:'terreno',form:{...(visibility===undefined?{}:{visibility}),title:'Lote ficticio',city:'Cartagena',region:'Bolívar',neighborhood:'Manzanillo del Mar',relationship:'owner',project_land_confirmed:true,description:'INFORMACIÓN RESERVADA',amount:'2000000000.50',area:'5200'},parcel:{geometry,confirmed:true},documentIds:[]},{user});assert.equal(response.status,201);return response.json();};
+  const create=async(user='alice',visibility)=>{const response=await request('records',{id:crypto.randomUUID(),kind:'terreno',form:{...(visibility===undefined?{}:{visibility}),title:'Lote ficticio',city:'Cartagena',region:'Bolívar',neighborhood:'Manzanillo del Mar',relationship:'owner',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",description:'INFORMACIÓN RESERVADA',amount:'2000000000.50',area:'5200'},parcel:{geometry,confirmed:true},documentIds:[]},{user});assert.equal(response.status,201);return response.json();};
   const find=async id=>(await(await request('team/records',null,{user:'admin'})).json()).records.find(r=>r.id===id).teamKey;
   const update=async(key,body,user='admin')=>request('team/records/'+encodeURIComponent(key),body,{user,method:'PATCH'});
   return {bucket,request,create,find,update};
