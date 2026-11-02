@@ -4,3 +4,5 @@
 .pu-publication .jr-form-orientation{display:none}
 
 .area-equivalences-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.area-equivalences input[readonly]{background:#f5f8fc;color:#254b76;cursor:default}.area-equivalences p{font-size:12px;color:#647b95;line-height:1.6;margin:10px 0 0}@media(max-width:480px){.area-equivalences-grid{grid-template-columns:1fr}}
+
+.terrain-photos{border:1px solid #dce6f2;border-radius:12px;padding:22px;margin:24px 0}.terrain-photos h3{margin:0 0 10px;color:#17395f}.terrain-photos p{font-size:14px;line-height:1.6}.terrain-photos-warning{padding:12px 14px;background:#fff7e8;border-left:3px solid #d99a2b;color:#745014;font-size:12px!important;letter-spacing:.02em}.terrain-photos small{display:block;color:#647b95;line-height:1.6;margin-top:10px}
