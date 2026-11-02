@@ -3,7 +3,8 @@ export const technicalLabels={use:'Uso propuesto',planning:'Información urbaní
 export const evidenceLabels={legal:'Titularidad y representación',obligations:'Obligaciones',planning:'Norma y uso',technical:'Información técnica'};
 export const evidenceStates={declared:'Declarado',provided:'Soporte aportado',reviewed:'Revisado por el equipo'};
 const txt=(v,n=300)=>typeof v==='string'?v.trim().slice(0,n):'';
-export function normalizePresentation(v={}){
+export function normalizePresentation(v={}, {kind}={}){
+ if(kind==='terreno')v={...v,reactivation:false,rescue:{}};
  const p={description:txt(v.description,3000),technical:{},shareGeometry:v.shareGeometry===true,photoIds:Array.isArray(v.photoIds)?[...new Set(v.photoIds.filter(x=>typeof x==='string'))].slice(0,8):[],evidence:{},reactivation:v.reactivation===true,rescue:{}};
  for(const key of Object.keys(technicalLabels))p.technical[key]=txt(v.technical?.[key],500);
  for(const key of Object.keys(evidenceLabels))p.evidence[key]=Array.isArray(v.evidence?.[key])?[...new Set(v.evidence[key].filter(x=>typeof x==='string'))].slice(0,8):[];
@@ -22,7 +23,7 @@ export function normalizePresentation(v={}){
 export function publicExperience(record,now=Date.now()){
  const base={availability:record.availability||'unknown',availabilityConfirmedAt:record.availabilityConfirmedAt||null,updatedAt:record.updatedAt||record.createdAt};
  if(record.publicationConsent?.version!=='detail-v2')return base;
- const p=normalizePresentation(record.publicPresentation),active=(record.files||[]).filter(f=>Date.parse(f.expiresAt)>now),ids=new Set(active.map(f=>f.id));
+ const p=normalizePresentation(record.publicPresentation,{kind:record.kind}),active=(record.files||[]).filter(f=>Date.parse(f.expiresAt)>now),ids=new Set(active.map(f=>f.id));
  const evidence={};for(const key of Object.keys(evidenceLabels)){const count=p.evidence[key].filter(id=>ids.has(id)).length;const reviewed=count>0&&record.evidenceReview?.[key]?.state==='reviewed';evidence[key]={state:reviewed?'reviewed':count?'provided':'declared',count,reviewedAt:reviewed?record.evidenceReview[key].at:null};}
  return {...base,detailVersion:'detail-v2',description:p.description,technical:p.technical,evidence,reactivation:p.reactivation,rescue:p.reactivation?p.rescue:null,geometry:p.shareGeometry?record.parcel?.geometry||null:null,photos:p.photoIds.filter(id=>ids.has(id)).map(id=>'/api/catalog/'+record.publicationId+'/photos/'+id),assetReference:record.assetId||record.id,representation:record.form?.relationship||'',exclusivity:record.form?.broker_exclusivity||null};
 }

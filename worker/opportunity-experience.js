@@ -18,7 +18,7 @@ export async function opportunityApi(request,env,c){
   }
   if(!allowsPublicListing(s.record))error(400,'El terreno es Off-market. No se admite una ficha pública.');
   if(data.authorized!==true)error(400,'Autoriza expresamente el contenido de esta ficha pública.');
-  let p;try{p=normalizePresentation(data.presentation);}catch(e){error(400,e.message);}
+  let p;try{p=normalizePresentation(data.presentation,{kind:s.record.kind});}catch(e){error(400,e.message);}
   const attached=new Set((s.record.files||[]).map(f=>f.id));
   for(const id of new Set([...p.photoIds,...Object.values(p.evidence).flat()])){
    if(!attached.has(id))error(400,'Selecciona soportes vinculados a este expediente.');

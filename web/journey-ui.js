@@ -2,7 +2,7 @@ import {terrainConsultOptions} from './terrain-contact.js';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function catalogGroupsHTML(state){
  const active=state.reactivationFilter==='only'?'reactivacion':state.type==='terreno'?(state.landContent||'terreno'):state.type==='proyecto'?'proyecto':'todos';
- const groups=[['terreno','Buscar terrenos','terreno'],['proyecto','Proyectos','proyecto'],['reactivacion','Para reactivación','proyecto&estado=reactivacion']];
+ const groups=[['terreno','Buscar terrenos','terreno'],['proyecto','Proyectos','proyecto'],...(state.type==='terreno'?[]:[['reactivacion','Proyectos para reactivación','proyecto&estado=reactivacion']])];
  const main=state.type==='terreno'?'terreno':active;
  return `<nav class="jr-categories" aria-label="Qué quieres explorar">${groups.map(([key,label,query])=>`<a href="#/oportunidades?tipo=${query}" ${key===main?'aria-current="page"':''}>${label}</a>`).join('')}</nav>${state.type==='terreno'?`<nav class="jr-categories" aria-label="Qué incluye el terreno">${[['','Todos los terrenos','todos'],['land-only','Sin proyecto asociado','solo-terreno'],['land-project','Con proyecto asociado','con-proyecto']].map(([key,label,query])=>`<a href="#/buscar?contenido=${query}" ${state.landContent===key?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`:''}`;
 }

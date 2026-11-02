@@ -10,7 +10,7 @@ export const demoRescueFinance={illustrative:true,asOf:'2026-10-21',projectedSal
  fundingPlan:[{label:'Continuidad de obra',amount:5_200_000_000},{label:'Estudios y gestión técnica y jurídica',amount:600_000_000},{label:'Pagos previstos a acreedores',amount:1_700_000_000}]
 };
 export function rescueFinanceSnapshot(p){
- if(p?.reactivation!==true)return null;
+ if(p?.reactivation!==true||(p.kind||p.type)==='terreno')return null;
  const f=p.rescueFinance||{},result={illustrative:f.illustrative===true,asOf:cutoff(f.asOf)};
  for(const key of [...metrics.map(([k])=>k),'collectedSales','constructionProgress','totalUnits','contractedUnits'])result[key]=amount(f[key]);
  for(const key of ['totalUnits','contractedUnits'])if(!Number.isInteger(result[key]))result[key]=null;
