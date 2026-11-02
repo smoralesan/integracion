@@ -1,3 +1,4 @@
+import {activeMarket} from './country-config.js';
 import {accessGateHTML} from './access-gate.js';
 import {valuationDescription} from './premium-valuation.js';
 import {api} from './records-api.js';
@@ -7,7 +8,7 @@ import {serviceStates,serviceTransitions,serviceTimings} from './service-request
 import {availabilityOptions,coverageLabel,safePortfolioUrl} from './professional-model.js';
 import {avatarHTML} from './avatars.js';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const date=v=>new Date(v).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'});
+const date=v=>new Date(v).toLocaleString(activeMarket.locale,{dateStyle:'medium',timeStyle:'short'});
 const nav=team=>`<nav class="service-entry-nav" aria-label="Gestión de conexiones">${team?'<a href="#/equipo-solicitudes">Solicitudes de servicio</a><a href="#/equipo-aliados">Perfiles autorizados</a><a href="#/equipo-comercial">Gestión comercial</a><a href="#/equipo">Expedientes</a>':'<a href="#/mis-solicitudes">Mis solicitudes de servicio</a><a href="#/aliados">Especialidades</a><a href="#/mi-espacio">Mi espacio</a>'}</nav>`;
 const options=(values,selected)=>values.map(([v,t])=>`<option value="${e(v)}" ${v===selected?'selected':''}>${e(t)}</option>`).join('');
 const municipalityOptions=d=>'<option value="">Seleccionar municipio</option>'+municipalitiesFor(d).map(m=>`<option value="${m.code}">${e(m.name)}</option>`).join('');

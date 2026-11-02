@@ -1,3 +1,4 @@
+import {activeMarket} from './country-config.js';
 import {locationBreadcrumbHTML} from './location-breadcrumb.js';
 import {formatDeclaredArea} from './declared-area.js';
 import {terrainLocationStatus} from './terrain-contact.js';
@@ -11,8 +12,8 @@ import {api} from './records-api.js';
 import {MAPBOX_TOKEN} from './mapbox-config.js';
 import {rescueFinanceHTML} from './reactivation-finance.js';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const n=v=>new Intl.NumberFormat('es-CO',{maximumFractionDigits:2}).format(v);
-const date=v=>v&&Number.isFinite(Date.parse(v))?new Date(v).toLocaleDateString('es-CO',{timeZone:'America/Bogota'}):'Por confirmar';
+const n=v=>new Intl.NumberFormat(activeMarket.locale,{maximumFractionDigits:2}).format(v);
+const date=v=>v&&Number.isFinite(Date.parse(v))?new Date(v).toLocaleDateString(activeMarket.locale,{timeZone:activeMarket.timeZone}):'Por confirmar';
 const compareStorage='ii-compare-v1';
 export function readRescueAmount(value){const amount=readAmount(String(value||''));if(!amount.valid)throw Error('Revisa los valores del diagnóstico de reactivación.');return amount.canonical;}
 export const comparisonButton=r=>(r.kind||r.type)==='terreno'?`<button type="button" class="exp-compare-button" data-exp-compare="${e(comparableRecord(r).compareKey)}" aria-pressed="false">Comparar lote</button>`:'';

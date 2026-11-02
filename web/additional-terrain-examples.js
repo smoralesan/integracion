@@ -1,3 +1,4 @@
+import {activeMarket} from './country-config.js';
 import {getMunicipality,getDepartment} from './colombia-locations.js';
 // Synthetic locations, areas and prices for browsing and pagination tests only.
 // None of these records represents an advertised property or a cadastral parcel.
@@ -17,7 +18,7 @@ const samples=[
  ['08001',[-74.827,10.979],12800,'Urbano','industrial','Venta',280000,'Sector ilustrativo 13'],
  ['73001',[-75.198,4.435],21500,'Expansión urbana','residencial','Venta o aporte',180000,'Sector ilustrativo 14']
 ];
-const format=value=>new Intl.NumberFormat('es-CO').format(value);
+const format=value=>new Intl.NumberFormat(activeMarket.locale).format(value);
 export const additionalTerrainExamples=samples.map(([code,coordinates,area,land_type,intended_use,mode,unitPrice,neighborhood],index)=>{
  const municipality=getMunicipality(code),department=getDepartment(municipality.departmentCode),id='TER-DEMO-'+String(index+5).padStart(3,'0');
  return {id,type:'terreno',landContent:'land-only',department_code:department.code,municipality_code:municipality.code,city:municipality.name,region:department.name,coordinates,area,land_type,intended_use,mode,price:unitPrice?area*unitPrice:null,neighborhood,label:'Lote '+land_type.toLocaleLowerCase('es'),title:'Lote '+(land_type==='Expansión urbana'?'de expansión urbana':land_type.toLocaleLowerCase('es'))+' de '+format(area)+' m² en '+municipality.name,image:land_type==='Rural'?'./assets/terreno-rural.jpg':'./assets/desarrollo-urbano.jpg',sector:department.code==='08'?'caribe':'interior',description:'Lote simulado para probar la búsqueda, los filtros y la paginación. La ubicación, el sector, el área y el precio son ilustrativos; no corresponde a un inmueble disponible. El uso propuesto requiere evaluación y no representa un permiso de desarrollo.',need:'Evaluación jurídica, técnica y de desarrollo'};

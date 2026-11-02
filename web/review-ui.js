@@ -1,3 +1,4 @@
+import {activeMarket} from './country-config.js';
 import {visibilityBadgeHTML,visibilityManagementHTML,isOffMarket} from './land-visibility.js';
 import {locationLabel} from './terrain-location.js';
 import {brokerExclusivitySummary} from './broker-exclusivity.js';
@@ -8,8 +9,8 @@ import {STATUS_LABELS,statusOf,statusLabel,permittedTransitions,publicSummary} f
 import {formatAmount} from './money-input.js';
 export const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const e=escapeHTML;
-const date=value=>value?new Date(value).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'}):'—';
-const money=value=>new Intl.NumberFormat('es-CO',{maximumFractionDigits:2}).format(Number(value));
+const date=value=>value?new Date(value).toLocaleString(activeMarket.locale,{dateStyle:'medium',timeStyle:'short'}):'—';
+const money=value=>new Intl.NumberFormat(activeMarket.locale,{maximumFractionDigits:2}).format(Number(value));
 export const statusBadge=record=>`<span class="record-status status-${e(statusOf(record))}">${e(statusLabel(record))}</span>`;
 export function timelineHTML(record){
   const history=record.history?.length?record.history:[{status:'received',at:record.createdAt,message:'Expediente recibido para revisión.'}];

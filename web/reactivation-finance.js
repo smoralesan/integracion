@@ -1,7 +1,8 @@
+import {activeMarket} from './country-config.js';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const amount=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0?v:null;
 const cutoff=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v?v:null;
-const number=v=>new Intl.NumberFormat('es-CO',{maximumFractionDigits:1}).format(v);
+const number=v=>new Intl.NumberFormat(activeMarket.locale,{maximumFractionDigits:1}).format(v);
 const money=v=>v===null?'Por informar':'$'+number(v/1_000_000)+' M';
 const metrics=[['projectedSales','Ventas proyectadas'],['effectiveSales','Ventas efectivas'],['totalDebt','Deudas reportadas'],['requiredFunds','Recursos requeridos']];
 // Cifras inventadas únicamente para mostrar el resumen financiero de la maqueta.

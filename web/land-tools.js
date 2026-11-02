@@ -1,8 +1,9 @@
+import {activeMarket} from './country-config.js';
 import {calculateLand,simulateContribution,contributionMilestones,negotiationChecklist,checklistStatuses,normalizeChecklist,readChecklist,checklistProgress,checklistText} from './land-tools-model.js';
 import {readAmount,formatAmount,formatAmountInput,normalizePastedAmount} from './money-input.js';
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const num=(value,digits=2)=>new Intl.NumberFormat('es-CO',{maximumFractionDigits:digits}).format(value);
-const money=(value,currency)=>`${currency} $${new Intl.NumberFormat('es-CO',{minimumFractionDigits:2,maximumFractionDigits:2}).format(value)}`;
+const num=(value,digits=2)=>new Intl.NumberFormat(activeMarket.locale,{maximumFractionDigits:digits}).format(value);
+const money=(value,currency)=>`${currency} $${new Intl.NumberFormat(activeMarket.locale,{minimumFractionDigits:2,maximumFractionDigits:2}).format(value)}`;
 const storageKey='ii-negotiation-checklist-v1';
 export const landToolRoutes=['/herramientas','/calculadora-terreno','/checklist-negociacion','/simulador-aporte'];
 const tools=[['calculadora-terreno','Calculadora de lote','Convierte áreas y calcula el precio por m² o hectárea.','01 / ÁREA Y PRECIO'],['checklist-negociacion','Checklist para negociar','Organiza documentos, autorizaciones, obligaciones y pendientes.','02 / PREPARACIÓN'],['simulador-aporte','Simulador de aporte','Explora dinero posterior, inmuebles o una combinación.','03 / ALTERNATIVAS'],['minutas-de-contratos','Minutas de contratos','Consulta ejemplos editables para preparar tus acuerdos.','DOCUMENTOS'],['directorio-de-notarias','Notarías · Fuentes oficiales','Accede a los canales oficiales de consulta de notarías.','DIRECTORIOS']];

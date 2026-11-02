@@ -1,7 +1,8 @@
+import {activeMarket} from './country-config.js';
 import {divipola} from './colombia-divipola-data.js';
 
 export const locationKey = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
-const displayName = value => value.toLocaleLowerCase('es-CO').split(' ').map((word,index) => ['de','del','la','las','los','y'].includes(word) && index ? word : word.charAt(0).toLocaleUpperCase('es-CO') + word.slice(1)).join(' ').replace(/d\.c\./gi,'D. C.');
+const displayName = value => value.toLocaleLowerCase(activeMarket.locale).split(' ').map((word,index) => ['de','del','la','las','los','y'].includes(word) && index ? word : word.charAt(0).toLocaleUpperCase(activeMarket.locale) + word.slice(1)).join(' ').replace(/d\.c\./gi,'D. C.');
 export const departments = divipola.departments.map(([code,name]) => ({code,name:displayName(name)})).sort((a,b)=>a.name.localeCompare(b.name,'es'));
 export const municipalities = divipola.municipalities.map(([code,name,type]) => ({code,departmentCode:code.slice(0,2),name:displayName(name),type}));
 const departmentIndex = new Map(departments.map(d=>[d.code,d]));

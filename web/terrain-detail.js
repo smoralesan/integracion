@@ -1,3 +1,4 @@
+import {activeMarket} from './country-config.js';
 import {locationBreadcrumbHTML} from './location-breadcrumb.js';
 import {formatDeclaredArea} from './declared-area.js';
 import {additionalTerrainExamples} from './additional-terrain-examples.js';
@@ -10,7 +11,7 @@ import {informationLegendHTML} from './journey-ui.js';
 import {hasConstructionProject,constructionProjectHTML} from './terrain-project.js';
 import {demoTerrainGeometry} from './terrain-parcels.js';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const n=v=>new Intl.NumberFormat('es-CO',{maximumFractionDigits:0}).format(v);
+const n=v=>new Intl.NumberFormat(activeMarket.locale,{maximumFractionDigits:0}).format(v);
 export const terrainContexts={
  ...Object.fromEntries(additionalTerrainExamples.map(p=>[p.id,{focus:'Un lote simulado para explorar la plataforma.',intro:'Información ilustrativa para probar el recorrido.',purpose:intendedUseLabel(p.intended_use)+' por evaluar',sector:p.neighborhood,context:'Ejemplo de solo lote, sin proyecto constructivo asociado.',questions:['¿Qué norma y restricciones deben verificarse?','¿Qué estudios y soportes hacen falta?','¿Qué condiciones de negociación se podrían evaluar?'],specialists:['abogados','arquitectos','estructuradores']}])) ,
  'TER-DEMO-001':{focus:'Un lote para pensar un desarrollo desde el inicio.',intro:'Explora una alternativa de venta o aporte y define qué estudios necesitas antes de presentar una propuesta.',purpose:'Residencial por evaluar',sector:'Zona Norte · Referencia ilustrativa',context:'El ejemplo plantea la búsqueda de un desarrollador que evalúe el predio y construya una propuesta junto al propietario.',questions:['¿Qué tratamiento urbanístico aplica al predio?','¿Cuál es el área útil después de afectaciones y cesiones?','¿Qué condiciones aceptaría el propietario para un aporte?'],specialists:['abogados','arquitectos','estructuradores']},

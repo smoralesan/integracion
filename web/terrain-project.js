@@ -1,7 +1,8 @@
+import {activeMarket} from './country-config.js';
 import {terrainSearchKind} from './terrain-search.js';
 import {specialistBySlug} from './specialist-landings.js';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const number=n=>new Intl.NumberFormat('es-CO').format(n);
+const number=n=>new Intl.NumberFormat(activeMarket.locale).format(n);
 export const hasConstructionProject=p=>(p.type||p.kind)==='terreno'&&p.landContent==='land-project'&&!!p.developmentProject&&p.developmentProject.landReference===p.id;
 export function terrainContentLabel(p){const kind=terrainSearchKind(p);return kind==='land-project'?'Lote con proyecto':kind==='land-only'?'Solo lote':'';}
 export function terrainCardTag(p){const label=terrainContentLabel(p);return label?`<div class="terrain-card-tag ${hasConstructionProject(p)?'with-project':''}">${hasConstructionProject(p)?'<span aria-hidden="true">▤</span>':''}${label}${hasConstructionProject(p)?`<small>${e(p.developmentProject.stage)}</small>`:''}</div>`:'';}

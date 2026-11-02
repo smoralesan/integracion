@@ -1,3 +1,4 @@
+import {activeMarket} from './country-config.js';
 import {obligations} from './land-situation-model.js';
 import {avatarStack} from './avatars.js';
 import {resolveLocation} from './colombia-locations.js';
@@ -11,7 +12,7 @@ const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 const stamp=v=>Number.isFinite(Date.parse(v))?Date.parse(v):0;
 export const spaceTabs=[['submissions','Mis inmuebles'],['drafts','Borradores'],['favorites','Guardados'],['searches','Búsquedas'],['requests','Mis solicitudes']];
 export const resolveSpaceTab=(value,fallback='submissions')=>spaceTabs.some(([key])=>key===value)?value:value==='interests'?'requests':fallback==='interests'?'requests':spaceTabs.some(([key])=>key===fallback)?fallback:'submissions';
-export const spaceDate=v=>stamp(v)?new Intl.DateTimeFormat('es-CO',{dateStyle:'medium',timeStyle:'short',timeZone:'America/Bogota'}).format(new Date(v)):'Fecha no disponible';
+export const spaceDate=v=>stamp(v)?new Intl.DateTimeFormat(activeMarket.locale,{dateStyle:'medium',timeStyle:'short',timeZone:activeMarket.timeZone}).format(new Date(v)):'Fecha no disponible';
 export function draftNextStep(draft){
  const f=draft.form||{},step=Number(draft.step)||1,missing=[];
  if(step===1){if(!String(f.title||'').trim())missing.push('nombre');if(!resolveLocation(f))missing.push('departamento y municipio');if(!f.relationship)missing.push('relación con el registro');if(!f.land_type)missing.push('tipo de '+(draft.kind==='proyecto'?'desarrollo':'lote'));if(draft.kind==='terreno'){if(!(Number(f.area)>0))missing.push('área');if(!['land-only','land-project'].includes(f.land_content))missing.push('qué incluye la oferta');try{normalizeBrokerExclusivity(f.relationship,f.broker_exclusivity);}catch{missing.push('exclusividad');}if(terrainLocationMode(f)==='pin'){try{normalizeLocationPin({coordinates:f.location_pin,confirmed:f.location_pin_confirmed});}catch{missing.push('pin confirmado');}}else if(!f.parcel_geometry||!f.parcel_confirmed)missing.push('perímetro confirmado');}}
