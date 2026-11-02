@@ -326,7 +326,7 @@ export class LandMap {
     this.map.resize();
     if(this.options.drawing)return;
     if(changed&&this.options.context==='search')this.fitView({restoreCamera:false});
-    else if(['parcel','detail'].includes(this.options.context)&&this.options.geometry)this.fitView();
+    else if(changed&&this.options.context==='detail'&&this.options.geometry)this.fitView();
   }
   fitView({restoreCamera=true}={}) {
     const o = this.options;

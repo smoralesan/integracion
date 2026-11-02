@@ -149,3 +149,12 @@ test('restaurar una búsqueda elimina el margen heredado de otro contexto del ma
  view.map={jumpTo:value=>camera=value};view.fitView();
  assert.deepEqual(camera,{center:[-75.5,10.5],zoom:11,padding:0});
 });
+
+ test('marcar o mover un pin conserva la cámara incluso si cambia la altura del formulario',()=>{
+ const view=new LandMap();let resized=0;
+ view.root={clientWidth:700,clientHeight:420};view.viewportSize={width:700,height:420};
+ view.options={context:'parcel',geometry:{type:'Point',coordinates:[-74.05,4.65]}};
+ view.map={resize:()=>resized++,easeTo:()=>assert.fail('Marcar un pin no debe centrar ni cambiar el zoom')};
+ view.resize();view.root.clientHeight=460;view.resize();
+ assert.equal(resized,2);
+ });
