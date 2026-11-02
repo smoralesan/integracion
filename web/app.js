@@ -393,15 +393,6 @@ function syncParcel() {
       refreshSubmissionSummary();
       saveDraft(true);
     },
-    onArea: area => {
-      if (state.form.client_id !== key) return;
-      state.form.area = String(area);
-      const field = $('[data-form="submission"] [name="area"]');
-      if (field) field.value = area;
-      updateAreaEquivalences($('[data-form="submission"]'),area);
-      refreshSubmissionSummary();
-      saveDraft(true);
-    },
     onDocument: document => {
       if (state.form.client_id !== key) return;
       state.files = state.files.filter(f => f.id || f.name !== document.name);
