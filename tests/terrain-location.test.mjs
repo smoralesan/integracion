@@ -37,7 +37,7 @@ test('los datos esenciales exigen dirección catastral y área declarada incluso
 
 test('el recorrido guarda y recupera dirección, área, pin, negociación y referencias de fotos sin alterar el área',()=>{
  const id=crypto.randomUUID(),store={submissions:[]};
- const form={client_id:id,title:'Prueba de recorrido',cadastral_address:'Predio ficticio de pruebas',area:'6400.5',location_mode:'pin',location_pin:[-74,4],location_pin_confirmed:true,negotiation:'sale',value_status:'known',amount:'900000000',price_method:'cop',visibility:'off_market'};
+ const form={client_id:id,title:'Prueba de recorrido',cadastral_address:'Predio ficticio de pruebas',area:'6400.5',location_mode:'pin',location_pin:[-74,4],location_pin_confirmed:true,negotiation:'sale',value_status:'known',amount:'900000000',price_method:'cop',visibility:'off-market'};
  for(let step=1;step<=4;step++){putDraft(store,{kind:'terreno',step,form,files:[{origin:'demo',name:'Foto ficticia.jpg'}]});const recovered=chooseDraft(store,'terreno',id);assert.equal(recovered.step,step);validateTerrainDetails(recovered.form);assert.equal(recovered.form.location_pin_confirmed,true);assert.equal(recovered.form.area,'6400.5');}
  const completed=completeLocalRegistration(store,chooseDraft(store,'terreno',id));
  assert.equal(completed.form.cadastral_address,form.cadastral_address);assert.equal(completed.form.amount,form.amount);assert.equal(completed.files[0].name,'Foto ficticia.jpg');assert.equal(chooseDraft(store,'terreno',id),null);
