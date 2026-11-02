@@ -7,6 +7,9 @@ export function normalizeNegotiationForm(input){
  const form=structuredClone(input),status=valueStatus(form);
  if(!valueStatusOptions.some(([key])=>key===status))throw Error('Indica si tienes un valor de referencia o necesitas orientación.');
  form.value_status=status;
+ const mixedContribution=form.negotiation==='contribution'&&form.compensation==='mixed';
+ if(!mixedContribution)delete form.cash_percent;
+
  if(status!=='known')for(const key of ['amount','amount_usd','exchange_rate'])delete form[key];
  if(!hasCashPreferences(form))for(const key of ['receive_currencies','exchange_rate','rate_method','negotiable'])delete form[key];
  return form;
@@ -15,3 +18,5 @@ export function referenceValueSummary(form){
  const status=valueStatus(form);
  return status==='advice'?'Por definir · Necesita orientación':status==='pending'?'Por definir':null;
 }
+
+export function validateContributionPercentage(form){if(form.negotiation==='contribution'&&form.compensation==='mixed'&&form.cash_percent!==''&&form.cash_percent!=null&&(!Number.isFinite(Number(form.cash_percent))||Number(form.cash_percent)<0||Number(form.cash_percent)>100))throw Error('El porcentaje en dinero debe estar entre 0 y 100.');}

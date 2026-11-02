@@ -1,4 +1,4 @@
-import {normalizeNegotiationForm} from '../web/land-negotiation.js';
+import {normalizeNegotiationForm,validateContributionPercentage} from '../web/land-negotiation.js';
 import {normalizeLandVisibility} from '../web/land-visibility.js';
 import {normalizeLocationPin,validateTerrainDetails} from '../web/terrain-location.js';
 import {landUses} from '../web/development-sectors.js';
@@ -131,7 +131,7 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       if(data.form?.land_content!=null&&!['land-only','land-project'].includes(data.form.land_content))error(400,'Selecciona si ofreces solo terreno o terreno con proyecto.');
       if(data.kind!=='terreno')delete form.land_content;
       if(data.kind==='terreno'){try{form.visibility=normalizeLandVisibility(data.form?.visibility);}catch(e){error(400,e.message);}}
-      if(data.kind==='terreno'){try{form=normalizeNegotiationForm(form);}catch(e){error(400,e.message);}}
+      if(data.kind==='terreno'){try{validateContributionPercentage(form);form=normalizeNegotiationForm(form);}catch(e){error(400,e.message);}}
       if(form.intended_use&&!landUses.some(([key])=>key===form.intended_use))error(400,'Selecciona un uso a evaluar válido.');
       if(data.form?.valuation_assistance!=null&&typeof data.form.valuation_assistance!=='boolean')error(400,'La solicitud de asesoría premium no es válida.');
       if(data.kind==='terreno'){try{const exclusivity=normalizeBrokerExclusivity(form.relationship,data.form?.broker_exclusivity);if(exclusivity)form.broker_exclusivity=exclusivity;}catch(e){error(400,e.message);}}

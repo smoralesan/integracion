@@ -1,3 +1,4 @@
+import {formatDeclaredArea} from './declared-area.js';
 import {
   MAPBOX_TOKEN,
   MAPBOX_VERSION,
@@ -235,7 +236,7 @@ export class LandMap {
       content.className = "real-map-popup";
       const detailHref=o.context==='project-needs'?'#/necesidades/'+selected.projectId:'#/oportunidad/'+selected.id;
       const detailLabel=o.context==='project-needs'?'Ver proyecto y necesidades →':'Ver oportunidad →';
-      content.innerHTML = o.richPopup ? `<img src="${escape(selected.image)}" alt=""><div><strong>${escape(selected.city)}, ${escape(selected.region)}</strong><small>${selected.area ? new Intl.NumberFormat("es-CO").format(selected.area) + " m² · " : ""}${escape(selected.mode)}</small>${selected.price?`<span class="hero-popup-price">COP $${new Intl.NumberFormat("es-CO").format(selected.price)}</span>`:""}<span>Ejemplo · Ubicación no predial</span><a href="${escape(detailHref)}">${detailLabel}</a></div>` : `<img src="${escape(selected.image)}" alt=""><div><strong>${escape(o.context==='project-needs'?selected.title:selected.city)} · Ejemplo</strong><small>${selected.area ? new Intl.NumberFormat("es-CO").format(selected.area) + " m² · " : ""}${escape(selected.mode)}</small><span>${selected.land_status === "searching" ? "Proyecto sin terreno; referencia municipal" : "Ubicación ilustrativa, no predial"}</span><a href="${escape(detailHref)}">${detailLabel}</a></div>`;
+      content.innerHTML = o.richPopup ? `<img src="${escape(selected.image)}" alt=""><div><strong>${escape(selected.city)}, ${escape(selected.region)}</strong><small>${selected.area ? formatDeclaredArea(selected.area) + " m² · " : ""}${escape(selected.mode)}</small>${selected.price?`<span class="hero-popup-price">COP $${new Intl.NumberFormat("es-CO").format(selected.price)}</span>`:""}<span>Ejemplo · Ubicación no predial</span><a href="${escape(detailHref)}">${detailLabel}</a></div>` : `<img src="${escape(selected.image)}" alt=""><div><strong>${escape(o.context==='project-needs'?selected.title:selected.city)} · Ejemplo</strong><small>${selected.area ? formatDeclaredArea(selected.area) + " m² · " : ""}${escape(selected.mode)}</small><span>${selected.land_status === "searching" ? "Proyecto sin terreno; referencia municipal" : "Ubicación ilustrativa, no predial"}</span><a href="${escape(detailHref)}">${detailLabel}</a></div>`;
       this.popup = new window.mapboxgl.Popup({
         offset: o.richPopup ? 12 : 30,
         closeButton: true,

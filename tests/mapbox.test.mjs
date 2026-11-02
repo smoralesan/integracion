@@ -158,3 +158,13 @@ test('restaurar una búsqueda elimina el margen heredado de otro contexto del ma
  view.resize();view.root.clientHeight=460;view.resize();
  assert.equal(resized,2);
  });
+
+test('los popups básico y destacado conservan todos los decimales del área declarada',t=>{
+ const previousDocument=globalThis.document,previousWindow=globalThis.window;let html;
+ globalThis.document={createElement:()=>({setAttribute(){},addEventListener(){},innerHTML:''})};
+ class Marker{setLngLat(){return this;}addTo(){return this;}remove(){}}
+ class Popup{setLngLat(){return this;}setDOMContent(content){html=content.innerHTML;return this;}addTo(){return this;}getElement(){return {querySelector:()=>null};}isOpen(){return true;}remove(){}}
+ globalThis.window={mapboxgl:{Marker,Popup}};
+ t.after(()=>{if(previousDocument===undefined)delete globalThis.document;else globalThis.document=previousDocument;if(previousWindow===undefined)delete globalThis.window;else globalThis.window=previousWindow;});
+ for(const richPopup of [false,true]){const view=new LandMap();view.map={};view.options={context:'search',richPopup,selectedId:'lot',items:[{id:'lot',title:'Prueba',city:'Cartagena',region:'Bolívar',coordinates:[-75,10],area:'5200.751234',mode:'Venta'}]};view.updateMarkers();assert.match(html,/5\.200,751234 m²/);}
+});

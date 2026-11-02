@@ -15,7 +15,7 @@ import {mountSpaceRequests} from './space-requests.js';
 import {terrainBasicsHTML,syncPublicationBasics,publicationPreviewHTML,nextStepsHTML} from './publication-ux.js';
 import {landToolsPage,mountLandTools,landToolRoutes} from './land-tools.js';
 import {notaryDirectoryPage} from './notary-directory.js';
-import {valueStatusOptions,valueStatus,hasCashPreferences,negotiationValueLabel,normalizeNegotiationForm,referenceValueSummary} from './land-negotiation.js';
+import {valueStatusOptions,valueStatus,hasCashPreferences,negotiationValueLabel,normalizeNegotiationForm,referenceValueSummary,validateContributionPercentage} from './land-negotiation.js';
 import {visibilityFieldsHTML,visibilityLabel} from './land-visibility.js';
 import {howItWorksPage,mountHowItWorks} from './how-it-works.js';
 import {proposalDemoPage,mountProposalDemo} from './proposal-demo.js';
@@ -1897,7 +1897,7 @@ document.addEventListener("submit", async (event) => {
       try{if(terrainLocationMode(state.form)==='pin')normalizeLocationPin({coordinates:state.form.location_pin,confirmed:state.form.location_pin_confirmed});else if(!state.form.parcel_geometry||!state.form.parcel_confirmed)throw Error('Añade y confirma el polígono, o cambia a un pin aproximado.');}
       catch(error){if(state.formStep!==1){state.formStep=1;render();}showFormIssue(error.message);return;}
     }
-    if(state.formKind==='terreno'&&state.formStep>=2){try{normalizeNegotiationForm(state.form);}catch(error){state.formStep=2;render();showFormIssue(error.message);return;}}
+    if(state.formKind==='terreno'&&state.formStep>=2){try{validateContributionPercentage(state.form);normalizeNegotiationForm(state.form);}catch(error){state.formStep=2;render();showFormIssue(error.message);return;}}
     if (state.formKind === "terreno" && state.formStep >= 2 && valueStatus(state.form)==='known') {
       const names = [
         "amount",
@@ -1919,15 +1919,6 @@ document.addEventListener("submit", async (event) => {
         );
         return;
       }
-    }
-    if (
-      state.form.cash_percent !== "" &&
-      state.form.cash_percent !== undefined &&
-      (Number(state.form.cash_percent) < 0 ||
-        Number(state.form.cash_percent) > 100)
-    ) {
-      showFormIssue("El porcentaje en dinero debe estar entre 0 y 100.");
-      return;
     }
     if (
       state.form.desired_min &&

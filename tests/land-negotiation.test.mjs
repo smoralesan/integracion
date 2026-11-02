@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {normalizeNegotiationForm,valueStatus,hasCashPreferences,negotiationValueLabel,referenceValueSummary} from '../web/land-negotiation.js';
+import {normalizeNegotiationForm,valueStatus,hasCashPreferences,negotiationValueLabel,referenceValueSummary,validateContributionPercentage} from '../web/land-negotiation.js';
 import {completeLocalRegistration} from '../web/registration-journey.js';
 test('Changing to pending or advice excludes former prices from the submitted record without erasing the draft',()=>{
  for(const status of ['pending','advice']){
@@ -28,4 +28,16 @@ test('The local completion uses the same active value projection as the real sub
  const form={client_id:'4be55c58-ddde-491e-bde4-12e5097a7e1b',title:'Prueba',value_status:'advice',amount:'1500000',valuation_assistance:false};
  const record=completeLocalRegistration({submissions:[],drafts:[]},{kind:'terreno',form,files:[]});
  assert.equal(record.form.value_status,'advice');assert.ok(!('amount' in record.form));assert.equal(form.amount,'1500000');assert.equal(record.form.valuation_assistance,false);
+});
+
+test('un porcentaje oculto no bloquea venta, alternativas ni aporte solo en inmuebles y se conserva en el borrador',()=>{
+ for(const [negotiation,compensation] of [['sale','mixed'],['open','mixed'],['contribution','units'],['contribution','cash']]){
+ const draft={negotiation,compensation,cash_percent:'120',value_status:'pending'};
+ assert.doesNotThrow(()=>validateContributionPercentage(draft));const sent=normalizeNegotiationForm(draft);assert.equal(sent.cash_percent,undefined);assert.equal(draft.cash_percent,'120');
+ }
+});
+test('el aporte mixto valida el porcentaje activo y permite dejarlo por definir',()=>{
+ const draft={negotiation:'contribution',compensation:'mixed',value_status:'pending'};
+ for(const cash_percent of ['120','-1','no','Infinity'])assert.throws(()=>validateContributionPercentage({...draft,cash_percent}),/porcentaje/);
+ for(const cash_percent of ['',undefined,'0','50.75','100'])assert.doesNotThrow(()=>validateContributionPercentage({...draft,cash_percent}));
 });
