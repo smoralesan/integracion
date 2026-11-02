@@ -1,3 +1,4 @@
+import {updateAreaEquivalences} from './area-equivalences.js';
 import {mountPublicationProgress} from './publication-progress.js';
 import {updateCatalogPublications} from './catalog-publications-update.js';
 import {matchesCatalog} from './catalog-match.js';
@@ -397,6 +398,7 @@ function syncParcel() {
       state.form.area = String(area);
       const field = $('[data-form="submission"] [name="area"]');
       if (field) field.value = area;
+      updateAreaEquivalences($('[data-form="submission"]'),area);
       refreshSubmissionSummary();
       saveDraft(true);
     },
@@ -1774,6 +1776,7 @@ document.addEventListener("focusout", (event) => {
   captureForm();
 });
 document.addEventListener("input", (event) => {
+  if(event.target.name==='area'&&event.target.closest('[data-form="submission"]'))updateAreaEquivalences(event.target.form,event.target.value);
   if(event.target.closest('[data-form="submission"]')&&!event.target.matches('[data-money],input[type="file"]')){
     clearTimeout(draftSaveTimer);const status=$('[data-draft-status]');if(status)status.textContent="Guardando en este navegador…";draftSaveTimer=setTimeout(()=>{if($('[data-form="submission"]'))saveDraft(true);},350);
   }
