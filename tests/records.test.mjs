@@ -18,7 +18,7 @@ function harness(){
   }};
 }
 const upload=(name,bytes)=>{const f=new FormData();f.set('file',new File([bytes],name));return f;};
-const record=(documentIds=[])=>({id:crypto.randomUUID(),kind:'terreno',form:{title:'Lote ficticio de prueba',city:'Cartagena',region:'Bolívar',relationship:'owner',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",amount:'2000000000.50'},parcel:{geometry,confirmed:true,source:'Prueba'},documentIds});
+const record=(documentIds=[])=>({id:crypto.randomUUID(),kind:'terreno',form:{visibility:'public',title:'Lote ficticio de prueba',city:'Cartagena',region:'Bolívar',relationship:'owner',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",amount:'2000000000.50'},parcel:{geometry,confirmed:true,source:'Prueba'},documentIds});
 test('requires trusted identity and same origin mutations',async()=>{
   const h=harness();assert.equal((await h.request('session',null,{owner:null})).status,401);
   assert.equal((await h.request('documents',{name:'Plan',url:'https://example.com/a'},{origin:'https://other.test'})).status,403);
@@ -136,4 +136,11 @@ test('el servidor exige dirección y área del formulario para pin y polígono s
   data.form.cadastral_address='Dirección ficticia';data.form.area='';assert.equal((await h.request('records',data)).status,400);
   data.form.area='1234.5';const response=await h.request('records',data);assert.equal(response.status,201);assert.equal((await response.json()).form.area,'1234.5');
  }
+});
+
+test('las nuevas publicaciones exigen visibilidad y valor conocido completo; el área científica se guarda normalizada',async()=>{
+ const h=harness();
+ for(const change of [{visibility:undefined},{visibility:''},{value_status:'known',amount:''},{value_status:'known',price_method:'dual',amount_usd:''}]){const data=record();Object.assign(data.form,change);assert.equal((await h.request('records',data)).status,400);}
+ const data=record();data.form.area='1e5';const response=await h.request('records',data);assert.equal(response.status,201);assert.equal((await response.json()).form.area,'100000');
+ const project=record();project.kind='proyecto';Object.assign(project.form,{land_status:'owned',need:'Terreno',desired_min:'10000',desired_max:'5000'});const projectResponse=await h.request('records',project);assert.equal(projectResponse.status,201);const stored=await projectResponse.json();assert.equal(stored.form.desired_min,undefined);assert.equal(stored.form.need,'Lote');
 });

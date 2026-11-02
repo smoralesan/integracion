@@ -1,3 +1,4 @@
+import {canonicalDeclaredArea} from './declared-area.js';
 // A pin locates a terrain approximately. It never supplies a perimeter or area.
 export function normalizeLocationPin(value) {
  if(value?.confirmed!==true)throw Error('Marca y confirma la ubicación aproximada del lote.');
@@ -29,6 +30,6 @@ export function captureLocationConfirmation(form, controls) {
 
 export function validateTerrainDetails(form){
  if(!String(form.cadastral_address||'').trim())throw Error('Indica la dirección catastral del lote para continuar.');
- const area=Number(form.area);
+ const canonical=canonicalDeclaredArea(form.area),area=canonical===null?NaN:Number(canonical);
  if(!Number.isFinite(area)||area<1)throw Error('Indica un área declarada válida de al menos 1 m². El polígono es solo de referencia.');
 }

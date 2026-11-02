@@ -1,3 +1,5 @@
+import {validateNegotiationSubmission,normalizeProjectForm,validateProjectAreaRange} from '../web/submission-validation.js';
+import {canonicalDeclaredArea} from '../web/declared-area.js';
 import {normalizeNegotiationForm,validateContributionPercentage} from '../web/land-negotiation.js';
 import {normalizeLandVisibility} from '../web/land-visibility.js';
 import {normalizeLocationPin,validateTerrainDetails} from '../web/terrain-location.js';
@@ -131,8 +133,10 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       if(data.form?.land_content!=null&&!['land-only','land-project'].includes(data.form.land_content))error(400,'Selecciona si ofreces solo lote o lote con proyecto.');
       if(data.kind!=='terreno')delete form.land_content;
       if(data.kind==='terreno')delete form.reactivation;
-      if(data.kind==='terreno'){try{form.visibility=normalizeLandVisibility(data.form?.visibility);}catch(e){error(400,e.message);}}
+      if(data.kind==='terreno'){try{validateNegotiationSubmission({...form,visibility:data.form?.visibility});form.visibility=normalizeLandVisibility(data.form?.visibility);}catch(e){error(400,e.message);}}
       if(data.kind==='terreno'){try{validateContributionPercentage(form);form=normalizeNegotiationForm(form);}catch(e){error(400,e.message);}}
+      if(form.area!=null&&form.area!==''){const area=canonicalDeclaredArea(form.area);if(area===null)error(400,'Indica un área declarada válida.');form.area=area;}
+      if(data.kind==='proyecto'){try{validateProjectAreaRange(form);form=normalizeProjectForm(form);}catch(e){error(400,e.message);}}
       if(form.intended_use&&!landUses.some(([key])=>key===form.intended_use))error(400,'Selecciona un uso a evaluar válido.');
       if(data.form?.valuation_assistance!=null&&typeof data.form.valuation_assistance!=='boolean')error(400,'La solicitud de asesoría premium no es válida.');
       if(data.kind==='terreno'){try{const exclusivity=normalizeBrokerExclusivity(form.relationship,data.form?.broker_exclusivity);if(exclusivity)form.broker_exclusivity=exclusivity;}catch(e){error(400,e.message);}}

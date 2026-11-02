@@ -21,14 +21,14 @@ test('changing to paid or not applicable removes stale debt and supporting detai
  const c=normalize(s);assert.deepEqual(c.obligations.predial,{status:'current'});assert.deepEqual(c.obligations.otras,{status:'na'});
 });
 test('private financial information and premium request never enter public summaries',()=>{
- const record={form:{title:'Lote',land_situation:normalize(situation()),valuation_assistance:true}};
+ const record={form:{visibility:'public',title:'Lote',land_situation:normalize(situation()),valuation_assistance:true}};
  assert.equal(publicSummary(record).land_situation,undefined);assert.equal(publicSummary(record).valuation_assistance,undefined);
  const s=situation();s.obligations.predial={status:'pending',resolution:'<script>alert(1)</script>'};assert.doesNotMatch(landSituationSummary(normalize(s)),/<script>/);
 });
 test('API persists private situation and premium request and prevents another owner from reading them',async()=>{
  const bucket=new MemoryBucket(),env={BUCKET:bucket};
  const request=(path,body,user='alice')=>handleApi(new Request('https://portal.test/api/'+path,{method:body?'POST':'GET',headers:{origin:'https://portal.test','content-type':'application/json','oai-authenticated-user-id':user},...(body?{body:JSON.stringify(body)}:{})}),env);
- const record={id:crypto.randomUUID(),kind:'terreno',form:{title:'Prueba privada',department_code:'13',municipality_code:'13001',relationship:'Propietario',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",valuation_assistance:true,land_situation:situation()},documentIds:[],parcel:{confirmed:true,source:'Prueba',geometry:{type:'Polygon',coordinates:[[[-75.5,10.4],[-75.49,10.4],[-75.49,10.41],[-75.5,10.41],[-75.5,10.4]]]}}};
+ const record={id:crypto.randomUUID(),kind:'terreno',form:{visibility:'public',title:'Prueba privada',department_code:'13',municipality_code:'13001',relationship:'Propietario',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",valuation_assistance:true,land_situation:situation()},documentIds:[],parcel:{confirmed:true,source:'Prueba',geometry:{type:'Polygon',coordinates:[[[-75.5,10.4],[-75.49,10.4],[-75.49,10.41],[-75.5,10.41],[-75.5,10.4]]]}}};
  const response=await request('records',record);assert.equal(response.status,201);const saved=await response.json();assert.equal(saved.form.valuation_assistance,true);assert.equal(saved.form.land_situation.obligations.predial.status,'unknown');assert.equal(saved.form.land_situation.verified,undefined);
  assert.equal((await request('records/'+record.id,null,'bob')).status,404);
  record.id=crypto.randomUUID();record.form.land_situation.obligations.predial.supportId=crypto.randomUUID();assert.equal((await request('records',record)).status,400);
