@@ -1,5 +1,5 @@
 import {catalogRecoveryHTML} from './catalog-recovery.js';
-import {mountPublicGalleryUX} from './opportunity-journey-ux.js';
+import {mountPublicGalleryUX,mountMobileContactSpacing} from './opportunity-journey-ux.js';
 import {terrainPhotoSectionHTML,mountTerrainPhotos,isLocalPhoto} from './terrain-photo-preview.js';
 import {updateAreaEquivalences} from './area-equivalences.js';
 import {mountPublicationProgress} from './publication-progress.js';
@@ -1014,6 +1014,7 @@ function render() {
   if(path.startsWith('/equipo/')&&reviewDesk.record)$('[data-review-desk]').insertAdjacentHTML('beforeend',teamExperienceHTML(reviewDesk.record));
   opportunityExperience.mount($('#contenido'),{owner:state.remoteRecord,team:reviewDesk.record});
   mountPublicGalleryUX($('#contenido'));
+  mountMobileContactSpacing($('#contenido'));
   mountActivity($('#contenido'),{team:!!state.session?.teamRole});
   mountSpaceFilters($('#contenido'),filter=>{Object.assign(state,{spaceQuery:filter.query,spaceStatus:filter.status});render();$('.ws-result-count')?.setAttribute('tabindex','-1');$('.ws-result-count')?.focus({preventScroll:true});});
   const spaceRequestsHost=$('[data-space-requests]');if(spaceRequestsHost)mountSpaceRequests(spaceRequestsHost,{session:state.session,localHTML:localInterestHTML()});
