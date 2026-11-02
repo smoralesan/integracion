@@ -2,9 +2,9 @@ import {terrainConsultOptions} from './terrain-contact.js';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function catalogGroupsHTML(state){
  const active=state.reactivationFilter==='only'?'reactivacion':state.type==='terreno'?(state.landContent||'terreno'):state.type==='proyecto'?'proyecto':'todos';
- const groups=[['terreno','Buscar terrenos','terreno'],['proyecto','Proyectos','proyecto'],...(state.type==='terreno'?[]:[['reactivacion','Proyectos para reactivación','proyecto&estado=reactivacion']])];
+ const groups=[['terreno','Buscar lotes','terreno'],['proyecto','Proyectos','proyecto'],...(state.type==='terreno'?[]:[['reactivacion','Proyectos para reactivación','proyecto&estado=reactivacion']])];
  const main=state.type==='terreno'?'terreno':active;
- return `<nav class="jr-categories" aria-label="Qué quieres explorar">${groups.map(([key,label,query])=>`<a href="#/oportunidades?tipo=${query}" ${key===main?'aria-current="page"':''}>${label}</a>`).join('')}</nav>${state.type==='terreno'?`<nav class="jr-categories" aria-label="Qué incluye el terreno">${[['','Todos los terrenos','todos'],['land-only','Sin proyecto asociado','solo-terreno'],['land-project','Con proyecto asociado','con-proyecto']].map(([key,label,query])=>`<a href="#/buscar?contenido=${query}" ${state.landContent===key?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`:''}`;
+ return `<nav class="jr-categories" aria-label="Qué quieres explorar">${groups.map(([key,label,query])=>`<a href="#/oportunidades?tipo=${query}" ${key===main?'aria-current="page"':''}>${label}</a>`).join('')}</nav>${state.type==='terreno'?`<nav class="jr-categories" aria-label="Qué incluye el lote">${[['','Todos los lotes','todos'],['land-only','Sin proyecto asociado','solo-terreno'],['land-project','Con proyecto asociado','con-proyecto']].map(([key,label,query])=>`<a href="#/buscar?contenido=${query}" ${state.landContent===key?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`:''}`;
 }
 export function informationLegendHTML(){return `<details class="jr-information-legend"><summary>¿Qué significa el estado de la información?</summary><dl><div><dt>Declarado por el titular</dt><dd>Información suministrada; aún requiere contraste con sus soportes.</dd></div><div><dt>Soporte aportado</dt><dd>Existe documentación vigente asociada. El acceso continúa siendo privado.</dd></div><div><dt>Revisado por el equipo</dt><dd>Se registró una revisión de ese grupo. No certifica titularidad ni viabilidad.</dd></div></dl></details>`;}
 export function detailTabsHTML(id,tabs){
@@ -13,7 +13,7 @@ export function detailTabsHTML(id,tabs){
 }
 export function consultationHTML(base,offer={}){
  if(!/^#\/interes\/publicacion\/[0-9a-f-]{36}$/i.test(base))return '';
- return `<div class="tu-consult-dialog"><span class="eyebrow">Un siguiente paso claro</span><h2 id="dialog-title">¿Qué te gustaría evaluar?</h2><p>Elige una opción. Podrás revisar tu solicitud antes de enviarla.</p><div>${terrainConsultOptions(offer).map(([key,item])=>`<a href="${e(base)}?consulta=${key}"><div><strong>${e(item.label)}</strong><small>${e(item.copy)}</small></div><span aria-hidden="true">→</span></a>`).join('')}</div><small>Elegir una opción no envía información, reserva el terreno ni confirma una visita.</small></div>`;
+ return `<div class="tu-consult-dialog"><span class="eyebrow">Un siguiente paso claro</span><h2 id="dialog-title">¿Qué te gustaría evaluar?</h2><p>Elige una opción. Podrás revisar tu solicitud antes de enviarla.</p><div>${terrainConsultOptions(offer).map(([key,item])=>`<a href="${e(base)}?consulta=${key}"><div><strong>${e(item.label)}</strong><small>${e(item.copy)}</small></div><span aria-hidden="true">→</span></a>`).join('')}</div><small>Elegir una opción no envía información, reserva el lote ni confirma una visita.</small></div>`;
 }
 export function mountJourney(root,{modal}={}){
  if(!root)return;

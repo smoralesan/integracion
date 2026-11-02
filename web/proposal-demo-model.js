@@ -1,5 +1,5 @@
-export const proposalModes={sale:'Compra del terreno',contribution:'Aporte al desarrollo',mixed:'Compra y aporte'};
-export const proposalConditions={titles:'Revisión de títulos y obligaciones',technical:'Estudios y norma urbanística',finance:'Disponibilidad de financiación',visit:'Visita y revisión del terreno'};
+export const proposalModes={sale:'Compra del lote',contribution:'Aporte al desarrollo',mixed:'Compra y aporte'};
+export const proposalConditions={titles:'Revisión de títulos y obligaciones',technical:'Estudios y norma urbanística',finance:'Disponibilidad de financiación',visit:'Visita y revisión del lote'};
 export const proposalStatuses={draft:'Borrador',open:'Pendiente de respuesta',base:'Base para continuar',closed:'Conversación cerrada'};
 export const proposalRoles={buyer:'Comprador de ejemplo',seller:'Propietario de ejemplo'};
 const text=(v,n=1000)=>typeof v==='string'?v.trim().slice(0,n):'';

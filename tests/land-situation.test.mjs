@@ -21,7 +21,7 @@ test('changing to paid or not applicable removes stale debt and supporting detai
  const c=normalize(s);assert.deepEqual(c.obligations.predial,{status:'current'});assert.deepEqual(c.obligations.otras,{status:'na'});
 });
 test('private financial information and premium request never enter public summaries',()=>{
- const record={form:{title:'Terreno',land_situation:normalize(situation()),valuation_assistance:true}};
+ const record={form:{title:'Lote',land_situation:normalize(situation()),valuation_assistance:true}};
  assert.equal(publicSummary(record).land_situation,undefined);assert.equal(publicSummary(record).valuation_assistance,undefined);
  const s=situation();s.obligations.predial={status:'pending',resolution:'<script>alert(1)</script>'};assert.doesNotMatch(landSituationSummary(normalize(s)),/<script>/);
 });

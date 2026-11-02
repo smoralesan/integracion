@@ -195,7 +195,7 @@ export class LandMap {
     if(o.context==='parcel'&&o.geometry?.type==='Point'&&isCoordinate(o.geometry.coordinates)){
       const marker=new window.mapboxgl.Marker({color:'#1265e9'}).setLngLat(o.geometry.coordinates).addTo(this.map);
       marker.getElement().setAttribute('role','img');
-      marker.getElement().setAttribute('aria-label','Pin de ubicación aproximada del terreno. No define sus linderos.');
+      marker.getElement().setAttribute('aria-label','Pin de ubicación aproximada del lote. No define sus linderos.');
       this.markers.push(marker);
     }
     for (const item of o.items.filter((p) => isCoordinate(p.coordinates))) {
@@ -236,7 +236,7 @@ export class LandMap {
       content.className = "real-map-popup";
       const detailHref=o.context==='project-needs'?'#/necesidades/'+selected.projectId:'#/oportunidad/'+selected.id;
       const detailLabel=o.context==='project-needs'?'Ver proyecto y necesidades →':'Ver oportunidad →';
-      content.innerHTML = o.richPopup ? `<img src="${escape(selected.image)}" alt=""><div><strong>${escape(selected.city)}, ${escape(selected.region)}</strong><small>${selected.area ? formatDeclaredArea(selected.area) + " m² · " : ""}${escape(selected.mode)}</small>${selected.price?`<span class="hero-popup-price">COP $${new Intl.NumberFormat("es-CO").format(selected.price)}</span>`:""}<span>Ejemplo · Ubicación no predial</span><a href="${escape(detailHref)}">${detailLabel}</a></div>` : `<img src="${escape(selected.image)}" alt=""><div><strong>${escape(o.context==='project-needs'?selected.title:selected.city)} · Ejemplo</strong><small>${selected.area ? formatDeclaredArea(selected.area) + " m² · " : ""}${escape(selected.mode)}</small><span>${selected.land_status === "searching" ? "Proyecto sin terreno; referencia municipal" : "Ubicación ilustrativa, no predial"}</span><a href="${escape(detailHref)}">${detailLabel}</a></div>`;
+      content.innerHTML = o.richPopup ? `<img src="${escape(selected.image)}" alt=""><div><strong>${escape(selected.city)}, ${escape(selected.region)}</strong><small>${selected.area ? formatDeclaredArea(selected.area) + " m² · " : ""}${escape(selected.mode)}</small>${selected.price?`<span class="hero-popup-price">COP $${new Intl.NumberFormat("es-CO").format(selected.price)}</span>`:""}<span>Ejemplo · Ubicación no predial</span><a href="${escape(detailHref)}">${detailLabel}</a></div>` : `<img src="${escape(selected.image)}" alt=""><div><strong>${escape(o.context==='project-needs'?selected.title:selected.city)} · Ejemplo</strong><small>${selected.area ? formatDeclaredArea(selected.area) + " m² · " : ""}${escape(selected.mode)}</small><span>${selected.land_status === "searching" ? "Proyecto sin lote; referencia municipal" : "Ubicación ilustrativa, no predial"}</span><a href="${escape(detailHref)}">${detailLabel}</a></div>`;
       this.popup = new window.mapboxgl.Popup({
         offset: o.richPopup ? 12 : 30,
         closeButton: true,

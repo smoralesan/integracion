@@ -25,7 +25,7 @@ test('team matching requires explicit sharing, honors revocation and preserves l
  await put(profile({revision:p.revision,shareWithTeam:false}));assert.equal((await(await h.request('team/ally-profiles',null,{user:'staff'})).json()).profiles.length,0);
  assert.equal((await(await h.request('profile',null,{user:'bob'})).json()).profile,null);
 });
-const service=()=>({id:crypto.randomUUID(),specialistSlug:'topografos',name:'Promotor de prueba',description:'Necesito un levantamiento para evaluar el terreno.',contactEmail:'promotor@example.test',departmentCode:'13',municipalityCode:'13001',contactConsent:true});
+const service=()=>({id:crypto.randomUUID(),specialistSlug:'topografos',name:'Promotor de prueba',description:'Necesito un levantamiento para evaluar el lote.',contactEmail:'promotor@example.test',departmentCode:'13',municipalityCode:'13001',contactConsent:true});
 test('service requests persist, deduplicate, isolate owners and require consent and real locations',async()=>{
  const h=harness(),body=service();assert.equal((await h.request('service-requests',{...body,contactConsent:false})).status,400);assert.equal((await h.request('service-requests',{...body,municipalityCode:'05001'})).status,400);
  const response=await h.request('service-requests',body);assert.equal(response.status,201);const r=await response.json();assert.equal(r.status,'received');assert.equal(r.owner,undefined);assert.equal((await h.request('service-requests',body)).status,200);

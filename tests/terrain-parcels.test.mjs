@@ -4,7 +4,7 @@ import {demoTerrainGeometry,terrainDefaultMapStyle} from '../web/terrain-parcels
 import {validRing,pointInRing} from '../web/geo.js';
 import {properties} from '../web/opportunity-examples.js';
 
-test('Solo los terrenos de ejemplo tienen polígonos ilustrativos válidos e irregulares',()=>{
+test('Solo los lotes de ejemplo tienen polígonos ilustrativos válidos e irregulares',()=>{
  for(const p of properties){
   const geometry=demoTerrainGeometry(p.id);
   if(p.type!=='terreno'){assert.equal(geometry,null);continue;}

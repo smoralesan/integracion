@@ -18,7 +18,7 @@ function harness(){
   }};
 }
 const upload=(name,bytes)=>{const f=new FormData();f.set('file',new File([bytes],name));return f;};
-const record=(documentIds=[])=>({id:crypto.randomUUID(),kind:'terreno',form:{title:'Terreno ficticio de prueba',city:'Cartagena',region:'Bolívar',relationship:'owner',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",amount:'2000000000.50'},parcel:{geometry,confirmed:true,source:'Prueba'},documentIds});
+const record=(documentIds=[])=>({id:crypto.randomUUID(),kind:'terreno',form:{title:'Lote ficticio de prueba',city:'Cartagena',region:'Bolívar',relationship:'owner',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",amount:'2000000000.50'},parcel:{geometry,confirmed:true,source:'Prueba'},documentIds});
 test('requires trusted identity and same origin mutations',async()=>{
   const h=harness();assert.equal((await h.request('session',null,{owner:null})).status,401);
   assert.equal((await h.request('documents',{name:'Plan',url:'https://example.com/a'},{origin:'https://other.test'})).status,403);

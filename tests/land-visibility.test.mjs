@@ -13,7 +13,7 @@ test('La visibilidad conserva compatibilidad y los valores desconocidos no se vu
  assert.ok(!visibilityFieldsHTML().includes('checked'));
  assert.ok(visibilityFieldsHTML('off-market').includes('value="off-market" checked'));
 });
-test('El titular de un terreno Off-market no recibe controles para autorizar una ficha pública',()=>{
+test('El titular de un lote Off-market no recibe controles para autorizar una ficha pública',()=>{
  const r={kind:'terreno',status:'approved',form:{visibility:'off-market'},files:[],history:[],publicationConsent:{authorized:true},revision:0};
  assert.ok(!permittedTransitions(r,'admin').includes('published'));
  const followup=ownerWorkflowHTML(r),experience=ownerExperienceHTML(r);

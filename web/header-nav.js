@@ -1,10 +1,10 @@
 const groups = [
-  {id:'terrenos',label:'Terrenos',eyebrow:'Terrenos para proyectos',title:'Vende o encuentra terrenos para desarrollar.',description:'Conectamos propietarios con compradores y desarrolladores en Colombia.',links:[
-    ['Vender mi terreno','Presenta su ubicación, área y condiciones de venta.','#/publicar/terreno'],
-    ['Buscar terrenos','Encuentra tierra sin proyecto constructivo asociado.','#/buscar?contenido=solo-terreno'],
-    ['Terreno con proyecto','Explora predios con una propuesta de desarrollo asociada.','#/buscar?contenido=con-proyecto'],
-    ['Todos los terrenos','Compara ambos formatos y los registros aún sin clasificar.','#/oportunidades?tipo=terreno'],
-  ],feature:{label:'Venta o aporte',title:'Aportar un terreno a un proyecto',text:'Conoce las opciones de recibir dinero posterior, inmuebles del desarrollo o una combinación.',action:'tutorial',cta:'Cómo funciona el aporte'}},
+  {id:'terrenos',label:'Lotes',eyebrow:'Lotes para proyectos',title:'Vende o encuentra lotes para desarrollar.',description:'Conectamos propietarios con compradores y desarrolladores en Colombia.',links:[
+    ['Vender mi lote','Presenta su ubicación, área y condiciones de venta.','#/publicar/terreno'],
+    ['Buscar lotes','Encuentra tierra sin proyecto constructivo asociado.','#/buscar?contenido=solo-terreno'],
+    ['Lote con proyecto','Explora predios con una propuesta de desarrollo asociada.','#/buscar?contenido=con-proyecto'],
+    ['Todos los lotes','Compara ambos formatos y los registros aún sin clasificar.','#/oportunidades?tipo=terreno'],
+  ],feature:{label:'Venta o aporte',title:'Aportar un lote a un proyecto',text:'Conoce las opciones de recibir dinero posterior, inmuebles del desarrollo o una combinación.',action:'tutorial',cta:'Cómo funciona el aporte'}},
   {id:'proyectos',label:'Proyectos',eyebrow:'Proyectos inmobiliarios',title:'Presenta tu proyecto y los aliados que buscas.',description:'Conectamos proyectos con profesionales y empresas especializados.',links:[
     ['Tengo un proyecto','Registra su etapa y las capacidades que necesitas sumar.','#/publicar/proyecto'],
     ['Necesidades de proyectos','Consulta las especialidades que buscan los proyectos.','#/necesidades'],
@@ -14,7 +14,7 @@ const groups = [
     ['Conocer la red de aliados','Conoce los perfiles públicos y las especialidades.','#/aliados'],
     ['Buscar aliados','Busca por firma, especialidad o servicio.','#/aliados/buscar'],
     ['Ser un aliado','Presenta tus servicios como persona o empresa.','#/registro/aliado'],
-    ['Abogados (legales)','Revisión jurídica de terrenos, contratos y acuerdos.','#/aliados/abogados'],
+    ['Abogados (legales)','Revisión jurídica de lotes, contratos y acuerdos.','#/aliados/abogados'],
     ['Estructuradores','Evalúan la estructura técnica, financiera y jurídica.','#/aliados/estructuradores'],
     ['Constructores','Evalúan y ejecutan las obras del proyecto.','#/aliados/constructores'],
     ['Técnicos','Estudios, diseños, interventoría y coordinación especializada.','#/aliados/tecnicos'],
@@ -25,7 +25,7 @@ export function mountHeaderNavigation(){
   const nav=document.querySelector('#primary-navigation');
   const toggle=header.querySelector('.menu-toggle');
   const mobile=matchMedia('(max-width: 960px)');
-  nav.innerHTML=groups.map(g=>`<div class="mega-group"><button class="mega-trigger" id="nav-${g.id}" aria-expanded="false" aria-controls="mega-${g.id}">${g.label}<span class="mega-chevron" aria-hidden="true"></span></button><div class="mega-panel" id="mega-${g.id}" aria-labelledby="nav-${g.id}" hidden><div class="container mega-grid"><div class="mega-intro"><span class="mega-eyebrow">${g.eyebrow}</span><h2>${g.title}</h2><p>${g.description}</p></div><div class="mega-links">${g.links.map(([title,text,href],i)=>`<a class="mega-link ${i===0?'mega-link-first':''}" href="${href}"><span><strong>${title}</strong><small>${text}</small></span><span class="mega-arrow" aria-hidden="true">↗</span></a>`).join('')}</div><aside class="mega-feature"><span class="mega-eyebrow">${g.feature.label}</span><h3>${g.feature.title}</h3><p>${g.feature.text}</p>${g.feature.action?`<button class="mega-feature-link" data-action="${g.feature.action}">${g.feature.cta} <span aria-hidden="true">→</span></button>`:`<a class="mega-feature-link" href="${g.feature.href}">${g.feature.cta} <span aria-hidden="true">→</span></a>`}</aside></div><button class="mega-close" aria-label="Cerrar menú ${g.label}">×</button></div></div>`).join('')+`<a class="mega-how" href="#/como-funciona">Cómo funciona</a><div class="mega-mobile-shortcuts"><a href="#/publicar/terreno">Vender mi terreno ↗</a><a href="#/mi-espacio">Mi espacio</a><a data-team-link hidden href="#/equipo">Bandeja del equipo</a></div>`;
+  nav.innerHTML=groups.map(g=>`<div class="mega-group"><button class="mega-trigger" id="nav-${g.id}" aria-expanded="false" aria-controls="mega-${g.id}">${g.label}<span class="mega-chevron" aria-hidden="true"></span></button><div class="mega-panel" id="mega-${g.id}" aria-labelledby="nav-${g.id}" hidden><div class="container mega-grid"><div class="mega-intro"><span class="mega-eyebrow">${g.eyebrow}</span><h2>${g.title}</h2><p>${g.description}</p></div><div class="mega-links">${g.links.map(([title,text,href],i)=>`<a class="mega-link ${i===0?'mega-link-first':''}" href="${href}"><span><strong>${title}</strong><small>${text}</small></span><span class="mega-arrow" aria-hidden="true">↗</span></a>`).join('')}</div><aside class="mega-feature"><span class="mega-eyebrow">${g.feature.label}</span><h3>${g.feature.title}</h3><p>${g.feature.text}</p>${g.feature.action?`<button class="mega-feature-link" data-action="${g.feature.action}">${g.feature.cta} <span aria-hidden="true">→</span></button>`:`<a class="mega-feature-link" href="${g.feature.href}">${g.feature.cta} <span aria-hidden="true">→</span></a>`}</aside></div><button class="mega-close" aria-label="Cerrar menú ${g.label}">×</button></div></div>`).join('')+`<a class="mega-how" href="#/como-funciona">Cómo funciona</a><div class="mega-mobile-shortcuts"><a href="#/publicar/terreno">Vender mi lote ↗</a><a href="#/mi-espacio">Mi espacio</a><a data-team-link hidden href="#/equipo">Bandeja del equipo</a></div>`;
   const countryButton=header.querySelector('[data-country-toggle]');
   const countryPanel=header.querySelector('#country-panel');
   const brandCluster=header.querySelector('.brand-cluster');

@@ -16,7 +16,7 @@ test('Terrain details preserve the boundary between demo content and private sup
 test('Unknown values cannot invent unit prices, project programs or interpret markup in a terrain detail',()=>{
  const p={id:'UNKNOWN',type:'terreno',title:'<script>unsafe</script>',city:'Test',region:'Test',mode:'Venta',price:null,area:null};
  const html=terrainDetailHTML(p);
- assert.match(html,/&lt;script&gt;/);assert.ok(!html.includes('<script>'));assert.ok(!html.includes('/ m² de terreno'));assert.ok(!html.includes('td-proyecto'));assert.ok(!html.includes('NaN'));assert.ok(!html.includes('Infinity'));
+ assert.match(html,/&lt;script&gt;/);assert.ok(!html.includes('<script>'));assert.ok(!html.includes('/ m² de lote'));assert.ok(!html.includes('td-proyecto'));assert.ok(!html.includes('NaN'));assert.ok(!html.includes('Infinity'));
  assert.equal(terrainDetailHTML({...p,type:'proyecto'}),'');
 });
 
@@ -41,7 +41,7 @@ test('Consultation choices are allowlisted and never submit a request or invent 
  const html=terrainConsultHTML(properties[0]);assert.equal((html.match(/consulta=/g)||[]).length,5);assert.ok(!html.includes('<form'));
 });
 
-test('El terreno abre con un solo mapa y permite ver las fotos después',()=>{
+test('El lote abre con un solo mapa y permite ver las fotos después',()=>{
  const map='<div data-test-map></div>';
  for(const p of properties.filter(p=>p.type==='terreno')){
   const html=terrainDetailHTML(p,{map});

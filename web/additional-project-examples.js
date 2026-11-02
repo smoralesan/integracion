@@ -13,7 +13,7 @@ export const additionalProjectExamples=[
   id:'PRO-DEMO-005',project_stage:'Planeación',project_kind:'Mixto',type:'proyecto',label:'Proyecto mixto en planeación',land_status:'available',
   title:'Vivienda y comercio que buscan desarrollador',city:'Cali',region:'Valle del Cauca',
   area:null,mode:'Alianzas',price:null,image:'./assets/projects/edificio-mixto-referencia.jpg',coordinates:[-76.53,3.41],sector:'interior',
-  description:'Caso ficticio de un edificio con 48 viviendas y comercio en primer piso, en planeación. El promotor busca un desarrollador y especialistas para evaluar el producto, los estudios, el presupuesto y la vinculación de aliados. La titularidad del terreno, los usos y los permisos están por revisar. No se ofrecen unidades ni se acredita una viabilidad aprobada.',
+  description:'Caso ficticio de un edificio con 48 viviendas y comercio en primer piso, en planeación. El promotor busca un desarrollador y especialistas para evaluar el producto, los estudios, el presupuesto y la vinculación de aliados. La titularidad del lote, los usos y los permisos están por revisar. No se ofrecen unidades ni se acredita una viabilidad aprobada.',
   need:'Desarrollador y arquitectos'
  },
  {

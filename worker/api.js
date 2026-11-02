@@ -128,7 +128,7 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       const data=JSON.parse(new TextDecoder().decode(await bodyBytes(request,262144)));
       if(!uuid.test(data.id)||!['terreno','proyecto'].includes(data.kind))error(400,'Registro inválido.');
       let form={};for(const field of allowedFields){const v=data.form?.[field];if(typeof v==='string')form[field]=text(v,field.includes('description')?3000:200);else if(typeof v==='boolean')form[field]=v;else if(field==='receive_currencies'&&Array.isArray(v))form[field]=v.filter(x=>['COP','USD'].includes(x));}
-      if(data.form?.land_content!=null&&!['land-only','land-project'].includes(data.form.land_content))error(400,'Selecciona si ofreces solo terreno o terreno con proyecto.');
+      if(data.form?.land_content!=null&&!['land-only','land-project'].includes(data.form.land_content))error(400,'Selecciona si ofreces solo lote o lote con proyecto.');
       if(data.kind!=='terreno')delete form.land_content;
       if(data.kind==='terreno')delete form.reactivation;
       if(data.kind==='terreno'){try{form.visibility=normalizeLandVisibility(data.form?.visibility);}catch(e){error(400,e.message);}}
@@ -145,13 +145,13 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       let parcel=null,locationPin=null;
       if(data.kind==='terreno') {
         try{validateTerrainDetails(form);}catch(e){error(400,e.message);}
-        if(form.project_land_confirmed!==true)error(400,landScopeExclusion+' Confirma que presentas el terreno para desarrollar un proyecto.');
-        if(data.locationMode!=null&&!['pin','polygon'].includes(data.locationMode))error(400,'Elige pin o polígono para ubicar el terreno.');
+        if(form.project_land_confirmed!==true)error(400,landScopeExclusion+' Confirma que presentas el lote para desarrollar un proyecto.');
+        if(data.locationMode!=null&&!['pin','polygon'].includes(data.locationMode))error(400,'Elige pin o polígono para ubicar el lote.');
         if(data.locationMode==='pin'){
           if(data.parcel!=null)error(400,'Envía solo la opción de ubicación elegida.');
           try{locationPin={...normalizeLocationPin(data.locationPin),confirmedAt:new Date().toISOString()};}catch(e){error(400,e.message);}
         }else{
-          if(!data.parcel?.confirmed)error(400,'Confirma el perímetro antes de enviar el terreno.');
+          if(!data.parcel?.confirmed)error(400,'Confirma el perímetro antes de enviar el lote.');
           parcel={...describeGeometry(data.parcel.geometry),source:text(data.parcel.source,160),confirmed:true,confirmedAt:new Date().toISOString()};
         }
       }

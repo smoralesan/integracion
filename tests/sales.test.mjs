@@ -9,7 +9,7 @@ function harness(){
  const get=async(path,user='buyer')=>{const r=await request(path,null,{user});assert.equal(r.status,200,await r.clone().text());return r.json();};
  const put=async(path,body,user='admin')=>{const r=await request(path,body,{user,method:'PATCH'});assert.equal(r.status,200,await r.clone().text());return r.json();};
  const publication=async()=>{
-  let res=await request('records',{id:crypto.randomUUID(),kind:'terreno',form:{title:'Terreno para desarrollo',city:'Cartagena',region:'Bolívar',relationship:'owner',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",description:'PRIVADO-DESCRIPCION',amount:'2000000000',area:'5200'},parcel:{confirmed:true,geometry:{type:'Polygon',coordinates:[[[-75.5,10.4],[-75.49,10.4],[-75.49,10.41],[-75.5,10.41],[-75.5,10.4]]]}},documentIds:[]},{user:'seller'});assert.equal(res.status,201,await res.clone().text());let r=await res.json();
+  let res=await request('records',{id:crypto.randomUUID(),kind:'terreno',form:{title:'Lote para desarrollo',city:'Cartagena',region:'Bolívar',relationship:'owner',project_land_confirmed:true,cadastral_address:"Dirección catastral ficticia",area:"5200",description:'PRIVADO-DESCRIPCION',amount:'2000000000',area:'5200'},parcel:{confirmed:true,geometry:{type:'Polygon',coordinates:[[[-75.5,10.4],[-75.49,10.4],[-75.49,10.41],[-75.5,10.41],[-75.5,10.4]]]}},documentIds:[]},{user:'seller'});assert.equal(res.status,201,await res.clone().text());let r=await res.json();
   const key=(await get('team/records','admin')).records.find(x=>x.id===r.id).teamKey;
   r=await put('team/records/'+key,{revision:r.revision,status:'in_review'});r=await put('team/records/'+key,{revision:r.revision,status:'approved'});
   res=await request('records/'+r.id+'/publication-consent',{revision:r.revision,authorized:true},{user:'seller'});assert.equal(res.status,200);r=await res.json();
@@ -23,7 +23,7 @@ function harness(){
 }
 test('sales resolves real approved summaries and ignores forged client source fields',async()=>{
  const h=harness(),p=await h.publication();const s=await h.get('purchase-leads/source/publication/'+p.publicationId);assert.equal(s.isOwn,false);assert.equal((await h.get('purchase-leads/source/publication/'+p.publicationId,'seller')).isOwn,true);
- const {r}=await h.lead(p,{source:{snapshot:{title:'FORGED'}},targetRecordKey:'FORGED'});assert.equal(r.source.snapshot.title,'Terreno para desarrollo');assert.doesNotMatch(JSON.stringify(r),/FORGED|PRIVADO-DESCRIPCION|users\//);assert.equal(r.status,'received');
+ const {r}=await h.lead(p,{source:{snapshot:{title:'FORGED'}},targetRecordKey:'FORGED'});assert.equal(r.source.snapshot.title,'Lote para desarrollo');assert.doesNotMatch(JSON.stringify(r),/FORGED|PRIVADO-DESCRIPCION|users\//);assert.equal(r.status,'received');
  assert.equal((await h.request('purchase-leads',h.payload(p),{user:'seller'})).status,400);
  await h.request('records/'+p.id+'/publication-consent',{revision:p.revision,authorized:false},{user:'seller'});
  assert.equal((await h.request('purchase-leads/source/publication/'+p.publicationId)).status,404);assert.equal((await h.request('purchase-leads',h.payload(p))).status,404);

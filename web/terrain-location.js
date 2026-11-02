@@ -1,6 +1,6 @@
 // A pin locates a terrain approximately. It never supplies a perimeter or area.
 export function normalizeLocationPin(value) {
- if(value?.confirmed!==true)throw Error('Marca y confirma la ubicación aproximada del terreno.');
+ if(value?.confirmed!==true)throw Error('Marca y confirma la ubicación aproximada del lote.');
  const p=value.coordinates;
  if(!Array.isArray(p)||p.length!==2||p.some(n=>typeof n!=='number'||!Number.isFinite(n))||p[0]<-82||p[0]>-66||p[1]<-5||p[1]>16)throw Error('Usa coordenadas válidas dentro del ámbito de Colombia (longitud y latitud).');
  return {coordinates:p.map(n=>Number(n.toFixed(7))),confirmed:true,precision:'approximate'};
@@ -28,7 +28,7 @@ export function captureLocationConfirmation(form, controls) {
 }
 
 export function validateTerrainDetails(form){
- if(!String(form.cadastral_address||'').trim())throw Error('Indica la dirección catastral del terreno para continuar.');
+ if(!String(form.cadastral_address||'').trim())throw Error('Indica la dirección catastral del lote para continuar.');
  const area=Number(form.area);
  if(!Number.isFinite(area)||area<1)throw Error('Indica un área declarada válida de al menos 1 m². El polígono es solo de referencia.');
 }

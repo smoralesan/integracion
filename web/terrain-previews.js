@@ -12,7 +12,7 @@ export function terrainPreviewURL(p){
 }
 export function terrainPreviewHTML(p){
  const url=terrainPreviewURL(p);if(!url)return '';
- return `<span class="terrain-preview" data-terrain-preview><img src="${e(url)}" alt="Mapa satelital con polígono ilustrativo del terreno en ${e(p.city)}" loading="lazy" decoding="async" data-parcel-preview-image><span class="terrain-preview-fallback" hidden><strong>Vista previa no disponible</strong><small>Abre la ficha para explorar el mapa</small></span><span class="terrain-preview-caption">Polígono de ejemplo · No predial</span></span>`;
+ return `<span class="terrain-preview" data-terrain-preview><img src="${e(url)}" alt="Mapa satelital con polígono ilustrativo del lote en ${e(p.city)}" loading="lazy" decoding="async" data-parcel-preview-image><span class="terrain-preview-fallback" hidden><strong>Vista previa no disponible</strong><small>Abre la ficha para explorar el mapa</small></span><span class="terrain-preview-caption">Polígono de ejemplo · No predial</span></span>`;
 }
 export function mountTerrainPreviews(host){
  if(!host)return;

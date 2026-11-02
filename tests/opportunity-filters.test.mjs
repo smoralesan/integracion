@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {matchesOpportunityFilters,declaredCOPPrice,areaBands} from '../web/opportunity-filters.js';
-const lot={type:'terreno',city:'Bogotá',region:'Bogotá D.C.',title:'Lote para desarrollar',label:'Terreno urbano',area:3100,price:2790000000,mode:'Venta'};
+const lot={type:'terreno',city:'Bogotá',region:'Bogotá D.C.',title:'Lote para desarrollar',label:'Lote urbano',area:3100,price:2790000000,mode:'Venta'};
 test('keyword matching ignores accents and includes classification',()=>{
  assert.equal(matchesOpportunityFilters(lot,{query:'bogota',type:'terreno'}),true);
  assert.equal(matchesOpportunityFilters(lot,{query:'urbano'}),true);

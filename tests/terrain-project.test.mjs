@@ -15,10 +15,10 @@ test('Construction projects belong to the same lot and preserve independent land
 });
 test('Missing or unrelated project metadata cannot create a construction section',()=>{
  const withProject=lots.find(hasConstructionProject);assert.equal(constructionProjectHTML(lots[0]),'');assert.equal(constructionProjectHTML({...withProject,developmentProject:{...withProject.developmentProject,landReference:'OTHER'}}),'');
- const html=constructionProjectHTML(withProject);assert.match(html,/Área del terreno/);assert.match(html,/Área construida propuesta/);assert.match(html,/archivo no aportado/);assert.ok(!html.includes('download='));
+ const html=constructionProjectHTML(withProject);assert.match(html,/Área del lote/);assert.match(html,/Área construida propuesta/);assert.match(html,/archivo no aportado/);assert.ok(!html.includes('download='));
 });
 test('Keyword searches distinguish both terrain formats without reclassifying either as a standalone project',()=>{
  const match=q=>properties.filter(p=>matchesOpportunityFilters(p,{type:'terreno',query:q})).map(p=>p.id);
- assert.deepEqual(match('solo terreno'),['TER-DEMO-001','TER-DEMO-004',...Array.from({length:14},(_,i)=>'TER-DEMO-'+String(i+5).padStart(3,'0'))]);assert.deepEqual(match('terreno con proyecto'),['TER-DEMO-002','TER-DEMO-003']);
+ assert.deepEqual(match('solo lote'),['TER-DEMO-001','TER-DEMO-004',...Array.from({length:14},(_,i)=>'TER-DEMO-'+String(i+5).padStart(3,'0'))]);assert.deepEqual(match('lote con proyecto'),['TER-DEMO-002','TER-DEMO-003']);
  assert.equal(matchesOpportunityFilters(lots.find(hasConstructionProject),{type:'proyecto'}),false);
 });

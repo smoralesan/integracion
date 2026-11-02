@@ -16,5 +16,5 @@ test('si varios filtros bloquean resultados no se prometen coincidencias ni inve
  const state={...base(),query:'<sin coincidencias>',min:'9999999999999'};const options=catalogRecoveryOptions(properties,state);assert.ok(options.every(option=>option.count===0));const html=catalogRecoveryHTML(properties,state);assert.match(html,/uno o varios filtros/);assert.match(html,/&lt;sin coincidencias&gt;/);assert.match(html,/no a inventario disponible/);assert.doesNotMatch(html,/>\d+ ejemplos</);
 });
 test('el contacto distingue la consulta real de la ficha de ejemplo y explica el seguimiento',()=>{
- const real=contactJourneyHTML(true),demo=contactJourneyHTML(false);assert.match(real,/La recibe el equipo de Integración/);assert.match(real,/Mis intereses/);assert.match(real,/no reserva el terreno/);assert.match(demo,/No se contacta a un propietario real/);assert.doesNotMatch(demo,/La recibe el equipo de Integración/);
+ const real=contactJourneyHTML(true),demo=contactJourneyHTML(false);assert.match(real,/La recibe el equipo de Integración/);assert.match(real,/Mis intereses/);assert.match(real,/no reserva el lote/);assert.match(demo,/No se contacta a un propietario real/);assert.doesNotMatch(demo,/La recibe el equipo de Integración/);
 });

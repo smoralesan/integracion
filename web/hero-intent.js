@@ -31,7 +31,7 @@ export class HeroIntentSelector {
     }
     this.index=index;
     const input=this.host.querySelector('[data-hero-intent]');input.value=String(index);
-    input.setAttribute('aria-valuetext',index===0?'Vendo terreno':'Compro terreno');
+    input.setAttribute('aria-valuetext',index===0?'Vendo lote':'Compro lote');
     this.host.querySelectorAll('[data-hero-content]').forEach((panel,i)=>{
       panel.classList.toggle('is-current',i===index);panel.setAttribute('aria-hidden',String(i!==index));panel.inert=i!==index;
     });

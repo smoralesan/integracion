@@ -47,7 +47,7 @@ test('Checklist progress excludes only explicit non-applicable items and never i
  const allNa=normalizeChecklist({items:Object.fromEntries(Object.keys(state.items).map(id=>[id,'na']))});assert.equal(checklistProgress(allNa).percent,0);assert.equal(checklistProgress(allNa).total,0);
 });
 test('A saved checklist round-trips only bounded known fields and tolerates corrupt browser storage',()=>{
- const source={title:'Terreno de ejemplo',notes:'Revisar el plano.',items:{boundary:'ready',title:'toString'}};
+ const source={title:'Lote de ejemplo',notes:'Revisar el plano.',items:{boundary:'ready',title:'toString'}};
  const restored=readChecklist(JSON.stringify(source));assert.equal(restored.notes,source.notes);assert.equal(restored.items.boundary,'ready');assert.equal(restored.items.title,'pending');
  assert.deepEqual(readChecklist('{bad'),normalizeChecklist());assert.deepEqual(readChecklist('null'),normalizeChecklist());assert.deepEqual(readChecklist('x'.repeat(20001)),normalizeChecklist());
  assert.equal(normalizeChecklist({title:'x'.repeat(200),notes:'y'.repeat(2000)}).title.length,120);assert.equal(normalizeChecklist({notes:'y'.repeat(2000)}).notes.length,1000);

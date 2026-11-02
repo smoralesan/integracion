@@ -16,8 +16,8 @@ export const properties = [
     landContent: "land-only",
     land_type: "Urbano",
     type: "terreno",
-    label: "Terreno urbano",
-    title: "Terreno urbano de 5.200 m² en Cartagena",
+    label: "Lote urbano",
+    title: "Lote urbano de 5.200 m² en Cartagena",
     city: "Cartagena",
     neighborhood: "Manzanillo del Mar",
     region: "Bolívar",
@@ -28,7 +28,7 @@ export const properties = [
     coordinates: [-75.487, 10.53],
     sector: "zona-norte",
     description:
-      "Terreno ilustrativo para explorar un posible desarrollo residencial. El propietario está abierto a evaluar venta, aporte al proyecto o una propuesta mixta.",
+      "Lote ilustrativo para explorar un posible desarrollo residencial. El propietario está abierto a evaluar venta, aporte al proyecto o una propuesta mixta.",
     need: "Desarrollador y estructurador",
   },
   {
@@ -40,15 +40,15 @@ export const properties = [
       title: "Propuesta residencial multifamiliar", stage: "Concepto", use: "Residencial multifamiliar",
       builtArea: 16800, units: 96, buildings: 2, floors: 6, parking: 108, commercialArea: 0, durationMonths: 24,
       description: "Programa conceptual de dos edificios de vivienda con zonas comunes y parqueaderos. Los datos sirven para recorrer la maqueta; no corresponden a un diseño aprobado.",
-      scope: "Terreno con propuesta conceptual asociada. La entrega o cesión de diseños y estudios se acordaría por separado; no incluye obra ejecutada.",
-      priceScope: "Valor del terreno por acordar. Diseños, estudios y derechos de uso requieren condiciones específicas.",
+      scope: "Lote con propuesta conceptual asociada. La entrega o cesión de diseños y estudios se acordaría por separado; no incluye obra ejecutada.",
+      priceScope: "Valor del lote por acordar. Diseños, estudios y derechos de uso requieren condiciones específicas.",
       license: "No aportada en este ejemplo", budget: "Sin presupuesto validado",
       documents: [{name:"Propuesta arquitectónica",status:"Programa ilustrativo; archivo no aportado"},{name:"Estudio de suelos",status:"No aportado"},{name:"Licencia de construcción",status:"No aportada"},{name:"Presupuesto y programación",status:"No aportados"}],
       specialists: ["abogados","arquitectos","ingenieros-estructurales","desarrolladores"]
     },
     type: "terreno",
-    label: "Terreno para desarrollo",
-    title: "Terreno urbano de 8.400 m² en Puerto Colombia",
+    label: "Lote para desarrollo",
+    title: "Lote urbano de 8.400 m² en Puerto Colombia",
     city: "Puerto Colombia",
     neighborhood: "Pradomar",
     region: "Atlántico",
@@ -59,7 +59,7 @@ export const properties = [
     coordinates: [-74.951, 10.992],
     sector: "caribe",
     description:
-      "Terreno de ejemplo con una propuesta residencial conceptual asociada. Permite revisar el programa constructivo antes de conversar sobre el aporte y las condiciones del desarrollo.",
+      "Lote de ejemplo con una propuesta residencial conceptual asociada. Permite revisar el programa constructivo antes de conversar sobre el aporte y las condiciones del desarrollo.",
     need: "Desarrollador",
   },
   {
@@ -91,15 +91,15 @@ export const properties = [
       title: "Anteproyecto de vivienda y comercio", stage: "Diseño preliminar", use: "Mixto: vivienda y comercio",
       builtArea: 6200, units: 56, buildings: 1, floors: 8, parking: 60, commercialArea: 650, durationMonths: 20,
       description: "Anteproyecto ilustrativo de un edificio con vivienda, comercio en primer piso y espacios comunes. Áreas, unidades y plazos son referencias para mostrar la funcionalidad.",
-      scope: "Se presenta el terreno con información de un anteproyecto. La titularidad y la cesión de diseños deben verificarse y acordarse; no se ofrecen unidades terminadas.",
-      priceScope: "Precio ilustrativo del terreno. La eventual cesión de diseños y estudios está por acordar; no es el costo de construcción.",
+      scope: "Se presenta el lote con información de un anteproyecto. La titularidad y la cesión de diseños deben verificarse y acordarse; no se ofrecen unidades terminadas.",
+      priceScope: "Precio ilustrativo del lote. La eventual cesión de diseños y estudios está por acordar; no es el costo de construcción.",
       license: "Por verificar; sin soporte publicado", budget: "Sin presupuesto validado",
       documents: [{name:"Anteproyecto arquitectónico",status:"Programa ilustrativo; archivo no aportado"},{name:"Diseño estructural",status:"No aportado"},{name:"Licencia de construcción",status:"Por verificar; sin soporte"},{name:"Presupuesto y programación",status:"No aportados"}],
       specialists: ["abogados","arquitectos","constructores"]
     },
     type: "terreno",
-    label: "Terreno urbano",
-    title: "Terreno urbano de 3.100 m² en Bogotá",
+    label: "Lote urbano",
+    title: "Lote urbano de 3.100 m² en Bogotá",
     city: "Bogotá",
     neighborhood: "La Esmeralda",
     region: "Bogotá D.C.",
@@ -110,13 +110,13 @@ export const properties = [
     coordinates: [-74.08, 4.65],
     sector: "interior",
     description:
-      "Terreno urbano de ejemplo con un anteproyecto de vivienda y comercio. La ficha separa el área del lote del programa constructivo y señala qué información requiere revisión.",
+      "Lote urbano de ejemplo con un anteproyecto de vivienda y comercio. La ficha separa el área del lote del programa constructivo y señala qué información requiere revisión.",
     need: "Desarrollador",
   },
   {
     id: "PRO-DEMO-002",project_stage:'Concepto',project_kind:'Residencial',
     type: "proyecto",
-    label: "Proyecto sin terreno",
+    label: "Proyecto sin lote",
     land_status: "searching",
     title: "Una idea residencial en busca de tierra",
     city: "Medellín",
@@ -128,8 +128,8 @@ export const properties = [
     coordinates: [-75.57, 6.24],
     sector: "interior",
     description:
-      "Un promotor registra su intención de desarrollar vivienda y busca un terreno compatible. Este ejemplo demuestra que un proyecto puede existir antes de vincular un predio.",
-    need: "Terreno y aliados",
+      "Un promotor registra su intención de desarrollar vivienda y busca un lote compatible. Este ejemplo demuestra que un proyecto puede existir antes de vincular un predio.",
+    need: "Lote y aliados",
   },
   {
     id: "PRO-DEMO-003",project_stage:'Factibilidad',project_kind:'Oficinas',
@@ -146,7 +146,7 @@ export const properties = [
     coordinates: [-74.06, 4.69],
     sector: "interior",
     description:
-      "Ejemplo de un edificio de oficinas de siete pisos con comercio en primer nivel, en etapa de factibilidad. Su promotor busca un estructurador, asesoría jurídica y un constructor para contrastar el programa, el presupuesto y las condiciones de ejecución. El terreno, los estudios, las licencias y el modelo comercial requieren revisión; no se ofrecen oficinas en venta ni se acredita una viabilidad aprobada.",
+      "Ejemplo de un edificio de oficinas de siete pisos con comercio en primer nivel, en etapa de factibilidad. Su promotor busca un estructurador, asesoría jurídica y un constructor para contrastar el programa, el presupuesto y las condiciones de ejecución. El lote, los estudios, las licencias y el modelo comercial requieren revisión; no se ofrecen oficinas en venta ni se acredita una viabilidad aprobada.",
     need: "Estructurador, abogados y constructor",
   },
   {
@@ -164,7 +164,7 @@ export const properties = [
     coordinates: [-75.69, 4.81],
     sector: "interior",
     description:
-      "Iniciativa ilustrativa de un hotel de cuatro pisos y 60 habitaciones, con restaurante y espacios de encuentro. En etapa de diseño, busca un operador hotelero y aliados de desarrollo para evaluar el programa, la demanda y el alcance de la inversión. Las cifras de operación, permisos, condiciones ambientales y acuerdos sobre el terreno están por estudiar. La imagen es una referencia arquitectónica y no representa una obra ejecutada.",
+      "Iniciativa ilustrativa de un hotel de cuatro pisos y 60 habitaciones, con restaurante y espacios de encuentro. En etapa de diseño, busca un operador hotelero y aliados de desarrollo para evaluar el programa, la demanda y el alcance de la inversión. Las cifras de operación, permisos, condiciones ambientales y acuerdos sobre el lote están por estudiar. La imagen es una referencia arquitectónica y no representa una obra ejecutada.",
     need: "Operador hotelero y desarrollador",
   },
   {
@@ -172,8 +172,8 @@ export const properties = [
     landContent: "land-only",
     land_type: "Rural",
     type: "terreno",
-    label: "Terreno rural",
-    title: "Terreno rural de 12.500 m² en Santa Marta",
+    label: "Lote rural",
+    title: "Lote rural de 12.500 m² en Santa Marta",
     city: "Santa Marta",
     region: "Magdalena",
     area: 12500,
@@ -183,7 +183,7 @@ export const properties = [
     coordinates: [-74.19, 11.24],
     sector: "caribe",
     description:
-      "Ejemplo de terreno para evaluar alternativas de venta y aporte. El uso deseado es una intención; no representa un permiso o una viabilidad aprobada.",
+      "Ejemplo de lote para evaluar alternativas de venta y aporte. El uso deseado es una intención; no representa un permiso o una viabilidad aprobada.",
     need: "Evaluación especializada",
   },
   ...additionalProjectExamples,

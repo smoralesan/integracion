@@ -1,5 +1,5 @@
-export const terrainSearchOptions=[['land-only','Solo terreno','solo-terreno'],['land-project','Terreno con proyecto','con-proyecto']];
-export const terrainSearchLabel=value=>terrainSearchOptions.find(([key])=>key===value)?.[1]||'Todos los terrenos';
+export const terrainSearchOptions=[['land-only','Solo lote','solo-terreno'],['land-project','Lote con proyecto','con-proyecto']];
+export const terrainSearchLabel=value=>terrainSearchOptions.find(([key])=>key===value)?.[1]||'Todos los lotes';
 export const terrainSearchQuery=value=>terrainSearchOptions.find(([key])=>key===value)?.[2]||'';
 export const terrainSearchFromQuery=value=>terrainSearchOptions.find(([, ,query])=>query===value)?.[0]||'';
 export function terrainSearchKind(record){

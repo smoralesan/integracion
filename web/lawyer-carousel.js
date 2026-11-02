@@ -1,8 +1,8 @@
 import {publicAllyProfiles,publicAllyProfileHref,publicAllyLogoHTML} from './public-ally-profiles.js';
 import {avatarHTML} from './avatars.js';
 const examples=[
- {name:'Firma de derecho inmobiliario',kind:'company',city:'Bogotá',specialty:'Títulos y compraventas',description:'Revisión documental del terreno y acuerdos entre las partes.'},
- {name:'Abogado independiente',kind:'person',city:'Medellín',specialty:'Contratos y aporte de terrenos',description:'Definición del alcance jurídico de compraventas y aportes.'},
+ {name:'Firma de derecho inmobiliario',kind:'company',city:'Bogotá',specialty:'Títulos y compraventas',description:'Revisión documental del lote y acuerdos entre las partes.'},
+ {name:'Abogado independiente',kind:'person',city:'Medellín',specialty:'Contratos y aporte de lotes',description:'Definición del alcance jurídico de compraventas y aportes.'},
  {name:'Equipo de derecho urbanístico',kind:'company',city:'Cali',specialty:'Urbanismo y desarrollo',description:'Acompañamiento jurídico durante la evaluación del proyecto.'},
  {name:'Firma de asesoría para proyectos',kind:'company',city:'Barranquilla',specialty:'Reactivación y acuerdos',description:'Revisión de antecedentes y alternativas de continuidad.'}
 ];

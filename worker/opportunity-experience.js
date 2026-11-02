@@ -16,7 +16,7 @@ export async function opportunityApi(request,env,c){
    s.record.availability=data.availability;s.record.availabilityConfirmedAt=new Date().toISOString();
    return json(ownerRecord(await save(s,key,data,'El titular confirmó disponibilidad: '+availabilityLabels[data.availability]+'.')));
   }
-  if(!allowsPublicListing(s.record))error(400,'El terreno es Off-market. No se admite una ficha pública.');
+  if(!allowsPublicListing(s.record))error(400,'El lote es Off-market. No se admite una ficha pública.');
   if(data.authorized!==true)error(400,'Autoriza expresamente el contenido de esta ficha pública.');
   let p;try{p=normalizePresentation(data.presentation,{kind:s.record.kind});}catch(e){error(400,e.message);}
   const attached=new Set((s.record.files||[]).map(f=>f.id));
@@ -46,7 +46,7 @@ export async function opportunityApi(request,env,c){
   }
   if(team[2]==='link-asset'&&request.method==='POST'){
    if(role!=='admin')error(403,'La vinculación requiere administración.');const data=await body(),target=String(data.target||'').match(/^([0-9a-f]{64}):([0-9a-f-]{36})$/);if(!target||!uuid.test(target[2])||data.target===decoded||data.confirm!==true||text(data.note,1000).length<10)error(400,'Selecciona otro expediente y explica la vinculación confirmada.');
-   const other=(await read('users/'+target[1]+'/records/'+target[2]+'.json'))?.record;if(!other||other.kind!=='terreno'||s.record.kind!=='terreno')error(400,'Solo se vinculan expedientes de terreno.');
+   const other=(await read('users/'+target[1]+'/records/'+target[2]+'.json'))?.record;if(!other||other.kind!=='terreno'||s.record.kind!=='terreno')error(400,'Solo se vinculan expedientes de lote.');
    s.record.assetId=other.assetId||other.id;s.record.assetLinkNote=text(data.note,1000);return json(ownerRecord(await save(s,key,data,'Administración vinculó este expediente al mismo inmueble de '+other.reference+'. La representación y exclusividad se conservan por expediente.')));
   }
   error(405,'Método no permitido.');

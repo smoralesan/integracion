@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {featuredOpportunities} from '../web/featured-opportunities.js';
 import {properties} from '../web/opportunity-examples.js';
 const html=()=>featuredOpportunities({items:properties,state:{query:'',type:'',min:'',max:''},favorites:[],icon:()=>'',money:n=>String(n),escape:s=>String(s??'')});
-test('El home separa terrenos y proyectos sin confundir terrenos con programas asociados',()=>{
+test('El home separa lotes y proyectos sin confundir lotes con programas asociados',()=>{
  const result=html();const [land,projectSections]=result.split('<section class="featured-opportunities featured-project-section"');
  const [projects,reactivations]=projectSections.split('<section class="featured-opportunities featured-reactivation-section"');
  assert.match(land,/id="featured-terrain-title"/);assert.match(projects,/id="featured-project-title"/);
@@ -23,7 +23,7 @@ test('El home separa terrenos y proyectos sin confundir terrenos con programas a
  assert.ok(!projects.includes('name="areaBand"'));assert.ok(!projects.includes('name="maxPrice"'));
  assert.match(land,/tipo=terreno/);assert.match(projects,/tipo=proyecto/);
 });
-test('Las tarjetas de terreno muestran el perímetro; las de proyectos conservan sus imágenes',()=>{
+test('Las tarjetas de lote muestran el perímetro; las de proyectos conservan sus imágenes',()=>{
  const result=html();const [land,projects]=result.split('<section class="featured-opportunities featured-project-section"');
  assert.equal((land.match(/data-parcel-preview-image/g)||[]).length,3);
  assert.ok(!projects.includes('data-parcel-preview-image'));

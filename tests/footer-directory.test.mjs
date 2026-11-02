@@ -23,7 +23,7 @@ test('city matching accepts accents and Bogotá district notation',()=>{
 test('lot classification uses declared fields and does not infer permitted use',()=>{
  const scope=readDirectoryScope('#/oportunidades?tipo=terreno&lote=urbano');
  assert.equal(matchesDirectory({kind:'terreno',land_type:'Urbano'},scope),true);
- assert.equal(matchesDirectory({type:'terreno',label:'Terreno urbano'},scope),true);
- assert.equal(matchesDirectory({type:'terreno',label:'Terreno para desarrollo',description:'Desarrollo urbano'},scope),false);
+ assert.equal(matchesDirectory({type:'terreno',label:'Lote urbano'},scope),true);
+ assert.equal(matchesDirectory({type:'terreno',label:'Lote para desarrollo',description:'Desarrollo urbano'},scope),false);
  assert.equal(matchesDirectory({kind:'proyecto',land_type:'Urbano'},scope),false);
 });

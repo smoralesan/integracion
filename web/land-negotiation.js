@@ -2,7 +2,7 @@
 export const valueStatusOptions=[['known','Sí, tengo un valor de referencia'],['pending','Aún no lo sé'],['advice','Necesito orientación']];
 export const valueStatus=form=>form.value_status??(form.amount||form.amount_usd?'known':'pending');
 export const hasCashPreferences=form=>form.negotiation!=='contribution'||['cash','mixed'].includes(form.compensation);
-export const negotiationValueLabel=form=>form.negotiation==='contribution'?'Valor estimado del aporte':'Valor de referencia del terreno';
+export const negotiationValueLabel=form=>form.negotiation==='contribution'?'Valor estimado del aporte':'Valor de referencia del lote';
 export function normalizeNegotiationForm(input){
  const form=structuredClone(input),status=valueStatus(form);
  if(!valueStatusOptions.some(([key])=>key===status))throw Error('Indica si tienes un valor de referencia o necesitas orientación.');

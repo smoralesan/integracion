@@ -4,14 +4,14 @@ import assert from 'node:assert/strict';
 import {buildSpaceInventory,filterSpaceInventory,draftNextStep,inventoryCardsHTML,resolveSpaceTab} from '../web/space-dashboard.js';
 import {requestNextStep,requestCardsHTML} from '../web/space-requests.js';
 const id='4be55c58-ddde-491e-bde4-12e5097a7e1b';
-const draft=(overrides={})=>({kind:'terreno',step:1,form:{client_id:id,title:'Terreno en Medellín'},updatedAt:'2026-11-01T10:00:00Z',...overrides});
+const draft=(overrides={})=>({kind:'terreno',step:1,form:{client_id:id,title:'Lote en Medellín'},updatedAt:'2026-11-01T10:00:00Z',...overrides});
 const completed=()=>({id:'TER-DEMO-'+id,clientId:id,kind:'terreno',localRegistration:true,form:{title:'Versión anterior'},createdAt:'2026-10-31T10:00:00Z'});
 test('draft and prior local demonstration occupy one row without losing the previous version',()=>{
  const saved={draft:draft(),drafts:[draft()],submissions:[completed()]},before=structuredClone(saved),rows=buildSpaceInventory(saved);
- assert.equal(rows.length,1);assert.equal(rows[0].status,'draft');assert.equal(rows[0].title,'Terreno en Medellín');assert.match(rows[0].action.href,/borrador=/);assert.match(rows[0].previous.href,/confirmacion/);assert.equal(rows[0].isDemo,true);assert.deepEqual(saved,before);
+ assert.equal(rows.length,1);assert.equal(rows[0].status,'draft');assert.equal(rows[0].title,'Lote en Medellín');assert.match(rows[0].action.href,/borrador=/);assert.match(rows[0].previous.href,/confirmacion/);assert.equal(rows[0].isDemo,true);assert.deepEqual(saved,before);
 });
 test('matching titles never merge different properties, nor a demonstration with an account record',()=>{
- const saved={draft:draft(),submissions:[completed()]},record={id,kind:'terreno',form:{title:'Terreno en Medellín',visibility:'off-market'},status:'approved',reference:'TER-REAL',updatedAt:'2026-11-01T12:00:00Z'};
+ const saved={draft:draft(),submissions:[completed()]},record={id,kind:'terreno',form:{title:'Lote en Medellín',visibility:'off-market'},status:'approved',reference:'TER-REAL',updatedAt:'2026-11-01T12:00:00Z'};
  const rows=buildSpaceInventory(saved,[record]);assert.equal(rows.length,2);assert.equal(rows[0].source,'account');assert.equal(rows[0].isDemo,false);assert.equal(rows[1].source,'local');
 });
 test('Off-market can never acquire a public-fiche action, including inconsistent legacy states',()=>{
@@ -23,7 +23,7 @@ test('inventory filters tolerate accents, preserve sources, and do not mutate re
 });
 test('draft hints name pending fields without treating unknown obligations as a debt or a blocker',()=>{
  assert.match(draftNextStep(draft()),/departamento y municipio/);
- const text=draftNextStep(draft({step:3,form:{land_situation:{obligations:Object.fromEntries(['predial','valorizacion','administracion','servicios','otras'].map(key=>[key,{status:'unknown'}]))}}}));assert.doesNotMatch(text,/Por completar/);assert.match(text,/situación del terreno/);
+ const text=draftNextStep(draft({step:3,form:{land_situation:{obligations:Object.fromEntries(['predial','valorizacion','administracion','servicios','otras'].map(key=>[key,{status:'unknown'}]))}}}));assert.doesNotMatch(text,/Por completar/);assert.match(text,/situación del lote/);
 });
 test('cards escape user content and display source, next step and last save instead of invented dates',()=>{
  const rows=buildSpaceInventory({draft:draft({form:{client_id:id,title:'<script>alert(1)</script>'},updatedAt:undefined}),submissions:[]}),html=inventoryCardsHTML(rows);

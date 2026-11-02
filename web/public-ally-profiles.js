@@ -5,9 +5,9 @@ export const publicAllyProfiles=[{
  id:'ALI-PUB-001',slug:'suarez-y-gomez-abogados',name:'Suarez y Gomez Abogados',kind:'company',category:'Abogados (legales)',specialistSlug:'abogados',logo:'./assets/allies/suarez-y-gomez-abogados.svg',
  city:'Bogotá, Colombia',headline:'Derecho fiduciario y negocios inmobiliarios',
  summary:'Asesoría jurídica para aportantes, promotores, compradores y participantes en proyectos gestionados mediante fiducia.',
- highlights:['Fiducia inmobiliaria','Aporte de terrenos','Auditoría fiduciaria'],
+ highlights:['Fiducia inmobiliaria','Aporte de lotes','Auditoría fiduciaria'],
  businessAreas:[
-  {id:'aportantes',title:'Propietarios que aportan terreno',audience:'Propietarios y aportantes',description:'Acuerdos de aporte, derechos del propietario y condiciones del negocio fiduciario.'},
+  {id:'aportantes',title:'Propietarios que aportan lote',audience:'Propietarios y aportantes',description:'Acuerdos de aporte, derechos del propietario y condiciones del negocio fiduciario.'},
   {id:'promotores',title:'Promotores y fiducia inmobiliaria',audience:'Promotores y desarrolladores',description:'Coordinación jurídica de acuerdos con propietarios e inversionistas, contratos y entrega del proyecto.'},
   {id:'compradores',title:'Compradores y beneficiarios de área',audience:'Compradores',description:'Revisión jurídica de la adquisición, desde el contrato hasta la entrega de las unidades.'},
   {id:'derechos',title:'Participaciones y derechos fiduciarios',audience:'Titulares de derechos',description:'Evaluación del modelo del negocio, las participaciones y el gobierno del fideicomiso.'},

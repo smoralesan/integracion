@@ -29,7 +29,7 @@ test('La presentación de aliados muestra solo perfiles públicos y lleva a un b
 });
 test('Buscar firmas incluye nombres y áreas de negocio, respeta grupos y no genera perfiles',()=>{
  const p=publicAllyProfiles[0];
- for(const q of ['Suárez y Gómez','fiducia','aporte de terrenos','auditoría'])assert.ok(publicAllyMatches(p,q,'all',specialists),q);
+ for(const q of ['Suárez y Gómez','fiducia','aporte de lotes','auditoría'])assert.ok(publicAllyMatches(p,q,'all',specialists),q);
  assert.ok(publicAllyMatches(p,'fiduciario','legal',specialists));
  assert.equal(publicAllyMatches(p,'fiduciario','tecnicos',specialists),false);
  assert.equal(publicAllyMatches(p,'no existente','all',specialists),false);

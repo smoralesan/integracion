@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {terrainPresentation,publicationPreviewHTML,publicationFollowUps,nextStepsHTML,terrainBasicsHTML} from '../web/publication-ux.js';
-const form=()=>({title:'Terreno de prueba',land_content:'land-only',city:'Medellín',region:'Antioquia',neighborhood:'BARRIO PRIVADO',department_code:'05',municipality_code:'05001',area:'5200',negotiation:'sale',value_status:'known',price_method:'cop',amount:'2000000000',visibility:'public',description:'DESCRIPCIÓN PRIVADA',relationship:'Propietario',contact:'CONTACTO PRIVADO',location_pin:[-75.5,6.2],parcel_geometry:{type:'Polygon',coordinates:[]},land_situation:{obligations:{predial:{status:'pending',amount:'SALDO PRIVADO'}}}});
+const form=()=>({title:'Lote de prueba',land_content:'land-only',city:'Medellín',region:'Antioquia',neighborhood:'BARRIO PRIVADO',department_code:'05',municipality_code:'05001',area:'5200',negotiation:'sale',value_status:'known',price_method:'cop',amount:'2000000000',visibility:'public',description:'DESCRIPCIÓN PRIVADA',relationship:'Propietario',contact:'CONTACTO PRIVADO',location_pin:[-75.5,6.2],parcel_geometry:{type:'Polygon',coordinates:[]},land_situation:{obligations:{predial:{status:'pending',amount:'SALDO PRIVADO'}}}});
 test('preview uses only public catalog projection and never exposes precise or private facts',()=>{
  const input=form(),before=structuredClone(input),projection=terrainPresentation(input);
  for(const key of ['neighborhood','description','contact','location_pin','parcel_geometry','land_situation','relationship'])assert.equal(key in projection,false);

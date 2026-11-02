@@ -12,7 +12,7 @@ const clean=(v,max=500)=>typeof v==='string'?v.trim().slice(0,max):'';
 function enumValue(value,options,label,required=false){if(!value&&!required)return '';if(!options.some(([v])=>v===value))throw Error('Selecciona una respuesta válida para '+label+'.');return value;}
 const validDate=v=>/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v+'T00:00:00Z'))&&new Date(v+'T00:00:00Z').toISOString().slice(0,10)===v;
 export function normalizeLandSituation(input,{documentIds=[],now=new Date().toISOString()}={}){
- if(!input||typeof input!=='object'||Array.isArray(input)||input.version!==1)throw Error('La situación del terreno no es válida.');
+ if(!input||typeof input!=='object'||Array.isArray(input)||input.version!==1)throw Error('La situación del lote no es válida.');
  const rows={};
  for(const [key,label] of obligations){
   const raw=input.obligations?.[key]||{},status=enumValue(raw.status,obligationStatuses,label,true),row={status};
