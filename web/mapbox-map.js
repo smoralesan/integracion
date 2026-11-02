@@ -409,7 +409,7 @@ export class LandMap {
 }
 
 // Resultados temporales: solo se muestran en memoria; no se guardan en localStorage.
-export async function geocodeLocation(query, signal) {
+export async function geocodeLocation(query, signal, {addresses=false}={}) {
   const text = String(query).trim();
   if (
     !text ||
@@ -426,7 +426,7 @@ export async function geocodeLocation(query, signal) {
     language: "es",
     autocomplete: "false",
     limit: "5",
-    types: "place,locality,neighborhood,region",
+    types: addresses ? "address,place,locality,neighborhood,region" : "place,locality,neighborhood,region",
     permanent: "false",
   }))
     url.searchParams.set(key, value);
