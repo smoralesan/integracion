@@ -57,7 +57,7 @@ export async function purgeExpired(bucket,now=Date.now(),cursor) {
   if(keys.length) await bucket.delete(keys);
   return {deleted:keys.length,cursor:listed.truncated?listed.cursor:null};
 }
-const allowedFields=['value_status','land_content','intended_use','valuation_assistance','title','city','region','department_code','municipality_code','neighborhood','land_type','project_land_confirmed','area','relationship','description','negotiation','price_method','amount','amount_usd','negotiable','receive_currencies','rate_method','exchange_rate','compensation','payment_schedule','payment_months','unit_type','unit_count','unit_area','unit_months','cash_percent','stage','land_status','need','participation','desired_min','desired_max','desired_zone','need_description','reactivation'];
+const allowedFields=['value_status','land_content','intended_use','valuation_assistance','title','city','region','department_code','municipality_code','cadastral_address','neighborhood','land_type','project_land_confirmed','area','relationship','description','negotiation','price_method','amount','amount_usd','negotiable','receive_currencies','rate_method','exchange_rate','compensation','payment_schedule','payment_months','unit_type','unit_count','unit_area','unit_months','cash_percent','stage','land_status','need','participation','desired_min','desired_max','desired_zone','need_description','reactivation'];
 export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
   const url=new URL(request.url);if(!url.pathname.startsWith('/api/'))return null;
   try {
@@ -140,6 +140,7 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       if(!location)error(400,'Selecciona un departamento y un municipio válido de Colombia.');
       Object.assign(form,location);
       if(form.neighborhood)form.neighborhood=text(form.neighborhood,120);
+      if(form.cadastral_address)form.cadastral_address=text(form.cadastral_address,300);
       let parcel=null,locationPin=null;
       if(data.kind==='terreno') {
         if(form.project_land_confirmed!==true)error(400,landScopeExclusion+' Confirma que presentas el terreno para desarrollar un proyecto.');

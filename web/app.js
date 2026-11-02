@@ -761,6 +761,7 @@ function formSummary() {
     ["Nombre", f.title],
     ["Ubicación", [f.region, f.city].filter(Boolean).join(" → ")],
     ["Barrio", f.neighborhood || "Sin especificar (opcional)"],
+    ...(state.formKind==='terreno'?[["Dirección catastral",f.cadastral_address||"Pendiente"]]:[]),
     ["Relación", f.relationship],
   ];
   if (state.formKind === "proyecto")
@@ -1888,6 +1889,7 @@ document.addEventListener("submit", async (event) => {
     Object.assign(state.form,selectedLocation);
     if(state.formKind==='terreno'&&!['land-only','land-project'].includes(state.form.land_content)){state.formStep=1;render();showFormIssue('Indica si ofreces solo terreno o terreno con proyecto antes de continuar.');return;}
     if(state.formKind==='terreno'&&state.form.project_land_confirmed!==true){state.formStep=1;render();showFormIssue(landScopeExclusion+' Confirma el destino del terreno antes de continuar.');return;}
+    if(state.formKind==='terreno'&&[1,4].includes(state.formStep)&&!String(state.form.cadastral_address||'').trim()){if(state.formStep!==1){state.formStep=1;render();}showFormIssue('Indica la dirección catastral del terreno para continuar.');return;}
     if(state.formKind==='terreno'&&[1,4].includes(state.formStep)){
       try{if(terrainLocationMode(state.form)==='pin')normalizeLocationPin({coordinates:state.form.location_pin,confirmed:state.form.location_pin_confirmed});else if(!state.form.parcel_geometry||!state.form.parcel_confirmed)throw Error('Añade y confirma el polígono, o cambia a un pin aproximado.');}
       catch(error){if(state.formStep!==1){state.formStep=1;render();}showFormIssue(error.message);return;}
