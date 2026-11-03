@@ -1,3 +1,4 @@
+import {attachmentLimits} from './attachment-limits.js';
 export const availabilityLabels={available:'Disponible',negotiating:'En negociación',withdrawn:'Retirado',unknown:'Por confirmar'};
 export const technicalLabels={use:'Uso propuesto',planning:'Información urbanística',topography:'Topografía',access:'Accesos',water:'Agua y saneamiento',energy:'Energía',obligations:'Obligaciones del inmueble'};
 export const evidenceLabels={legal:'Titularidad y representación',obligations:'Obligaciones',planning:'Norma y uso',technical:'Información técnica'};
@@ -5,7 +6,8 @@ export const evidenceStates={declared:'Declarado',provided:'Soporte aportado',re
 const txt=(v,n=300)=>typeof v==='string'?v.trim().slice(0,n):'';
 export function normalizePresentation(v={}, {kind}={}){
  if(kind==='terreno')v={...v,reactivation:false,rescue:{}};
- const p={description:txt(v.description,3000),technical:{},shareGeometry:v.shareGeometry===true,photoIds:Array.isArray(v.photoIds)?[...new Set(v.photoIds.filter(x=>typeof x==='string'))].slice(0,8):[],evidence:{},reactivation:v.reactivation===true,rescue:{}};
+ const p={description:txt(v.description,3000),technical:{},shareGeometry:v.shareGeometry===true,photoIds:Array.isArray(v.photoIds)?[...new Set(v.photoIds.filter(x=>typeof x==='string'))]:[],evidence:{},reactivation:v.reactivation===true,rescue:{}};
+ if(p.photoIds.length>attachmentLimits.images)throw Error('Puedes publicar hasta '+attachmentLimits.images+' fotos. Quita alguna antes de guardar.');
  for(const key of Object.keys(technicalLabels))p.technical[key]=txt(v.technical?.[key],500);
  for(const key of Object.keys(evidenceLabels))p.evidence[key]=Array.isArray(v.evidence?.[key])?[...new Set(v.evidence[key].filter(x=>typeof x==='string'))].slice(0,8):[];
  for(const key of ['reason','suspendedAt','licenseStatus','conditions'])p.rescue[key]=txt(v.rescue?.[key],key==='suspendedAt'?10:1000);
