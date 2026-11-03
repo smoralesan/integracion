@@ -1,5 +1,5 @@
 import {mergeBrowserStore} from './store-merge.js';
-import {uniquePhotoSelection} from './photo-duplicates.js';
+import {uniquePhotoSelection,newDemoId,hasDemoDocument} from './photo-duplicates.js';
 import {declaredAreaInput,updateDeclaredAreaField,normalizePastedArea} from './declared-area-input.js';
 import {validateAttachmentLimits,attachmentLimitCopy} from './attachment-limits.js';
 import {completedSubmissionProgressHTML} from './publication-review.js';
@@ -1437,7 +1437,7 @@ async function action(actionName, el, event) {
   }
   if(actionName==='save-and-exit'){if(saveDraft(true)){state.spaceTab='submissions';location.hash='#/mi-espacio';toast('Avance guardado en este navegador. Puedes retomarlo desde Mis lotes y proyectos.');}return;}
   if(actionName==='edit-local-registration'){const record=saved.submissions.find(s=>s.localRegistration&&s.id===el.dataset.id);if(!record)return;const previous=structuredClone(saved);const draft={kind:record.kind,form:structuredClone(record.form),step:1,files:structuredClone(record.files||[]),updatedAt:new Date().toISOString()};putDraft(saved,draft);if(!persist()){saved=previous;return;}location.hash=draftHref(draft);return;}
-  if(actionName==='demo-document'&&emailEntry.isPreview()){if(!state.files.some(f=>f.origin==='demo'))state.files.push({id:crypto.randomUUID(),name:'Ficha técnica de ejemplo.pdf',origin:'demo',analysis:{status:'demo',message:'Referencia ficticia. No se cargó ningún archivo.'}});saveDraft(true);render();return;}
+  if(actionName==='demo-document'&&emailEntry.isPreview()){if(!hasDemoDocument(state.files))state.files.push({id:crypto.randomUUID(),name:'Ficha técnica de ejemplo.pdf',origin:'demo',analysis:{status:'demo',message:'Referencia ficticia. No se cargó ningún archivo.'}});saveDraft(true);render();return;}
   if(actionName==='demo-perimeter'&&emailEntry.isPreview()){captureForm();Object.assign(state.form,{parcel_geometry:demoTerrainGeometry('TER-DEMO-001'),parcel_source:'Perímetro ficticio de demostración · no predial',parcel_confirmed:false,demo_parcel_confirmed:false});saveDraft(true);render();return;}
   if (actionName === "save-draft") saveDraft();
   if (actionName === "file-mode") {
@@ -1710,8 +1710,8 @@ document.addEventListener("change", async (event) => {
   if (["file-input","terrain-photo-input"].includes(el.id)&&!(el.id==='terrain-photo-input'&&emailEntry.isPreview())) {
     if(emailEntry.isPreview()){el.value='';toast("La carga de documentos requiere el acceso real del portal.");return;}
     captureForm();const key=state.form.client_id;let files=[...el.files];const fingerprints=new Map();
-    if(el.id==='terrain-photo-input'){const unique=await uniquePhotoSelection(files,state.files);files=unique.files.map(({file,fingerprint})=>{fingerprints.set(file,fingerprint);return file;});if(unique.duplicates.length)toast('Se omitieron fotos duplicadas: '+unique.duplicates.join(', '));if(state.form.client_id!==key)return;}
-    try{validateAttachmentLimits([...state.files,...files]);}catch(error){el.value='';toast(error.message);return;}
+    el.disabled=true;try{const unique=await uniquePhotoSelection(files,state.files);files=unique.files.map(({file,fingerprint})=>{fingerprints.set(file,fingerprint);return file;});if(unique.duplicates.length)toast('Se omitieron fotos duplicadas: '+unique.duplicates.join(', '));if(state.form.client_id!==key){el.disabled=false;return;}}catch(error){el.disabled=false;el.value='';toast('No se pudieron leer los archivos. Vuelve a seleccionarlos.');return;}
+    try{validateAttachmentLimits([...state.files,...files]);}catch(error){el.disabled=false;el.value='';toast(error.message);return;}
     const messages=[];el.disabled=true;
     for(const file of files) {
       if(el.id==='terrain-photo-input'&&!/\.(jpe?g|png)$/i.test(file.name)){messages.push(file.name+": usa una imagen JPG o PNG.");continue;}
@@ -1970,7 +1970,7 @@ document.addEventListener("submit", async (event) => {
     try{
       const proposal=normalizeNeedProposal({...Object.fromEntries(data),demoAcknowledged:data.get('demoAcknowledged')==='on'});
       if(saved.interests.some(i=>i.reference===proposal.reference))throw Error('Ya guardaste una participación para esta necesidad. Puedes consultarla en Mi espacio.');
-      const entry={...proposal,id:'CON-DEMO-'+String(saved.interests.length+1).padStart(4,'0'),createdAt:new Date().toISOString()};
+      const entry={...proposal,id:newDemoId('CON-DEMO'),createdAt:new Date().toISOString()};
       saved.interests.push(entry);
       if(!persist()){saved.interests.pop();throw Error('No se pudo guardar en este navegador. Libera espacio e inténtalo de nuevo.');}
       state.spaceTab='interests';
@@ -1987,7 +1987,7 @@ document.addEventListener("submit", async (event) => {
       return;
     }
     saved.interests.push({
-      id: "CON-DEMO-" + String(saved.interests.length + 1).padStart(4, "0"),
+      id: newDemoId('CON-DEMO'),
       reference: ref,
       title: String(data.get("title")),
       role: String(data.get("role")),
@@ -2001,7 +2001,7 @@ document.addEventListener("submit", async (event) => {
   }
   if (type === "ally") {
     const id =
-      "ALI-DEMO-" + String(saved.submissions.length + 1).padStart(4, "0");
+      newDemoId('ALI-DEMO');
     saved.submissions.push({
       id,
       kind: "aliado",
