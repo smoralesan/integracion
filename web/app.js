@@ -1,4 +1,6 @@
-import {declaredAreaInput,updateDeclaredAreaField} from './declared-area-input.js';
+import {mergeBrowserStore} from './store-merge.js';
+import {uniquePhotoSelection} from './photo-duplicates.js';
+import {declaredAreaInput,updateDeclaredAreaField,normalizePastedArea} from './declared-area-input.js';
 import {validateAttachmentLimits,attachmentLimitCopy} from './attachment-limits.js';
 import {completedSubmissionProgressHTML} from './publication-review.js';
 import {validateNegotiationSubmission,migratePublicationForm,normalizeProjectForm,validateProjectAreaRange,expiredSubmissionFiles,expiredAttachmentsHTML,currencyChangeNotice} from './submission-validation.js';
@@ -236,13 +238,16 @@ function readStore() {
   }
 }
 let saved = readStore();
+let savedBase=structuredClone(saved);
 function persist() {
   try {
-    localStorage.setItem(KEY, JSON.stringify(saved));
+    const merged=mergeBrowserStore(savedBase,saved,readStore());
+    localStorage.setItem(KEY, JSON.stringify(merged));
+    saved=merged;savedBase=structuredClone(merged);
     return true;
-  } catch {
+  } catch(error) {
     toast(
-      "No fue posible guardar en este navegador. Revisa el espacio disponible.",
+      error.message?.includes("otra pestaña")?error.message:"No fue posible guardar en este navegador. Revisa el espacio disponible.",
     );
     return false;
   }
@@ -951,7 +956,7 @@ function howPage() { return howItWorksPage({icon,faqs}); }
 function notFound() {
   return `<section class="page-content"><div class="container"><div class="empty-state">${icon("search")}<h1 style="font-size:30px">Esta página no está disponible</h1><p style="margin-top:15px">Puedes retomar el recorrido desde el inicio.</p>${btn("Volver al inicio", "#/")}</div></div></section>`;
 }
-function currentRouteHash(){const slug=location.pathname.replace(/\/+$/,'').slice('/aliados/'.length);return location.hash||(location.pathname.startsWith('/aliados/')&&(slug==='desarrolladores'||sectorForSlug(slug))?'#'+location.pathname:'#/');}
+function currentRouteHash(){const slug=location.pathname.replace(/\/+$/,'').slice('/aliados/'.length);return location.hash||(location.pathname.startsWith('/aliados/')&&(specialistBySlug(slug)||sectorForSlug(slug))?'#'+location.pathname:'#/');}
 function render() {
   const path = currentRouteHash().slice(1).split("?")[0];
   let html;
@@ -1592,7 +1597,7 @@ async function action(actionName, el, event) {
       `<h2 id="dialog-title">Borrar datos de este navegador</h2><p>Se eliminarán favoritos, búsquedas, borradores e historial local de este navegador. Tus expedientes enviados, perfil y solicitudes guardados en tu cuenta se conservan.</p><div class="dialog-actions"><button class="button" data-action="close-dialog">Conservar</button><button class="button primary" data-action="confirm-clear">Borrar datos locales</button></div>`,
     );
   if (actionName === "confirm-clear") {
-    localStorage.removeItem(KEY);localStorage.removeItem('ii-compare-v1');opportunityExperience.selected=[];opportunityExperience.refresh();for(const key of Object.keys(localStorage))if(key.startsWith('ii-terrain-preparation-'))localStorage.removeItem(key);
+    localStorage.removeItem(KEY);savedBase=readStore();localStorage.removeItem('ii-compare-v1');opportunityExperience.selected=[];opportunityExperience.refresh();for(const key of Object.keys(localStorage))if(key.startsWith('ii-terrain-preparation-'))localStorage.removeItem(key);
     saved = readStore();
     closeModal();
     render();
@@ -1704,13 +1709,14 @@ document.addEventListener("change", async (event) => {
   }
   if (["file-input","terrain-photo-input"].includes(el.id)&&!(el.id==='terrain-photo-input'&&emailEntry.isPreview())) {
     if(emailEntry.isPreview()){el.value='';toast("La carga de documentos requiere el acceso real del portal.");return;}
-    captureForm();const key=state.form.client_id,files=[...el.files];
+    captureForm();const key=state.form.client_id;let files=[...el.files];const fingerprints=new Map();
+    if(el.id==='terrain-photo-input'){const unique=await uniquePhotoSelection(files,state.files);files=unique.files.map(({file,fingerprint})=>{fingerprints.set(file,fingerprint);return file;});if(unique.duplicates.length)toast('Se omitieron fotos duplicadas: '+unique.duplicates.join(', '));if(state.form.client_id!==key)return;}
     try{validateAttachmentLimits([...state.files,...files]);}catch(error){el.value='';toast(error.message);return;}
     const messages=[];el.disabled=true;
     for(const file of files) {
       if(el.id==='terrain-photo-input'&&!/\.(jpe?g|png)$/i.test(file.name)){messages.push(file.name+": usa una imagen JPG o PNG.");continue;}
       if(file.size>10_000_000){state.fileMode='link';messages.push(file.name+" supera 10 MB. Agrega un enlace HTTPS.");continue;}
-      try {const doc=await uploadDocument(file);if(state.form.client_id!==key)return;state.files=state.files.filter(f=>f.id||f.name!==doc.name);state.files.push(doc);saveDraft(true);}
+      try {const doc=await uploadDocument(file);if(state.form.client_id!==key)return;state.files=state.files.filter(f=>f.id||f.name!==doc.name);state.files.push({...doc,...(fingerprints.has(file)?{fingerprint:fingerprints.get(file)}:{})});saveDraft(true);}
       catch(e){messages.push(file.name+': '+e.message);}
     }
     if(state.form.client_id===key){render();$('#file-message').textContent=messages.join(' ')||'Archivos guardados privados. Revisa el resultado de interpretación.';}
@@ -1768,6 +1774,7 @@ document.addEventListener("beforeinput", (event) => {
 });
 document.addEventListener("paste", (event) => {
   const el = event.target;
+  if(el.matches('[data-declared-area]')){const raw=event.clipboardData?.getData('text');if(!raw)return;event.preventDefault();const normalized=normalizePastedArea(raw);if(normalized===null){toast('Usa un área válida, por ejemplo 5.200,50 m².');return;}el.setRangeText(normalized,el.selectionStart,el.selectionEnd,'end');const area=updateDeclaredAreaField(el);updateAreaEquivalences(el.form,area.canonical);saveDraft(true);return;}
   if (!el.matches("[data-money]")) return;
   const pasted = event.clipboardData?.getData("text") || "";
   if (!pasted) return;

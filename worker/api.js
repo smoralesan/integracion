@@ -108,7 +108,8 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
           try {analysis={status:'geometry_read',...await parseGeospatial(bytes,name),message:'Perímetros interpretados. Confirma cuál corresponde al lote.'};}
           catch(e){analysis={status:'needs_review',message:String(e.message).slice(0,300)};}
         }
-        meta={id,name,size:file.size,origin:'file',extension,createdAt:now.toISOString(),expiresAt,analysis};
+        const fingerprint=['jpg','jpeg','png'].includes(extension)?Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),byte=>byte.toString(16).padStart(2,'0')).join(''):undefined;
+        meta={id,name,size:file.size,origin:'file',extension,...(fingerprint?{fingerprint}:{}),createdAt:now.toISOString(),expiresAt,analysis};
       }
       const key=prefix+'documents/'+id+'/';
       if(bytes) await bucket.put(key+'content',bytes,{httpMetadata:{contentType:'application/octet-stream'},customMetadata:{expiresAt}});
@@ -162,7 +163,7 @@ export async function handleApi(request,env,ctx={waitUntil:()=>{}}) {
       }
       if(!Array.isArray(data.documentIds)||data.documentIds.length>20)error(400,'Puedes vincular hasta 20 documentos.');
       if(data.kind==='terreno'&&data.form?.land_situation!=null){try{form.land_situation=normalizeLandSituation(data.form.land_situation,{documentIds:data.documentIds});}catch(e){error(400,e.message);}}
-      const files=[];for(const id of [...new Set(data.documentIds)]){const m=await documentMeta(bucket,prefix,id,Date.now());files.push({id:m.id,name:m.name,size:m.size,origin:m.origin,extension:attachmentExtension(m),createdAt:m.createdAt,expiresAt:m.expiresAt,analysis:{status:m.analysis.status,message:m.analysis.message}});}
+      const files=[];for(const id of [...new Set(data.documentIds)]){const m=await documentMeta(bucket,prefix,id,Date.now());files.push({id:m.id,name:m.name,size:m.size,origin:m.origin,...(m.fingerprint?{fingerprint:m.fingerprint}:{}),extension:attachmentExtension(m),createdAt:m.createdAt,expiresAt:m.expiresAt,analysis:{status:m.analysis.status,message:m.analysis.message}});}
       try{validateAttachmentLimits(files);}catch(e){error(400,e.message);}
       const key=prefix+'records/'+data.id+'.json',existing=await getJson(bucket,key);if(existing)return json(ownerRecord(existing));
       const record={id:data.id,reference:(data.kind==='terreno'?'TER-':'PRO-')+data.id.slice(0,8).toUpperCase(),kind:data.kind,form,parcel,...(locationPin?{locationPin}:{}),files,status:'received',createdAt:new Date().toISOString(),...initialWorkflow(request)};
