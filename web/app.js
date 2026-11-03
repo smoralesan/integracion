@@ -1,3 +1,4 @@
+import {declaredAreaInput,updateDeclaredAreaField} from './declared-area-input.js';
 import {validateAttachmentLimits,attachmentLimitCopy} from './attachment-limits.js';
 import {completedSubmissionProgressHTML} from './publication-review.js';
 import {validateNegotiationSubmission,migratePublicationForm,normalizeProjectForm,validateProjectAreaRange,expiredSubmissionFiles,expiredAttachmentsHTML,currencyChangeNotice} from './submission-validation.js';
@@ -659,6 +660,7 @@ function inputField(
   } = {},
 ) {
   const v = state.form[name] ?? "";
+  const areaField=name==='area';
   return `<label class="form-field ${full ? "full" : ""}">${label}${required?'<span class="ux-required">Obligatorio</span>':''}${
     options
       ? `<select aria-label="${escape(label)}" name="${name}" ${required ? "required" : ""}><option value="">Seleccionar</option>${options
@@ -667,7 +669,7 @@ function inputField(
             return `<option value="${escape(value)}" ${v === value ? "selected" : ""}>${text}</option>`;
           })
           .join("")}</select>`
-      : `<input aria-label="${escape(label)}" type="${currency ? "text" : type}" ${currency ? 'data-money inputmode="decimal" autocomplete="off"' : ""} name="${name}" value="${escape(currency ? formatAmount(v) : v)}" placeholder="${escape(placeholder)}" ${required ? "required" : ""} ${!currency && min !== "" ? `min="${min}"` : ""} ${!currency && type === "number" ? 'step="any"' : ""}>`
+      : `<input aria-label="${escape(label)}" type="${currency || areaField ? "text" : type}" ${areaField?'data-declared-area inputmode="decimal" autocomplete="off"':''} ${currency ? 'data-money inputmode="decimal" autocomplete="off"' : ""} name="${name}" value="${escape(currency ? formatAmount(v) : areaField && v!=='' ? formatDeclaredArea(v) : v)}" placeholder="${escape(placeholder)}" ${required ? "required" : ""} ${!currency && min !== "" ? `min="${min}"` : ""} ${!currency && type === "number" ? 'step="any"' : ""}>`
   }${hint ? `<small>${hint}</small>` : ""}</label>`;
 }
 function municipalityOptions(departmentCode, selected = "") {
@@ -875,6 +877,8 @@ function captureForm() {
         name === "receive_currencies"
           ? group.filter((c) => c.checked).map((c) => c.value)
           : group[0].checked;
+    } else if(group[0].hasAttribute("data-declared-area")){
+      const area=declaredAreaInput(group[0].value);state.form[name]=area.valid?area.canonical:"";
     } else if (group[0].hasAttribute("data-money")) {
       const amount = readAmount(group[0].value);
       state.form[name] = amount.valid ? amount.canonical : "";
@@ -1011,6 +1015,7 @@ function render() {
   syncMap();
   syncParcel();
   mountTerrainPhotos($('#contenido'),{preview:emailEntry.isPreview(),draftId:state.form.client_id,files:state.files,onChange:files=>{const previous=state.files;state.files=files;if(!saveDraft(true)){state.files=previous;return false;}render();return true;}});
+  document.querySelectorAll('[data-declared-area]').forEach(updateDeclaredAreaField);
   mountPublicationProgress($('#contenido'),()=>({step:state.formStep,form:state.form,files:state.files,preview:emailEntry.isPreview()}));
   needsBoard.mount($('[data-project-needs-host]'),{id:path.split("/")[2]||"",query:location.hash.split("?")[1]||""});
   mountRescueGalleries($('#contenido'),[...properties,...needProjects],item=>modal(rescueGalleryZoomHTML(item)));
@@ -1734,7 +1739,7 @@ function updateMoneyField(el) {
 }
 document.addEventListener("beforeinput", (event) => {
   const el = event.target;
-  if (!el.matches("[data-money]") || event.isComposing) return;
+  if (!el.matches("[data-money],[data-declared-area]") || event.isComposing) return;
   const start = el.selectionStart,
     end = el.selectionEnd;
   if (start === null || end === null) return;
@@ -1746,7 +1751,7 @@ document.addEventListener("beforeinput", (event) => {
     )
       return;
     el.setRangeText(",", start, end, "end");
-    updateMoneyField(el);
+    if(el.matches('[data-declared-area]')){updateDeclaredAreaField(el);updateAreaEquivalences(el.form,declaredAreaInput(el.value).canonical);saveDraft(true);}else updateMoneyField(el);
   } else if (
     start === end &&
     event.inputType === "deleteContentBackward" &&
@@ -1784,7 +1789,7 @@ document.addEventListener("focusout", (event) => {
   captureForm();
 });
 document.addEventListener("input", (event) => {
-  if(event.target.name==='area'&&event.target.closest('[data-form="submission"]'))updateAreaEquivalences(event.target.form,event.target.value);
+  if(event.target.matches('[data-declared-area]')&&!event.isComposing){const area=updateDeclaredAreaField(event.target);updateAreaEquivalences(event.target.form,area.valid?area.canonical:'');}
   if(event.target.closest('[data-form="submission"]')&&!event.target.matches('[data-money],input[type="file"]')){
     clearTimeout(draftSaveTimer);const status=$('[data-draft-status]');if(status)status.textContent="Guardando en este navegador…";draftSaveTimer=setTimeout(()=>{if($('[data-form="submission"]'))saveDraft(true);},350);
   }
