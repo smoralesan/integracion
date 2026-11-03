@@ -1,3 +1,5 @@
+import {updateMoneyInput} from './money-field.js';
+import {applyOwnerRecordUpdate} from './owner-update.js';
 import {movePublicationStep,setUploadMessage,startPublicationUpload,finishPublicationUpload} from './publication-actions.js';
 import {mergeBrowserStore} from './store-merge.js';
 import {uniquePhotoSelection,newDemoId,hasDemoDocument} from './photo-duplicates.js';
@@ -100,7 +102,7 @@ const profileEditor = new ProfileEditor();
 const serviceRequestsUI = new ServiceRequestsUI();
 const salesUI = new SalesUI();
 const heroIntent = new HeroIntentSelector();
-const opportunityExperience = new OpportunityExperience({properties,toast,onOwnerUpdate:r=>{state.remoteRecord=r;render();},onTeamUpdate:()=>reviewDesk.load(reviewDesk.key)});
+const opportunityExperience = new OpportunityExperience({properties,toast,onOwnerUpdate:r=>{if(!applyOwnerRecordUpdate(state,r,location.hash))return false;render();return true;},onTeamUpdate:()=>reviewDesk.load(reviewDesk.key)});
 const needsBoard = new ProjectNeedsBoard((project,need)=>modal(needProposalHTML(project,need)));
 document.querySelector("#footer-directory-root").innerHTML = footerDirectoryHTML();
 const $ = (s, root = document) => root.querySelector(s);
@@ -1728,24 +1730,7 @@ document.addEventListener("change", async (event) => {
 
 });
 function updateMoneyField(el) {
-  const result = formatAmountInput(
-    el.value,
-    el.selectionStart ?? el.value.length,
-  );
-  el.setCustomValidity(
-    !result.valid
-      ? "Ingresa un monto válido, con máximo dos decimales y 15 cifras enteras."
-      : result.canonical && Number(result.canonical) < (el.name.startsWith("ls_")?0:1)
-        ? "El valor solicitado debe ser al menos 1."
-        : "",
-  );
-  if (result.valid) {
-    el.value = result.formatted;
-    el.setSelectionRange(result.caret, result.caret);
-  }
-  saveDraft(true);
-  if ($("#conversion-preview"))
-    $("#conversion-preview").innerHTML = conversionText();
+  updateMoneyInput(el,{saveDraft,updateConversion:()=>{const preview=$("#conversion-preview");if(preview)preview.innerHTML=conversionText();}});
 }
 document.addEventListener("beforeinput", (event) => {
   const el = event.target;
