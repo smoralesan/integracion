@@ -1,3 +1,4 @@
+import {declaredCOPPrice} from './opportunity-filters.js';
 // Numeric comparisons use declared area and COP asking prices, never missing values as zero.
 export const catalogOrders=[
  ['', 'Orden inicial'],
@@ -6,8 +7,8 @@ export const catalogOrders=[
  ['m2-asc','Precio/m² (COP): menor a mayor'],['m2-desc','Precio/m² (COP): mayor a menor'],
 ];
 export function normalizeCatalogOrder(value){return catalogOrders.some(([key])=>key===value)?value:'';}
-const positive=value=>typeof value==='number'&&Number.isFinite(value)&&value>0?value:null;
-export function copAskingPrice(item){return (item.currency||item.price_currency||'COP')==='COP'?positive(item.price):null;}
+const positive=value=>value!==null&&value!==''&&value!==undefined&&Number.isFinite(Number(value))&&Number(value)>0?Number(value):null;
+export function copAskingPrice(item){return positive(declaredCOPPrice(item));}
 export function pricePerM2(item){const price=copAskingPrice(item),area=positive(item.area);return price!==null&&area!==null?price/area:null;}
 export function orderCatalog(items,order){
  const mode=normalizeCatalogOrder(order);if(!mode)return [...items];

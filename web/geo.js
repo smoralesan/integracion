@@ -117,3 +117,10 @@ export function locationBounds(feature) {
     return null;
   return [...bounds];
 }
+
+export function ringsIntersect(a,b){
+ if(!Array.isArray(a)||!Array.isArray(b)||a.length<3||b.length<3||!a.every(isCoordinate)||!b.every(isCoordinate))return false;
+ if(a.some(p=>pointInRing(p,b))||b.some(p=>pointInRing(p,a)))return true;
+ for(let i=0;i<a.length;i++)for(let j=0;j<b.length;j++)if(segmentsIntersect(a[i],a[(i+1)%a.length],b[j],b[(j+1)%b.length]))return true;
+ return false;
+}

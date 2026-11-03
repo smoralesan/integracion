@@ -1,3 +1,4 @@
+import {movePublicationStep,setUploadMessage,startPublicationUpload,finishPublicationUpload} from './publication-actions.js';
 import {mergeBrowserStore} from './store-merge.js';
 import {uniquePhotoSelection,newDemoId,hasDemoDocument} from './photo-duplicates.js';
 import {declaredAreaInput,updateDeclaredAreaField,normalizePastedArea} from './declared-area-input.js';
@@ -377,7 +378,7 @@ function publicationsHTML(){
   if(!state.catalogLoaded)return '<section class="published-catalog"><p role="status">Consultando resúmenes publicados…</p></section>';
   if(state.catalogError)return '<p class="jr-publications-access">No pudimos cargar las publicaciones. Puedes explorar los ejemplos o <button type="button" class="text-button" data-action="retry-publications">volver a intentarlo</button>.</p>';
   if(!state.catalogRecords.length&&!state.catalogCursor)return '';
-  const directoryRecords=state.catalogRecords.filter(r=>matchesCatalog(r,state));
+  const directoryRecords=orderCatalog(state.catalogRecords.filter(r=>matchesCatalog(r,state)),state.catalogOrder);
   return `<section class="published-catalog"><div class="section-heading"><div><h2>Resúmenes publicados</h2><p>${directoryRecords.length} ${directoryRecords.length===1?'coincidencia':'coincidencias'} entre ${state.catalogRecords.length} ${state.catalogRecords.length===1?'publicación cargada':'publicaciones cargadas'}${state.catalogCursor?'; hay más por cargar':''}. Información autorizada por su titular.</p></div></div><div class="published-grid">${[...directoryRecords.reduce((groups,r)=>{const key=r.assetReference||r.id;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);return groups;},new Map()).values()].map(group=>{const r=group[0];return `<article>${availabilityHTML(r)}${terrainCardTag(r)}${summaryHTML(r)}<a class="button outline" href="#/publicacion/${r.id}">Ver ficha</a>${comparisonButton(r)}${group.length>1?`<details><summary>${group.length} presentaciones vinculadas al mismo inmueble</summary>${group.slice(1).map(x=>`<p><a href="#/publicacion/${x.id}">${escape(x.reference)} · ${escape(x.title)}</a></p>`).join('')}<p>Revisa representación y exclusividad en cada ficha. Las autorizaciones se gestionan por separado.</p></details>`:''}</article>`;}).join('')}</div>${!directoryRecords.length?'<p>Aún no hay coincidencias entre los resúmenes cargados.</p>':''}${state.catalogCursor?'<button class="button outline" data-action="more-publications">Cargar más publicaciones</button>':''}</section>`;
 }
 function publicationPage(){
@@ -1019,7 +1020,7 @@ function render() {
   heroIntent.mount($('[data-hero-selector]'));
   syncMap();
   syncParcel();
-  mountTerrainPhotos($('#contenido'),{preview:emailEntry.isPreview(),draftId:state.form.client_id,files:state.files,onChange:files=>{const previous=state.files;state.files=files;if(!saveDraft(true)){state.files=previous;return false;}render();return true;}});
+  mountTerrainPhotos($('#contenido'),{preview:emailEntry.isPreview(),draftId:state.form.client_id,files:state.files,onBusy:busy=>{if(busy)return startPublicationUpload(state);finishPublicationUpload(state);},onChange:files=>{const previous=state.files;state.files=files;if(!saveDraft(true)){state.files=previous;return false;}render();return true;}});
   document.querySelectorAll('[data-declared-area]').forEach(updateDeclaredAreaField);
   mountPublicationProgress($('#contenido'),()=>({step:state.formStep,form:state.form,files:state.files,preview:emailEntry.isPreview()}));
   needsBoard.mount($('[data-project-needs-host]'),{id:path.split("/")[2]||"",query:location.hash.split("?")[1]||""});
@@ -1426,12 +1427,11 @@ async function action(actionName, el, event) {
   }
   if (actionName === "save-search") saveSearchDialog();
   if(actionName==='remove-filter'){if(removeFilter(state,el.dataset.filter)){render();captureSearchContext(state,location.hash);$('.ux-active-filters button')?.focus();}return;}
-  if(actionName==='review-correction'){const step=Number(el.dataset.step),target=el.dataset.reviewTarget;if(!Number.isInteger(step)||step<1||step>state.formStep)return;captureForm();state.formStep=step;saveDraft(true);render();const form=$('[data-form="submission"]'),field=target==='location'?form?.querySelector('[data-pin-confirm],[data-parcel-confirm],[data-parcel-search]'):target==='files'?form?.querySelector('[data-expired-attachments] button,#terrain-photo-input,#file-input'):[...(form?.elements||[])].find(control=>control.name===target);if(field){field.focus({preventScroll:true});field.scrollIntoView({block:'center',behavior:'smooth'});}else focusFormStep();return;}
-  if(actionName==='form-step'){const step=Number(el.dataset.step);if(Number.isInteger(step)&&step>=1&&step<state.formStep){captureForm();state.formStep=step;saveDraft(true);render();focusFormStep();}return;}
+  if(actionName==='review-correction'){const step=Number(el.dataset.step),target=el.dataset.reviewTarget;if(!Number.isInteger(step)||step<1||step>state.formStep)return;captureForm();if(!movePublicationStep(state,step,()=>saveDraft(true)))return;render();const form=$('[data-form="submission"]'),field=target==='location'?form?.querySelector('[data-pin-confirm],[data-parcel-confirm],[data-parcel-search]'):target==='files'?form?.querySelector('[data-expired-attachments] button,#terrain-photo-input,#file-input'):[...(form?.elements||[])].find(control=>control.name===target);if(field){field.focus({preventScroll:true});field.scrollIntoView({block:'center',behavior:'smooth'});}else focusFormStep();return;}
+  if(actionName==='form-step'){const step=Number(el.dataset.step);if(Number.isInteger(step)&&step>=1&&step<state.formStep){captureForm();if(!movePublicationStep(state,step,()=>saveDraft(true)))return;render();focusFormStep();}return;}
   if (actionName === "form-back") {
     captureForm();
-    state.formStep = Math.max(1, state.formStep - 1);
-    saveDraft(true);
+    if(!movePublicationStep(state,Math.max(1,state.formStep-1),()=>saveDraft(true)))return;
     render();
     focusFormStep();
   }
@@ -1447,15 +1447,16 @@ async function action(actionName, el, event) {
   }
   if (actionName === "add-file-link") {
     if(emailEntry.isPreview()){toast("Los adjuntos requieren el acceso real del portal. Esta maqueta conserva solo el borrador local.");return;}
+    if(state.uploadingFiles||state.submitting){toast('Espera a que termine la carga actual.');return;}
     captureForm();
     try{validateAttachmentLimits([...state.files,{name:state.form.file_link_name,url:state.form.file_link_url}]);}catch(error){toast(error.message);return;}
     const key=state.form.client_id;
     try {
-      el.disabled=true;
+      state.uploadingFiles=true;el.disabled=true;
       const document=await addDocumentLink(state.form.file_link_name,state.form.file_link_url);
       if(state.form.client_id!==key)return;
       state.files.push(document);state.form.file_link_url='';state.form.file_link_name='';saveDraft(true);render();
-    }catch(e){toast(e.message);}finally{el.disabled=false;}
+    }catch(e){toast(e.message);}finally{finishPublicationUpload(state);el.disabled=false;}
   }
   if(actionName==='remove-expired-files'){captureForm();const expired=new Set(expiredSubmissionFiles(state.files));state.files=state.files.filter(file=>!expired.has(file));saveDraft(true);render();return;}
   if (actionName === "remove-file") {
@@ -1709,6 +1710,8 @@ document.addEventListener("change", async (event) => {
   }
   if (["file-input","terrain-photo-input"].includes(el.id)&&!(el.id==='terrain-photo-input'&&emailEntry.isPreview())) {
     if(emailEntry.isPreview()){el.value='';toast("La carga de documentos requiere el acceso real del portal.");return;}
+    if(!startPublicationUpload(state)){el.value='';toast('Espera a que termine la carga actual.');return;}
+    try{
     captureForm();const key=state.form.client_id;let files=[...el.files];const fingerprints=new Map();
     el.disabled=true;try{const unique=await uniquePhotoSelection(files,state.files);files=unique.files.map(({file,fingerprint})=>{fingerprints.set(file,fingerprint);return file;});if(unique.duplicates.length)toast('Se omitieron fotos duplicadas: '+unique.duplicates.join(', '));if(state.form.client_id!==key){el.disabled=false;return;}}catch(error){el.disabled=false;el.value='';toast('No se pudieron leer los archivos. Vuelve a seleccionarlos.');return;}
     try{validateAttachmentLimits([...state.files,...files]);}catch(error){el.disabled=false;el.value='';toast(error.message);return;}
@@ -1719,7 +1722,8 @@ document.addEventListener("change", async (event) => {
       try {const doc=await uploadDocument(file);if(state.form.client_id!==key)return;state.files=state.files.filter(f=>f.id||f.name!==doc.name);state.files.push({...doc,...(fingerprints.has(file)?{fingerprint:fingerprints.get(file)}:{})});saveDraft(true);}
       catch(e){messages.push(file.name+': '+e.message);}
     }
-    if(state.form.client_id===key){render();$('#file-message').textContent=messages.join(' ')||'Archivos guardados privados. Revisa el resultado de interpretación.';}
+    if(state.form.client_id===key){render();setUploadMessage($('#contenido'),messages.join(' ')||'Archivos guardados privados. Revisa el resultado de interpretación.');}
+    }finally{finishPublicationUpload(state);el.disabled=false;}
   }
 
 });
@@ -1904,6 +1908,7 @@ document.addEventListener("submit", async (event) => {
     }
   }
   if (type === "submission") {
+    if(state.uploadingFiles){showFormIssue('Espera a que termine la carga de archivos antes de continuar.');return;}
     if(state.submitting)return;
     captureForm();
     if(state.formKind==='terreno'){try{normalizeBrokerExclusivity(state.form.relationship,state.form.broker_exclusivity);}catch(error){state.formStep=1;render();showFormIssue(error.message);return;}}
