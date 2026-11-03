@@ -23,5 +23,5 @@
 .pu-publication .area-equivalences-reference>summary{justify-content:flex-start;padding:10px 0 0;min-height:32px;font-size:11px;line-height:1.4;font-weight:400;color:#526d8a}
 .pu-publication .area-equivalences-reference>summary:after{font-size:14px;margin-left:auto}
 .pu-publication .area-equivalences-reference p{padding:0;margin:8px 0 0;font-size:11px;line-height:1.6}
-@media(max-width:1150px){.pu-publication .area-equivalences-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:561px){.pu-publication .area-equivalences-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.pu-publication .area-equivalences .form-field{overflow-wrap:anywhere}}
 @media(max-width:560px){.pu-publication .area-equivalences-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pu-publication .form-grid>.area-equivalences{padding:14px}.area-equivalences>header{display:grid;gap:4px}}
